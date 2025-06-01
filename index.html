@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Matthew Diep | Portfolio</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    * {
+      box-sizing: border-box;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+
+    header {
+      background: linear-gradient(to right, #1e3c72, #000000);
+      color: #fff;
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0 0 0.3rem;
+      font-size: 2.5rem;
+    }
+
+    header p {
+      margin: 0;
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    nav {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(8px);
+      border-radius: 50px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 1rem;
+      padding: 0.6rem 1rem;
+    }
+
+    .tab-link {
+      text-decoration: none;
+      color: #333;
+      font-size: 0.95rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .tab-link:hover {
+      background-color: #1e3c72;
+      color: #fff;
+    }
+
+    section {
+      max-width: 900px;
+      margin: 7rem auto;        /* Larger spacing between sections */
+      padding: 2rem 1.5rem;     /* Reduced inner padding */
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #333;
+      font-size: 1.8rem;
+    }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .project-card {
+      background-color: #f0f4ff;
+      border-radius: 8px;
+      padding: 1.5rem;
+      text-decoration: none;
+      color: #333;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .project-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .project-card h3 {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+    }
+
+    .resume-button {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      background-color: #1e3c72;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      text-decoration: none;
+      transition: background-color 0.3s ease;
+    }
+
+    .resume-button:hover {
+      background-color: #162c5d;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      background-color: #f1f1f1;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .social-icons {
+      margin-top: 0.5rem;
+    }
+
+    .social-icons a {
+      color: #444;
+      margin: 0 10px;
+      font-size: 1.5rem;
+      transition: color 0.3s ease;
+    }
+
+    .social-icons a:hover {
+      color: #1e3c72;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="tabs">
+      <a href="#projects" class="tab-link">Projects</a>
+      <a href="#education" class="tab-link">Education</a>
+      <a href="#experience" class="tab-link">Experience</a>
+      <a href="#resume" class="tab-link">Resume</a>
+      <a href="#contact" class="tab-link">Contact</a>
+    </div>
+  </nav>
+
+  <header>
+    <h1>Matthew Diep</h1>
+    <p>Hi I'm Matt and Welcome to my website!</p>
+  </header>
+
+  <section id="projects">
+    <h2>Projects</h2>
+    <div class="project-grid">
+      <a class="project-card" href="https://public.tableau.com/app/profile/matthew.diep/viz/SalesDashboard_17481187693500/SalesDashboard" target="_blank">
+        <h3>Amazon Sales Dashboard</h3>
+        <p>Explores subcategories, sales, and profits over time using Tableau.</p>
+      </a>
+      <a class="project-card" href="https://public.tableau.com/app/profile/matthew.diep/viz/BrtishAirwaysDashboard/Dashboard1" target="_blank">
+        <h3>British Airways Ratings</h3>
+        <p>Tracks customer satisfaction across service parameters over many years.</p>
+      </a>
+    </div>
+  </section>
+
+  <section id="education">
+    <h2>Education</h2>
+    <p><strong>UC Berkeley</strong> — B.A. in Economics, Minor in Data Science (2024–2026)</p>
+    <p><strong>Orange Coast College</strong> — Architecture & Economics (2022–2024, 4.0 GPA)</p>
+  </section>
+
+  <section id="experience">
+    <h2>Experience</h2>
+    <p><strong>Exceptional STEAM</strong> — Co-founder & Instructor (2020–2024)</p>
+    <ul>
+      <li>Designed and led STEAM summer camps for students in the U.S. and Taiwan</li>
+      <li>Managed virtual curriculum and built engaging hands-on activities</li>
+    </ul>
+    <p><strong>TASA at UC Berkeley</strong> — Internal Vice President (2024–Present)</p>
+    <ul>
+      <li>Led internal events and coordinated executive team bonding initiatives</li>
+      <li>Improved member retention and club cohesion through strategic planning</li>
+    </ul>
+  </section>
+
+  <section id="resume">
+    <h2>Resume</h2>
+    <p>You can download my resume using the button below:</p>
+    <a href="Your_Resume_Link_Here.pdf" target="_blank" class="resume-button">
+      <i class="fas fa-download"></i> Download Resume
+    </a>
+  </section>
+
+  <section id="contact">
+    <h2>Contact</h2>
+    <p>Email: <a href="mailto:matthewdiep15@gmail.com">matthewdiep15@gmail.com</a></p>
+    <p>GitHub: <a href="https://github.com/mattdiep15" target="_blank">github.com/matthewdiep</a></p>
+    <p>LinkedIn: <a href="https://www.linkedin.com/in/matthewdiep15/" target="_blank">linkedin.com/in/matthewdiep</a></p>
+  </section>
+
+  <footer>
+    <div class="social-icons">
+      <a href="https://github.com/mattdiep15" target="_blank"><i class="fab fa-github"></i></a>
+      <a href="https://www.linkedin.com/in/matthewdiep15/" target="_blank"><i class="fab fa-linkedin"></i></a>
+    </div>
+  </footer>
+
+</body>
+</html>
