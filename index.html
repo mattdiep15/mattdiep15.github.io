@@ -170,9 +170,28 @@
     .social-icons a:hover {
       color: #1e3c72;
     }
+
+    .logo-fixed {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1001;
+    }
+
+    .logo-fixed img {
+      height: 25px;  /* Adjust this value to make it smaller or larger */
+      width: auto;
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
   </style>
 </head>
 <body>
+
+  <a href="#" class="logo-fixed">
+  <img src="images/banana.jpg" alt="Matthew Diep Logo" />
+  </a>
 
   <nav>
     <div class="tabs">
@@ -189,27 +208,47 @@
     <p>Hi I'm Matt and Welcome to my website!</p>
   </header>
 
+  <section id="about">
+  <h2>About Me</h2>
+  <p>
+    I'm Matt, i like bananas.
+  </p>
+  <p>
+    hello hello hello hello.
+  </p>
+  </section>
+
+
   <section id="projects">
     <h2>Projects</h2>
     <div class="project-grid">
-      <a class="project-card" href="https://public.tableau.com/app/profile/matthew.diep/viz/SalesDashboard_17481187693500/SalesDashboard" target="_blank">
+      <a class="project-card" href="https://github.com/mattdiep15/projects/blob/main/EDA/Amazon_EDA_Project.ipynb" target="_blank">
         <img src="images/amazon.webp" alt="Sales Dashboard" class="project-image" />
         <h3>Amazon Sales Dashboard</h3>
-        <p>Explores subcategories, sales, and profits over time using Tableau.</p>
+        <p>Cleaned and analyzed Amazon product data using Python, Pandas, and Seaborn to uncover pricing trends, category insights, and keyword patterns.</p>
         <div class="project-skills">
           <span>Python</span>
-          <span>Data Viz</span>
+          <span>Seaborn</span>
           <span>Business Analytics</span>
         </div>
       </a>
       <a class="project-card" href="https://public.tableau.com/app/profile/matthew.diep/viz/BrtishAirwaysDashboard/Dashboard1" target="_blank">
         <img src="images/british_airways.png" alt="British Airways Dashboard" class="project-image" />
         <h3>British Airways Ratings</h3>
-        <p>Tracks customer satisfaction across service parameters over many years.</p>
+        <p>Visualized customer satisfaction trends for British Airlines across service categories over time using Tableau, highlighting key patterns in airline experience ratings.</p>
         <div class="project-skills">
           <span>Tableau</span>
-          <span>Customer Experience</span>
-          <span>Survey Analysis</span>
+        </div>
+      </a>
+      <a class="project-card" href="https://github.com/mattdiep15/projects/blob/main/practice_projects/Titanic_Prediction_PracticeProject.ipynb" target="_blank">
+        <img src="images/titanic.jpg" alt="Titanic ML Prediction Model" class="project-image" />
+        <h3>Titanic ML Prediction Model</h3>
+        <p>Built a machine learning model to predict passenger survival on the Titanic using Python, Pandas, and Scikit-learn.</p>
+        <div class="project-skills">
+          <span>Python</span>
+          <span>Seaborn</span>
+          <span>MatplotLib</span>
+          <span>scikit-learn</span>
         </div>
       </a>
     </div>
