@@ -69,8 +69,8 @@
 
     section {
       max-width: 900px;
-      margin: 7rem auto;        /* Larger spacing between sections */
-      padding: 2rem 1.5rem;     /* Reduced inner padding */
+      margin: 7rem auto;
+      padding: 2rem 1.5rem;
       background: #fff;
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -104,9 +104,32 @@
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     }
 
+    .project-image {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+
     .project-card h3 {
       margin-top: 0;
       margin-bottom: 0.5rem;
+    }
+
+    .project-skills {
+      margin-top: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .project-skills span {
+      background-color: #1e3c72;
+      color: #fff;
+      padding: 0.3rem 0.6rem;
+      border-radius: 15px;
+      font-size: 0.75rem;
     }
 
     .resume-button {
@@ -170,12 +193,24 @@
     <h2>Projects</h2>
     <div class="project-grid">
       <a class="project-card" href="https://public.tableau.com/app/profile/matthew.diep/viz/SalesDashboard_17481187693500/SalesDashboard" target="_blank">
+        <img src="images/amazon.webp" alt="Sales Dashboard" class="project-image" />
         <h3>Amazon Sales Dashboard</h3>
         <p>Explores subcategories, sales, and profits over time using Tableau.</p>
+        <div class="project-skills">
+          <span>Python</span>
+          <span>Data Viz</span>
+          <span>Business Analytics</span>
+        </div>
       </a>
       <a class="project-card" href="https://public.tableau.com/app/profile/matthew.diep/viz/BrtishAirwaysDashboard/Dashboard1" target="_blank">
+        <img src="images/british_airways.png" alt="British Airways Dashboard" class="project-image" />
         <h3>British Airways Ratings</h3>
         <p>Tracks customer satisfaction across service parameters over many years.</p>
+        <div class="project-skills">
+          <span>Tableau</span>
+          <span>Customer Experience</span>
+          <span>Survey Analysis</span>
+        </div>
       </a>
     </div>
   </section>
@@ -211,7 +246,7 @@
   <section id="contact">
     <h2>Contact</h2>
     <p>Email: <a href="mailto:matthewdiep15@gmail.com">matthewdiep15@gmail.com</a></p>
-    <p>GitHub: <a href="https://github.com/mattdiep15" target="_blank">github.com/matthewdiep</a></p>
+    <p>GitHub: <a href="https://github.com/mattdiep15" target="_blank">github.com/mattdiep15</a></p>
     <p>LinkedIn: <a href="https://www.linkedin.com/in/matthewdiep15/" target="_blank">linkedin.com/in/matthewdiep</a></p>
   </section>
 
