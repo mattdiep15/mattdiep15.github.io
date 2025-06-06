@@ -25,7 +25,7 @@
     header {
       background-color:#000;
       color: #fff;
-      padding: 6rem 2rem; 
+      padding: 8.4rem 2rem; 
       text-align: center;
     }
 
@@ -44,7 +44,7 @@
       left: 0;
       width: 100%;
       background: #000;
-      padding: 1.2rem 2rem;
+      padding: 2.8rem 2rem;
       z-index: 1000;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
@@ -173,6 +173,30 @@
       color: #1e3c72;
     }
 
+    .logo-nav {
+      height: 100px;
+      width: 200px;
+      background-color: #000; /* black background */
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      top: 10px;
+      left: 20px;
+      z-index: 1001;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* optional */
+    }
+
+
+    .logo-nav img {
+      height: 100px;   /* smaller than container */
+      width: 180px;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
     .logo-fixed {
       position: fixed;
       top: 20px;
@@ -196,11 +220,25 @@
       box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
     }
 
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      opacity: 0;
+      animation: fadeIn 1.5s ease-out forwards;
+    }
+
+    .fade-in-delay {
+      opacity: 0;
+      animation: fadeIn 1.5s ease-out forwards;
+      animation-delay: 0.5s;
+    }
 
   </style>
 </head>
 <body>
-
   <a href="#" class="logo-fixed">
   <img src="images/mattlogo.png" alt="Matthew Diep Logo" />
   </a>
@@ -217,12 +255,12 @@
 
   <header>
     <div class="header-content">
-      <div class="profile-photo">
+      <div class="profile-photo fade-in">
         <img src="images/DSC02080.jpg" alt="Matt's Photo" />
       </div>
-      <div class="intro-text">
-        <h1>Matthew Diep</h1>
-        <p>Hi I'm Matt and welcome to my website!</p>
+      <div class="intro-text fade-in-delay">
+        <h1>I'm Matt</h1>
+        <p>Welcome to my website!</p>
       </div>
     </div>
   </header>
@@ -286,12 +324,17 @@
 
   <section id="education">
     <h2>Education</h2>
-    <p><strong>UC Berkeley</strong> — B.A. in Economics, Minor in Data Science (2024–2026)</p>
+    <p><strong>UC Berkeley</strong> — B.A. in Economics, Minor in Data Science (2024–2026, 3.85 GPA)</p>
     <p><strong>Orange Coast College</strong> — Architecture & Economics (2022–2024, 4.0 GPA)</p>
   </section>
 
   <section id="experience">
     <h2>Experience</h2>
+    <p><strong>VC Deal Sourcing Externship in Collaboration with Ignite XL</strong> — (2024)</p>
+    <ul>
+      <li>Sourced pre-seed/seed stage startups for potential investment, evaluating competitive environment and opportunity for future growth</li>
+      <li>Performed In-depth market research to identify competitive advantages and emerging trends within the specified industry</li>
+    </ul>
     <p><strong>Exceptional STEAM</strong> — Co-founder & Instructor (2020–2024)</p>
     <ul>
       <li>Designed and led STEAM summer camps for students in the U.S., Taiwan and India</li>
