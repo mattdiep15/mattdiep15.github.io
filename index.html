@@ -307,6 +307,53 @@
       box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
     }
 
+    .education-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      cursor: pointer;
+      padding: 1rem;
+      background-color: #f8f9fc;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      transition: background-color 0.3s ease;
+    }
+
+    .education-card:hover {
+      background-color: #e6ecf5;
+    }
+
+    .school-icon {
+      width: 50px;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    /* Slide-down animation */
+    .coursework {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s ease;
+      background-color: #ffffff;
+      padding: 0 1rem;
+      margin-bottom: 1rem;
+      border-left: 3px solid #d0d0d0;
+      font-size: 0.95rem;
+    }
+
+    .coursework.show {
+        max-height: 200px;
+        padding-top: 0.5rem;
+      }
+
+      .coursework-column {
+      flex: 1;
+    }
+
+    .coursework-column ul {
+      padding-left: 1rem;
+    }
+
     /* colors */
     .blue-fade-left {
       background: linear-gradient(to right, #9abdff, #ffffff); /* change these colors as needed */
@@ -335,6 +382,16 @@
       opacity: 0;
       animation: fadeIn 1.5s ease-out forwards;
       animation-delay: 0.5s;
+    }
+
+    .coursework {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s ease;
+    }
+
+    .coursework.show {
+      max-height: 500px; /* adjust as needed */
     }
 
   </style>
@@ -446,9 +503,48 @@
 
   <section id="education" class="card-section">
     <h2>Education</h2>
-    <p><strong>UC Berkeley</strong> — B.A. in Economics, Minor in Data Science (2024–2026, 3.85 GPA)</p>
-    <p><strong>Orange Coast College</strong> — Architecture & Economics (2022–2024, 4.0 GPA)</p>
+
+    <div class="education-card" onclick="toggleCoursework('berkeley-coursework')">
+      <img src="images/berkeley_icon.svg" alt="UC Berkeley Logo" class="school-icon" />
+      <div>
+        <strong>UC Berkeley</strong> — B.A. of Data Science & Economics (2024–2026, 3.85 GPA)
+      </div>
+    </div>
+
+    <div class="coursework" id="berkeley-coursework">
+      <div class="coursework-column">
+        <p><strong>Data Science Coursework</strong></p>
+        <ul>
+          <li>Stat 20 - Introduction to Probability and Statistics</li>
+          <li>Data C88C - Computational Structures in Data Science</li>
+          <li>CS61B - Data Structures</li>
+          <li>Math 54 - Linear Algebra</li>
+        </ul>
+      </div>
+      <div class="coursework-column">
+        <p><strong>Economics Coursework</strong></p>
+        <ul>
+          <li>Econ 100A - Intermediate Microeconomics</li>
+          <li>Econ 100B - Intermediate Macroeconomics</li>
+          <li>Econ 140 - Econometrics</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="education-card" onclick="toggleCoursework('occ-coursework')">
+      <img src="images/OCC_logo.jpg" alt="OCC Logo" class="school-icon" />
+      <div>
+        <strong>Orange Coast College</strong> — Architecture & Economics (2022–2024, 4.0 GPA)
+      </div>
+    </div>
+    <div class="coursework" id="occ-coursework">
+      <p><strong>Achievements:</strong></p>
+        <li>President's List</li>
+        <li>Honor's List</li>
+        <li>Architecture Club</li>
+    </div>
   </section>
+
 
   <section id="resume" class="card-section">
     <h2>Resume</h2>
@@ -479,6 +575,13 @@
     </div>
     <p style="margin-top: 1rem;">Designed by Matthew</p>
   </footer>
+
+  <script>
+    function toggleCoursework(id) {
+      const section = document.getElementById(id);
+      section.classList.toggle("show");
+    }
+  </script>
 
 </body>
 </html>
