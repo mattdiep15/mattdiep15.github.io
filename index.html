@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Matthew Diep | Portfolio</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
   <style>
     * {
       box-sizing: border-box;
@@ -13,29 +13,69 @@
 
     body {
       margin: 0;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Quicksand', sans-serif;
       background-color: #f5f7fa;
       color: #333;
     }
 
-    h1, h2, h3 {
-      font-family: 'Inter', sans-serif;
+    h1 {
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 650;
+    }
+
+    h2 {
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 500;
+    }
+
+    h3 {
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 300;
+    }
+
+    .intro-text h1 {
+      margin-bottom: -3rem;
+    }
+
+    .intro-text p {
+      margin-top: 4rem;
+      font-weight: 100;
     }
 
     header {
-      background-color:#000;
+      background: linear-gradient(to bottom, #000 0%, #000 40%, #f5f7fa 100%);
       color: #fff;
-      padding: 8.4rem 2rem; 
-      text-align: center;
+      min-height: 900px;
+      display: flex;
+      align-items: flex-start;  
+      justify-content: center;
+      padding-top: 12rem; 
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16rem;
+      flex-wrap: wrap;
+      text-align: left;
+    }
+
+    .profile-photo {
+      order: 2;
+    }
+
+    .intro-text {
+      order: 1;
     }
 
     header h1 {
-      font-size: 3rem;
+      font-size: 5rem;
       margin-bottom: 1rem;
     }
 
     header p {
-      font-size: 1.5rem; 
+      font-size: 2rem; 
     }
 
     nav {
@@ -78,27 +118,69 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
 
-    h2 {
-      margin-top: 0;
-      color: #333;
-      font-size: 1.8rem;
+    .card-section {
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 2rem 3rem;
+      margin: 7rem auto;
+      border-radius: 12px;
+      max-width: 1000px;
+    }
+
+    .about-section {
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 2rem 3rem;
+      margin: 7rem auto;
+      border-radius: 12px;
+      max-width: 1000px;
+    }
+
+    .about-section h2 {
+      font-size: 2.5rem;
+    }
+
+    .about-section p {
+      font-size: 1.25rem;
+      line-height: 1.8;
+    }
+
+    .projects-section h2 {
+      font-size: 2.5rem;
+    }
+
+    .projects-section {
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 2rem 3rem;
+      margin: 7rem auto;
+      border-radius: 12px;
+      max-width: 1000px;
+      scroll-margin-top: 100px
     }
 
     .project-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
       gap: 1.5rem;
       margin-top: 1.5rem;
     }
 
     .project-card {
-      background-color: #f0f4ff;
+      background-color: #f4f7ff;
       border-radius: 8px;
       padding: 1.5rem;
       text-decoration: none;
       color: #333;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
       transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .project-card h3 {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      font-size: 1.2rem;
+      font-weight: bold;
     }
 
     .project-card:hover {
@@ -117,6 +199,7 @@
     .project-card h3 {
       margin-top: 0;
       margin-bottom: 0.5rem;
+      font-size: 1.5 rem;
     }
 
     .project-skills {
@@ -127,18 +210,22 @@
     }
 
     .project-skills span {
-      background-color: #1e3c72;
+      background-color: #152238;
       color: #fff;
       padding: 0.3rem 0.6rem;
       border-radius: 15px;
       font-size: 0.75rem;
     }
 
+    .card-section h2 {
+      font-size: 2.5rem;
+    }
+
     .resume-button {
       display: inline-block;
       margin-top: 1rem;
       padding: 0.6rem 1.2rem;
-      background-color: #1e3c72;
+      background-color: #152238;
       color: #fff;
       border: none;
       border-radius: 5px;
@@ -147,7 +234,7 @@
     }
 
     .resume-button:hover {
-      background-color: #162c5d;
+      background-color: #365392;
     }
 
     footer {
@@ -176,7 +263,7 @@
     .logo-nav {
       height: 100px;
       width: 200px;
-      background-color: #000; /* black background */
+      background-color: #000; 
       border-radius: 50%;
       overflow: hidden;
       display: flex;
@@ -186,12 +273,12 @@
       top: 10px;
       left: 20px;
       z-index: 1001;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* optional */
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); 
     }
 
 
     .logo-nav img {
-      height: 100px;   /* smaller than container */
+      height: 100px; /
       width: 180px;
       object-fit: cover;
       border-radius: 50%;
@@ -205,7 +292,7 @@
     }
 
     .logo-fixed img {
-      height: 100px;  /* Adjust this value to make it smaller or larger */
+      height: 100px; 
       width: auto;
       border-radius: 50%;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -220,6 +307,20 @@
       box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
     }
 
+    /* colors */
+    .blue-fade-left {
+      background: linear-gradient(to right, #9abdff, #ffffff); /* change these colors as needed */
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .blue-fade-right {
+      background: linear-gradient(to left, #9abdff, #ffffff); /* change these colors as needed */
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* animations */
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -238,6 +339,10 @@
 
   </style>
 </head>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+/>
 <body>
   <a href="#" class="logo-fixed">
   <img src="images/mattlogo.png" alt="Matthew Diep Logo" />
@@ -246,8 +351,8 @@
   <nav>
     <div class="tabs">
       <a href="#projects" class="tab-link">Projects</a>
-      <a href="#education" class="tab-link">Education</a>
       <a href="#experience" class="tab-link">Experience</a>
+      <a href="#education" class="tab-link">Education</a>
       <a href="#resume" class="tab-link">Resume</a>
       <a href="#contact" class="tab-link">Contact</a>
     </div>
@@ -259,24 +364,22 @@
         <img src="images/DSC02080.jpg" alt="Matt's Photo" />
       </div>
       <div class="intro-text fade-in-delay">
-        <h1>I'm Matt</h1>
+        <h1 class= "blue-fade-right">Hello!</h1>
+        <h1 class= "blue-fade-left">I'm Matt</h1>
         <p>Welcome to my website!</p>
       </div>
     </div>
   </header>
 
-  <section id="about">
+  <section id="about" class="about-section">
   <h2>About Me</h2>
   <p>
-    I'm Matt.
-  </p>
-  <p>
-    hello hello hello hello.
+    I'm a student at UC Berkeley passionate about data science, analytics and always open to learn new things!
   </p>
   </section>
 
 
-  <section id="projects">
+  <section id="projects" class="projects-section">
     <h2>Projects</h2>
     <div class="project-grid">
       <a class="project-card" href="https://github.com/mattdiep15/projects/blob/main/US_Regional_Sales_EDA_LR_Project.ipynb" target="_blank">
@@ -322,13 +425,7 @@
     </div>
   </section>
 
-  <section id="education">
-    <h2>Education</h2>
-    <p><strong>UC Berkeley</strong> — B.A. in Economics, Minor in Data Science (2024–2026, 3.85 GPA)</p>
-    <p><strong>Orange Coast College</strong> — Architecture & Economics (2022–2024, 4.0 GPA)</p>
-  </section>
-
-  <section id="experience">
+  <section id="experience" class="card-section">
     <h2>Experience</h2>
     <p><strong>VC Deal Sourcing Externship in Collaboration with Ignite XL</strong> — (2024)</p>
     <ul>
@@ -347,15 +444,21 @@
     </ul>
   </section>
 
-  <section id="resume">
+  <section id="education" class="card-section">
+    <h2>Education</h2>
+    <p><strong>UC Berkeley</strong> — B.A. in Economics, Minor in Data Science (2024–2026, 3.85 GPA)</p>
+    <p><strong>Orange Coast College</strong> — Architecture & Economics (2022–2024, 4.0 GPA)</p>
+  </section>
+
+  <section id="resume" class="card-section">
     <h2>Resume</h2>
     <p>You can download my resume using the button below:</p>
-    <a href="Your_Resume_Link_Here.pdf" target="_blank" class="resume-button">
+    <a href="https://docs.google.com/document/d/1Hkpq5IFQXoEbVdSNWLQopGuJX12h_5ght_T3oZZ-EUA/edit?usp=sharing" target="_blank" class="resume-button">
       <i class="fas fa-download"></i> Download Resume
     </a>
   </section>
 
-  <section id="contact">
+  <section id="contact" class="card-section">
     <h2>Contact</h2>
     <p>Email: <a href="mailto:matthewdiep15@gmail.com">matthewdiep15@gmail.com</a></p>
     <p>GitHub: <a href="https://github.com/mattdiep15" target="_blank">github.com/mattdiep15</a></p>
@@ -364,9 +467,17 @@
 
   <footer>
     <div class="social-icons">
-      <a href="https://github.com/mattdiep15" target="_blank"><i class="fab fa-github"></i></a>
-      <a href="https://www.linkedin.com/in/matthewdiep15/" target="_blank"><i class="fab fa-linkedin"></i></a>
+      <a href="https://github.com/mattdiep15" target="_blank" aria-label="GitHub">
+        <i class="fab fa-github"></i>
+      </a>
+      <a href="https://www.linkedin.com/in/matthewdiep15/" target="_blank" aria-label="LinkedIn">
+        <i class="fab fa-linkedin"></i>
+      </a>
+      <a href="mailto:matthewdiep15@gmail.com" target="_blank" aria-label="Email">
+        <i class="fas fa-envelope"></i>
+      </a>
     </div>
+    <p style="margin-top: 1rem;">Designed by Matthew</p>
   </footer>
 
 </body>
