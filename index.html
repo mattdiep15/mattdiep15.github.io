@@ -394,6 +394,97 @@
       max-height: 500px; /* adjust as needed */
     }
 
+    html {
+      height: 100%;
+      background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+      /* overflow: hidden; */
+    }
+
+    #stars, #stars:after {
+      content: " ";
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      background: transparent;
+      box-shadow: 
+        747px 1944px #FFF, 258px 198px #FFF, 685px 1390px #FFF, 1110px 280px #FFF,
+        889px 610px #FFF, 1719px 431px #FFF, 1889px 1618px #FFF, 172px 1170px #FFF,
+        929px 412px #FFF, 401px 1876px #FFF, 1348px 588px #FFF, 359px 847px #FFF,
+        302px 930px #FFF, 538px 1606px #FFF, 1671px 1682px #FFF, 1658px 1827px #FFF,
+        1134px 345px #FFF, 957px 197px #FFF, 339px 70px #FFF, 1131px 1199px #FFF,
+        1121px 1986px #FFF, 1764px 1747px #FFF, 1641px 887px #FFF, 1242px 788px #FFF,
+        956px 1841px #FFF, 1024px 1259px #FFF, 126px 3px #FFF;
+      animation: animStar 50s linear infinite;
+      top: 0;
+    }
+
+    #stars:after {
+      top: 2000px;
+    }
+
+    #stars2, #stars2:after {
+      content: " ";
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: transparent;
+      box-shadow: 
+        856px 116px #FFF, 1245px 1421px #FFF, 543px 876px #FFF, 126px 433px #FFF,
+        1802px 1880px #FFF, 382px 1185px #FFF;
+      animation: animStar 100s linear infinite;
+      top: 0;
+    }
+
+    #stars2:after {
+      top: 2000px;
+    }
+
+    #stars3, #stars3:after {
+      content: " ";
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: transparent;
+      box-shadow: 
+        271px 142px #FFF, 1011px 742px #FFF, 1999px 1269px #FFF, 314px 982px #FFF;
+      animation: animStar 150s linear infinite;
+      top: 0;
+    }
+
+    #stars3:after {
+      top: 2000px;
+    }
+
+    #title {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      margin-top: -60px;
+      padding-left: 10px;
+      color: #FFF;
+      text-align: center;
+      font-family: 'Lato', sans-serif;
+      font-weight: 300;
+      font-size: 50px;
+      letter-spacing: 10px;
+    }
+
+    #title span {
+      background: -webkit-linear-gradient(white, #38495a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    @keyframes animStar {
+      from {
+        transform: translateY(0px);
+      }
+      to {
+        transform: translateY(-2000px);
+      }
+    }
+
   </style>
 </head>
 <link
@@ -401,6 +492,10 @@
   href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
 />
 <body>
+  <div id="stars"></div>
+  <div id="stars2"></div>
+  <div id="stars3"></div>
+
   <a href="#" class="logo-fixed">
   <img src="images/mattlogo.png" alt="Matthew Diep Logo" />
   </a>
