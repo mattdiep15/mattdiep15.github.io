@@ -252,6 +252,93 @@
       background-color: #365392;
     }
 
+        /* Burger cards with clickable expand-to-reveal details */
+    .exp-stack { display:flex; flex-direction:column; gap:1rem; margin-top:1rem; }
+
+    .exp-burger {
+      display: grid;
+      grid-template-columns: 84px 1fr 120px;
+      gap: 1rem;
+      align-items: center;
+      padding: 1.1rem 1.25rem;
+      background-color: #f8f9fc;  /* Same as education-card */
+      border-radius: 8px;  /* Changed from 12px to match education */
+      box-shadow: none;  /* Remove shadow - education cards don't have it */
+      border-left: 4px solid transparent;
+      color: #333;
+      cursor: pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease, border-left-color 180ms ease, background-color 180ms ease;
+      outline: none;
+    }
+
+    /* compact front-only view uses less vertical space automatically because details hidden */
+    .exp-burger .exp-front { display:block; }
+
+    /* icon */
+    .exp-left { display:flex; align-items:center; justify-content:center; }
+    .exp-icon {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0; /* optional, remove rounded corners */
+      background: transparent; /* no background */
+      box-shadow: none; /* remove shadow */
+      border: none; /* remove border */
+      padding: 0;
+    }
+
+    /* center: front + details */
+    .exp-center { min-width:0; }
+    .exp-title { font-weight:700; font-size:1.05rem; margin-bottom:3px; }
+    .exp-company { color: var(--muted); font-size:0.95rem; }
+
+    /* details starts collapsed */
+    .exp-details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 300ms ease, padding 200ms ease;
+      padding-top: 0;
+    }
+
+    /* icon at right */
+    .exp-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+    .exp-date { color: var(--muted); font-size:0.95rem; white-space:nowrap; }
+    .exp-toggle-icon { color: var(--muted); transition: transform 220ms ease; }
+
+    /* when open - reveal details */
+    .exp-burger.open {
+      transform: translateY(-6px);
+      box-shadow: 0 14px 30px rgba(2,6,23,0.45);
+      border-left-color: var(--accent);
+    }
+    .exp-burger.open .exp-details {
+      /* allow enough space for your content; adjust 600px if you have longer lists */
+      max-height: 600px;
+      padding-top: 0.6rem;
+    }
+    .exp-burger.open .exp-toggle-icon { transform: rotate(180deg); color: var(--accent); }
+
+    /* accessibility focus */
+    .exp-burger:focus { box-shadow: 0 12px 24px rgba(2,6,23,0.35); border-left-color: var(--accent); }
+
+    /* responsive: stack vertically on small screens */
+    @media (max-width:740px) {
+      .exp-burger { grid-template-columns: 1fr; gap:0.6rem; padding:0.9rem; }
+      .exp-right { align-items:flex-start; justify-content:flex-start; }
+      .exp-icon { width:48px; height:48px; min-width:48px; }
+    }
+
+    /* ensure icons (img or svg) fit nicely inside the icon box */
+    .exp-icon img,
+    .exp-icon svg {
+      width: 80px;
+      height: 80px;
+      display: block;
+      object-fit: contain;
+    }
+
     footer {
       text-align: center;
       padding: 2rem 1rem;
@@ -616,29 +703,96 @@
   </section>
 
   <section id="experience" class="card-section">
-    <h2>Experience</h2>
-    <p><strong>Venture Capital Analyst Intern</strong> — (2024)</p>
-    <ul>
-      <li>Evaluated 100+ pre-seed and seed-stage startups across multiple industries, analyzing competitive landscapes, 
-        market trends, customer needs, and growth potential to identify promising early-stage investment opportunities.
-</li>
-      <li>Authored and presented investment briefs and one-page memos by synthesizing qualitative insights and quantitative 
-        metrics into recommendations, supporting shortlisting decisions and presenting an opportunity to the Ignite XL team.</li>
-    </ul>
-    <p><strong>Exceptional STEAM</strong> — Co-founder & Instructor (2020–2024)</p>
-    <ul>
-      <li>Founded a nonprofit to address limited STEAM access, delivering 9-week camps for 30+ Title I students in the U.S. 
-        and 12 in Taiwan and India, broadening access to STEAM education across local and international communities.</li>
-      <li>Designed an interactive curriculum with weekly experiments in physics, chemistry, math, and engineering, 
-        and built virtual lab simulations on www.exceptionalsteam.org to expand international accessibility, boosting site usage by 60%</li>
-    </ul>
-    <p><strong>Taiwanese American Student Association</strong> — Internal Vice President (2024–Present)</p>
-    <ul>
-      <li>Planned and coordinated numerous internal events and social gatherings, managing 
-        logistics, communication, and execution to strengthen community bonds and support the overall well-being of 80+ active members, 
-        boosting participation rates by 25%.</li>
-    </ul>
-  </section>
+  <h2 style="margin-bottom:1.2rem;">Experience</h2>
+
+  <div class="exp-stack">
+    <!-- Card 1 -->
+    <article class="exp-burger" tabindex="0" role="button" aria-expanded="false">
+      <div class="exp-left">
+        <div class="exp-icon">
+          <img src="images\ignitexl.png" alt="Ignite XL logo" />
+        </div>
+      </div>
+
+      <div class="exp-center">
+        <!-- FRONT: always visible -->
+        <div class="exp-front">
+          <div class="exp-title">Venture Capital Intern</div>
+          <div class="exp-company">Ignite XL</div>
+        </div>
+
+        <!-- DETAILS: originally your long text/bullets, hidden until click -->
+        <div class="exp-details" aria-hidden="true">
+          <ul>
+            <li>Evaluated 100+ pre-seed and seed-stage startups across multiple industries, analyzing competitive landscapes, market trends, customer needs, and growth potential to identify promising early-stage investment opportunities.</li>
+            <li>Authored and presented investment briefs and one-page memos by synthesizing qualitative insights and quantitative metrics into recommendations, supporting shortlisting decisions and presenting an opportunity to the Ignite XL team.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="exp-right">
+        <div class="exp-date">2024</div>
+        <div class="exp-toggle-icon" aria-hidden="true"><i class="fas fa-chevron-down"></i></div>
+      </div>
+    </article>
+
+    <!-- Card 2 -->
+    <article class="exp-burger" tabindex="0" role="button" aria-expanded="false">
+      <div class="exp-left">
+        <div class="exp-icon">
+          <img src="images\exceptionalsteam.png" alt="Exceptional STEAM logo" />
+        </div>
+      </div>
+
+      <div class="exp-center">
+        <div class="exp-front">
+          <div class="exp-title">Co-founder &amp; Instructor</div>
+          <div class="exp-company">Exceptional STEAM</div>
+        </div>
+
+        <div class="exp-details" aria-hidden="true">
+          <ul>
+            <li>Founded a nonprofit to address limited STEAM access, delivering 9-week camps for 30+ Title I students in the U.S. and 12 in Taiwan and India, broadening access to STEAM education across local and international communities.</li>
+            <li>Designed an interactive curriculum with weekly experiments in physics, chemistry, math, and engineering, and built virtual lab simulations on www.exceptionalsteam.org to expand international accessibility, boosting site usage by 60%.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="exp-right">
+        <div class="exp-date">2020–2024</div>
+        <div class="exp-toggle-icon" aria-hidden="true"><i class="fas fa-chevron-down"></i></div>
+      </div>
+    </article>
+
+    <!-- Card 3 -->
+    <article class="exp-burger" tabindex="0" role="button" aria-expanded="false">
+      <div class="exp-left">
+        <div class="exp-icon">
+          <img src="images\TASA_black-01 (1).png" alt="Exceptional STEAM logo" />
+        </div>
+      </div>
+
+      <div class="exp-center">
+        <div class="exp-front">
+          <div class="exp-title">Internal Vice President</div>
+          <div class="exp-company">Taiwanese American Student Association</div>
+        </div>
+
+        <div class="exp-details" aria-hidden="true">
+          <ul>
+            <li>Planned and coordinated numerous internal events and social gatherings, managing logistics, communication, and execution to strengthen community bonds and support the overall well-being of 80+ active members, boosting participation rates by 25%.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="exp-right">
+        <div class="exp-date">2024–Present</div>
+        <div class="exp-toggle-icon" aria-hidden="true"><i class="fas fa-chevron-down"></i></div>
+      </div>
+    </article>
+  </div>
+</section>
+
 
   <section id="education" class="card-section">
     <h2>Education</h2>
@@ -713,6 +867,35 @@
       section.classList.toggle("show");
     }
   </script>
+  <script>
+  (function(){
+    const cards = document.querySelectorAll('.exp-burger');
+
+    function toggleCard(el) {
+      const isOpen = el.classList.toggle('open');
+      el.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      const details = el.querySelector('.exp-details');
+      if (details) details.setAttribute('aria-hidden', !isOpen);
+    }
+
+    cards.forEach(card => {
+      // click anywhere on card toggles
+      card.addEventListener('click', (e) => {
+        // avoid toggling when clicking links inside details (if you later add)
+        if (e.target.closest('a')) return;
+        toggleCard(card);
+      });
+
+      // keyboard support: Enter or Space toggles
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleCard(card);
+        }
+      });
+    });
+  })();
+</script>
 
 </body>
 </html>
