@@ -4,8 +4,55 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Matthew Diep | Portfolio</title>
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
   <style>
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('Fonts/Satoshi-Regular.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('Fonts/Satoshi-Light.otf') format('opentype');
+      font-weight: 300;
+      font-style: normal;
+    }
+
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('Fonts/Satoshi-Medium.otf') format('opentype');
+      font-weight: 500;
+      font-style: normal;
+    }
+
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('Fonts/Satoshi-Bold.otf') format('opentype');
+      font-weight: bold;
+      font-style: normal;
+    }
+
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('Fonts/Satoshi-Black.otf') format('opentype');
+      font-weight: 900;
+      font-style: normal;
+    }
+
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('Fonts/Satoshi-Italic.otf') format('opentype');
+      font-weight: normal;
+      font-style: italic;
+    }
+
+    @font-face {
+      font-family: 'Satoshi';
+      src: url('Fonts/Satoshi-BoldItalic.otf') format('opentype');
+      font-weight: bold;
+      font-style: italic;
+    }
     * {
       box-sizing: border-box;
       scroll-behavior: smooth;
@@ -13,23 +60,23 @@
 
     body {
       margin: 0;
-      font-family: 'Quicksand', sans-serif;
+      font-family: 'Satoshi', sans-serif;
       background-color: #f5f7fa;
       color: #333;
     }
 
     h1 {
-      font-family: 'Quicksand', sans-serif;
+      font-family: 'Satoshi', sans-serif;
       font-weight: 650;
     }
 
     h2 {
-      font-family: 'Quicksand', sans-serif;
+      font-family: 'Satoshi', sans-serif;
       font-weight: 500;
     }
 
     h3 {
-      font-family: 'Quicksand', sans-serif;
+      font-family: 'Satoshi', sans-serif;
       font-weight: 300;
     }
 
@@ -43,39 +90,55 @@
     }
 
     header {
-      background: linear-gradient(to bottom, #000 0%, #000 40%, #f5f7fa 100%);
+      background: linear-gradient(to bottom, #000 0%, #000 55%, #1a1a1a 70%, #f5f7fa 100%);
       color: #fff;
       min-height: 900px;
       display: flex;
       align-items: flex-start;  
       justify-content: center;
-      padding-top: 12rem; 
+      padding-top: 8rem; 
     }
 
     .header-content {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 16rem;
       flex-wrap: wrap;
-      text-align: left;
-    }
-
-    .profile-photo {
-      order: 2;
+      text-align: center;
     }
 
     .intro-text {
-      order: 1;
+      text-align: center;
+    }
+
+    .profile-photo {
+      margin-bottom: 2rem;
+      margin-top: 3rem;
+      transition: transform 0.2s ease-out;
+      will-change: transform;
+    }
+
+    .profile-photo img {
+      width: 320px;          
+      height: 320px;   
+      object-fit: cover;     
+      border-radius: 50%;     
+      border: 4px solid white; 
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
     }
 
     header h1 {
       font-size: 5rem;
       margin-bottom: 1rem;
+      transition: transform 0.2s ease-out;
+      will-change: transform;
+      display: inline-block;
     }
 
     header p {
-      font-size: 2rem; 
+      font-size: 2rem;
+      transition: transform 0.2s ease-out;
+      will-change: transform;
     }
 
     nav {
@@ -380,7 +443,7 @@
 
 
     .logo-nav img {
-      height: 100px; /
+      height: 100px;
       width: 180px;
       object-fit: cover;
       border-radius: 50%;
@@ -560,7 +623,7 @@
       padding-left: 10px;
       color: #FFF;
       text-align: center;
-      font-family: 'Lato', sans-serif;
+      font-family: 'Satoshi', sans-serif;
       font-weight: 300;
       font-size: 50px;
       letter-spacing: 10px;
@@ -613,12 +676,11 @@
 
   <header>
     <div class="header-content">
-      <div class="profile-photo fade-in">
-        <img src="images/DSC02080.jpg" alt="Matt's Photo" />
-      </div>
       <div class="intro-text fade-in-delay">
-        <h1 class= "blue-fade-right">Hello!</h1>
-        <h1 class= "blue-fade-left">I'm Matt</h1>
+        <div class="profile-photo fade-in">
+          <img src="images/DSC02080.jpg" alt="Matt's Photo" />
+        </div>
+        <h1 class="blue-fade-right">Hi! I'm Matthew</h1>
         <p>Welcome to my website!</p>
       </div>
     </div>
@@ -627,7 +689,7 @@
   <section id="about" class="about-section">
   <h2>About Me</h2>
   <p>
-    I'm a student at UC Berkeley passionate about data science, analytics and always open to learn new things!
+    Passionate data science student at UC Berkeley, always eager to learn new things.
   </p>
   </section>
 
@@ -898,6 +960,59 @@
     });
   })();
 </script>
+  <script>
+    // Subtle cursor parallax effect for header text and photo
+    (function() {
+      const header = document.querySelector('header');
+      const profilePhoto = document.querySelector('.profile-photo');
+      const introHeading = document.querySelector('.intro-text h1');
+      const introParagraph = document.querySelector('.intro-text p');
+      
+      if (!header || !profilePhoto || !introHeading || !introParagraph) return;
+
+      let targetX = 0;
+      let targetY = 0;
+      let currentX = 0;
+      let currentY = 0;
+
+      header.addEventListener('mousemove', (e) => {
+        const rect = header.getBoundingClientRect();
+        // Normalize position to -1 to 1 range (centered)
+        targetX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+        targetY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+      });
+
+      header.addEventListener('mouseleave', () => {
+        targetX = 0;
+        targetY = 0;
+      });
+
+      function animate() {
+        // Smooth interpolation for fluid movement
+        currentX += (targetX - currentX) * 0.08;
+        currentY += (targetY - currentY) * 0.08;
+
+        // Apply subtle parallax transforms with layered depth
+        // Photo moves the most (foreground), heading moves medium, paragraph moves least
+        const photoMoveX = currentX * 12; // Max 12px horizontal
+        const photoMoveY = currentY * 8; // Max 8px vertical
+        
+        const headingMoveX = currentX * 15; // Max 15px horizontal
+        const headingMoveY = currentY * 10; // Max 10px vertical
+        
+        const paraMoveX = currentX * 8; // Max 8px horizontal (less than heading)
+        const paraMoveY = currentY * 5; // Max 5px vertical (less than heading)
+        
+        profilePhoto.style.transform = `translate(${photoMoveX}px, ${photoMoveY}px)`;
+        introHeading.style.transform = `translate(${headingMoveX}px, ${headingMoveY}px)`;
+        introParagraph.style.transform = `translate(${paraMoveX}px, ${paraMoveY}px)`;
+
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    })();
+  </script>
 
 </body>
 </html>
