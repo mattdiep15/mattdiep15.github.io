@@ -120,9 +120,10 @@
     }
 
     .profile-photo img {
-      width: 320px;          
-      height: 320px;   
-      object-fit: cover;     
+      width: 360px;          
+      height: 360px;   
+      object-fit: cover;
+      object-position: 60%, 30%; /* Adjust these values: first is horizontal (left/center/right or %), second is vertical (top/center/bottom or %) */
       border-radius: 50%;     
       border: 4px solid white; 
       box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
@@ -464,15 +465,6 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
-    .profile-photo img {
-      width: 320px;          
-      height: 320px;   
-      object-fit: cover;     
-      border-radius: 50%;     
-      border: 4px solid white; 
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
-    }
-
     .education-card {
       display: flex;
       align-items: center;
@@ -679,7 +671,7 @@
     <div class="header-content">
       <div class="intro-text fade-in-delay">
         <div class="profile-photo fade-in">
-          <img src="images/DSC02080.jpg" alt="Matt's Photo" />
+          <img src="images/DSC05060.jpg" alt="Matt's Photo" />
         </div>
         <h1 class="blue-fade-right">Hi! I'm Matthew</h1>
         <p>Welcome to my website!</p>
