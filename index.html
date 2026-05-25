@@ -1119,7 +1119,10 @@
       var cx     = rect.left + rect.width  / 2;
       var cy     = rect.top  + rect.height / 2;
       var radius = rect.width / 2;
-      var colors = ['#4d96ff','#1a6fff','#74b3ff','#0047cc','#93c5fd','#2563eb','#60a5fa'];
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      var colors = isDark
+        ? ['#ffffff','#f0f0f0','#e8e8e8','#d4d4d4','#fafafa']
+        : ['#0d0d0d','#222222','#333333','#111111','#1a1a1a'];
       var count  = 22;
       for (var i = 0; i < count; i++) {
         (function (idx) {
