@@ -42,13 +42,14 @@
       left: 0;
       width: 6px;
       height: 6px;
-      background: var(--black);
+      background: #ffffff;
       border-radius: 50%;
       pointer-events: none;
       z-index: 9999;
       transform: translate(-50%, -50%);
       transition: transform 0.2s cubic-bezier(0.1, 0, 0.3, 1), opacity 0.3s;
       will-change: left, top;
+      mix-blend-mode: difference;
     }
 
     #cursor-dot.cursor-hover {
@@ -234,7 +235,7 @@
       height: 100%;
       object-fit: cover;
       object-position: center;
-      transition: opacity 0.35s cubic-bezier(0.1, 0, 0.3, 1);
+      transition: transform 0.18s ease, opacity 0.35s cubic-bezier(0.1, 0, 0.3, 1);
     }
 
     .hero-name {
@@ -712,6 +713,53 @@
       .contact-icons { gap: 1.2rem; }
       .tl-date { font-size: 0.78rem; }
     }
+
+    /* ── DARK MODE ── */
+    body {
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f0f0f;
+      --white: #0f0f0f;
+      --black: #e8e8e8;
+      --grey-dark: #cccccc;
+      --grey-mid: #8a8a8a;
+      --grey-light: #2a2a2a;
+    }
+
+    [data-theme="dark"] .tl-card             { background: #1c1c1c; }
+    [data-theme="dark"] .tl-card.open        { box-shadow: 0 6px 24px rgba(0,0,0,0.5); }
+    [data-theme="dark"] .project-card:hover  { background-color: #1c1c1c; }
+    [data-theme="dark"] .project-skills span { background-color: #272727; color: #8a8a8a; }
+    [data-theme="dark"] .coursework          { background-color: #141414; }
+    [data-theme="dark"] footer               { border-top-color: #222; }
+    [data-theme="dark"] .resume-button       { background-color: #444; }
+    [data-theme="dark"] .resume-button:hover { background-color: #5a5a5a; }
+    [data-theme="dark"] #nav-dropdown        { background: #1c1c1c; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+    [data-theme="dark"] #menu-btn            { color: var(--bg); }
+
+    /* ── THEME TOGGLE BUTTON ── */
+    #theme-btn {
+      position: fixed;
+      top: 1.1rem;
+      left: 1.1rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: transparent;
+      border: 1.5px solid var(--grey-light);
+      color: var(--black);
+      cursor: none;
+      z-index: 1001;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82rem;
+      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    #theme-btn:hover { background: var(--grey-light); }
   </style>
 </head>
 <body>
@@ -725,6 +773,7 @@
   </nav>
 
   <button id="menu-btn" aria-label="Open menu"><i class="fas fa-bars"></i></button>
+  <button id="theme-btn" aria-label="Toggle dark mode"><i class="fas fa-moon"></i></button>
 
   <div id="nav-dropdown">
     <a href="#projects" class="tab-link">Projects</a>
@@ -736,7 +785,7 @@
 
   <header>
     <div class="hero-photo-row">
-      <div class="hero-circle-wrap" tabindex="0" id="hero-circle" onclick="cycleHeroPhoto()">
+      <div class="hero-circle-wrap" tabindex="0" id="hero-circle" onclick="cycleHeroPhoto(event)">
         <img id="hero-img" src="images/PalaceFineArts.jpg" alt="Photo" />
       </div>
       <div class="hero-arrow-hint" id="hero-arrow-hint">
@@ -1027,7 +1076,7 @@
   </section>
 
   <footer>
-    <p style="color: #ffffff;">Designed by Matthew</p>
+    <p style="color: var(--bg);">Designed by Matthew</p>
   </footer>
 
   <div id="cursor-dot"></div>
@@ -1038,18 +1087,66 @@
     }
 
     var _heroPhotos = ['images/PalaceFineArts.jpg', 'images/WRportrait.jpg', 'images/abandonedhutphoto.jpg', 'images/centered_pfp.jpg'];
-    var _heroIndex  = 0;
+    var _heroIndex   = 0;
+    var _heroFlipping = false;
 
-    function cycleHeroPhoto() {
+    function cycleHeroPhoto(e) {
+      if (_heroFlipping) return;
+      _heroFlipping = true;
+
       var hint = document.getElementById('hero-arrow-hint');
       if (hint) hint.classList.add('hide');
+
       var img = document.getElementById('hero-img');
-      img.style.opacity = '0';
+      spawnParticles(document.getElementById('hero-circle'));
+
+      // Fade out
+      img.style.transition = 'opacity 0.28s ease-in';
+      img.style.opacity    = '0';
+
       setTimeout(function () {
         _heroIndex = (_heroIndex + 1) % _heroPhotos.length;
         img.src = _heroPhotos[_heroIndex];
-        img.style.opacity = '1';
-      }, 350);
+        // Fade in
+        img.style.transition = 'opacity 0.28s ease-out';
+        img.style.opacity    = '1';
+        setTimeout(function () { _heroFlipping = false; }, 280);
+      }, 280);
+    }
+
+    function spawnParticles(circleEl) {
+      var rect   = circleEl.getBoundingClientRect();
+      var cx     = rect.left + rect.width  / 2;
+      var cy     = rect.top  + rect.height / 2;
+      var radius = rect.width / 2;
+      var colors = ['#4d96ff','#1a6fff','#74b3ff','#0047cc','#93c5fd','#2563eb','#60a5fa'];
+      var count  = 22;
+      for (var i = 0; i < count; i++) {
+        (function (idx) {
+          var angle = (idx / count) * 2 * Math.PI + (Math.random() - 0.5) * 0.3;
+          var sx    = cx + Math.cos(angle) * radius;
+          var sy    = cy + Math.sin(angle) * radius;
+          var p     = document.createElement('div');
+          var size  = 4 + Math.random() * 5;
+          p.style.cssText = 'position:fixed;left:' + sx + 'px;top:' + sy + 'px;'
+            + 'width:' + size + 'px;height:' + size + 'px;border-radius:50%;'
+            + 'background:' + colors[Math.floor(Math.random() * colors.length)] + ';'
+            + 'pointer-events:none;z-index:9998;';
+          document.body.appendChild(p);
+
+          var dist = 50 + Math.random() * 80;
+          var dx   = Math.cos(angle) * dist;
+          var dy   = Math.sin(angle) * dist;
+          var dur  = 480 + Math.random() * 280;
+
+          var anim = p.animate([
+            { transform: 'translate(-50%,-50%)', opacity: 1 },
+            { transform: 'translate(calc(-50% + ' + dx + 'px),calc(-50% + ' + dy + 'px)) scale(0.3)', opacity: 0 }
+          ], { duration: dur, easing: 'cubic-bezier(0.2,0.9,0.4,1)', fill: 'forwards' });
+
+          anim.onfinish = function () { p.remove(); };
+        })(i);
+      }
     }
   </script>
 
@@ -1187,6 +1284,26 @@
         }
         requestAnimationFrame(loop);
       })();
+    })();
+  </script>
+
+  <script>
+    // Dark mode toggle
+    (function () {
+      var root = document.documentElement;
+      var btn  = document.getElementById('theme-btn');
+
+      function applyTheme(dark) {
+        root.setAttribute('data-theme', dark ? 'dark' : 'light');
+        btn.querySelector('i').className = dark ? 'fas fa-sun' : 'fas fa-moon';
+        localStorage.setItem('theme', dark ? 'dark' : 'light');
+      }
+
+      applyTheme(localStorage.getItem('theme') === 'dark');
+
+      btn.addEventListener('click', function () {
+        applyTheme(root.getAttribute('data-theme') !== 'dark');
+      });
     })();
   </script>
 
