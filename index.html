@@ -529,12 +529,18 @@
 
     @media (max-width: 740px) {
       .timeline::before { display: none; }
-      .tl-entry { grid-template-columns: 56px 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+      .tl-entry { grid-template-columns: 80px 1fr; gap: 1rem; margin-bottom: 1.5rem; }
       .tl-mid { display: none; }
       .tl-l { padding: 0; justify-content: flex-start; grid-row: 1; }
       .tl-r { padding: 0; grid-row: 1; grid-column: 2; }
+      /* Entries where card is left, logo is right — swap columns */
+      .tl-l:has(.tl-card) { grid-column: 2; }
+      .tl-r:has(.tl-logo) { grid-column: 1; }
+      /* Normalize card border to left side on mobile */
+      .tl-l .tl-card { border-right: none; border-left: 3px solid transparent; }
+      .tl-l .tl-card.open { border-left-color: var(--black); }
       .tl-entry .tl-l .tl-logo,
-      .tl-entry .tl-r .tl-logo { width: 80px; height: 80px; }
+      .tl-entry .tl-r .tl-logo { width: 80px !important; height: 80px !important; }
     }
 
     /* ── EDUCATION ── */
@@ -559,6 +565,15 @@
 
     .school-icon { width: 44px; height: auto; border-radius: 4px; }
 
+    .education-card > div {
+      font-size: 0.97rem;
+      color: var(--black);
+    }
+
+    .education-card > div strong {
+      font-weight: 500;
+    }
+
     .coursework {
       max-height: 0;
       overflow: hidden;
@@ -567,14 +582,13 @@
       padding: 0 1rem;
       margin-bottom: 0.5rem;
       border-left: 2px solid var(--grey-light);
-      font-size: 0.88rem;
       color: var(--grey-mid);
     }
 
     .coursework.show { max-height: 500px; padding-top: 0.5rem; }
-    .coursework-column { flex: 1; }
-    .coursework-column + .coursework-column { margin-top: 1rem; }
-    .coursework-column ul { padding-left: 1rem; }
+    .coursework-column { flex: 1; min-width: 180px; }
+    .coursework-column p { font-size: 0.86rem; font-weight: 500; color: var(--grey-mid); margin-bottom: 0.3rem; }
+    .coursework-column ul { padding-left: 1.1rem; margin: 0; font-size: 0.86rem; line-height: 1.8; color: var(--grey-mid); }
 
     /* ── RESUME ── */
     .resume-button {
@@ -680,9 +694,23 @@
     }
 
     @media (max-width: 768px) {
-      .hero-sub { left: 2rem; }
       nav { padding: 1.5rem 1.5rem; gap: 1.2rem; }
-      .project-grid { grid-template-columns: 1fr; }
+
+      /* Project cards stack vertically */
+      .project-card { flex-direction: column; }
+      .project-image { width: 100%; height: 180px; border-radius: 2px 2px 0 0; }
+
+      /* Experience card head allows wrapping */
+      .tl-card-head { flex-wrap: wrap; gap: 0.5rem; }
+
+      /* More room for stacked coursework columns */
+      .tl-card.open .tl-details { max-height: 900px; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-name { font-size: 2.2rem; }
+      .contact-icons { gap: 1.2rem; }
+      .tl-date { font-size: 0.78rem; }
     }
   </style>
 </head>
@@ -924,37 +952,50 @@
   <section id="education" class="card-section reveal">
     <span class="section-label">03 — Education</span>
 
-    <div class="education-card" tabindex="0" onclick="toggleCoursework('berkeley-coursework')">
-      <img src="images/berkeley_icon.svg" alt="UC Berkeley Logo" class="school-icon" />
-      <div>
-        <strong>UC Berkeley</strong> — B.A. of Data Science &amp; Economics (2024–2026)
-      </div>
-    </div>
-
-    <div class="coursework" id="berkeley-coursework">
-      <div class="coursework-column">
-        <p><strong>Data Science Coursework</strong></p>
-        <ul>
-          <li>Stat 20 - Introduction to Probability and Statistics</li>
-          <li>Data C88C - Computational Structures in Data Science</li>
-          <li>DIGHUM 100 - Ethics and Methods in Data Science</li>
-          <li>CS61B - Data Structures</li>
-          <li>Math 54 - Linear Algebra</li>
-          <li>Data 100 - Data Analysis and Regression</li>
-          <li>Data 140 - Probability for Data Science</li>
-        </ul>
-      </div>
-      <div class="coursework-column">
-        <p><strong>Economics Coursework</strong></p>
-        <ul>
-          <li>Econ 100A - Intermediate Microeconomics</li>
-          <li>Econ 100B - Intermediate Macroeconomics</li>
-          <li>Econ 140 - Econometrics</li>
-          <li>Econ 110 - Game Theory</li>
-          <li>Econ 165 - Money and Banking</li>
-          <li>Econ 151 - Labor Economics</li>
-          <li>Econ 119 - Behavioral Economics</li>
-        </ul>
+    <div style="margin-top: 2.5rem;">
+      <div class="tl-card" tabindex="0" role="button" aria-expanded="false">
+        <div class="tl-card-head">
+          <div class="tl-info" style="display:flex;align-items:center;gap:0.75rem;">
+            <img src="images/berkeley_icon.svg" alt="UC Berkeley Logo" class="school-icon" />
+            <div>
+              <div class="tl-title">UC Berkeley</div>
+              <div class="tl-company">B.A. Data Science &amp; B.A. Economics</div>
+            </div>
+          </div>
+          <div class="tl-meta">
+            <span class="tl-date">2024–2026</span>
+            <span class="tl-chevron"><i class="fas fa-chevron-down"></i></span>
+          </div>
+        </div>
+        <div class="tl-details" aria-hidden="true">
+          <div style="display:flex;flex-wrap:wrap;gap:1.5rem;align-items:flex-start;">
+            <div class="coursework-column">
+              <p><strong>Data Science Coursework</strong></p>
+              <ul>
+                <li>Stat 20 - Introduction to Probability and Statistics</li>
+                <li>Data C88C - Computational Structures in Data Science</li>
+                <li>DIGHUM 100 - Ethics and Methods in Data Science</li>
+                <li>CS61B - Data Structures</li>
+                <li>Math 54 - Linear Algebra</li>
+                <li>Data 100 - Data Analysis and Regression</li>
+                <li>Data 140 - Probability for Data Science</li>
+                <li>CS 189 - Machine learning</li>
+              </ul>
+            </div>
+            <div class="coursework-column">
+              <p><strong>Economics Coursework</strong></p>
+              <ul>
+                <li>Econ 100A - Intermediate Microeconomics</li>
+                <li>Econ 100B - Intermediate Macroeconomics</li>
+                <li>Econ 140 - Econometrics</li>
+                <li>Econ 110 - Game Theory</li>
+                <li>Econ 165 - Money and Banking</li>
+                <li>Econ 151 - Labor Economics</li>
+                <li>Econ 119 - Behavioral Economics</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
