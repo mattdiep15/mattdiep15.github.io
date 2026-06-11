@@ -97,7 +97,10 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       position: relative;
-      transition: opacity 0.3s cubic-bezier(0.1, 0, 0.3, 1);
+      display: inline-block;
+      transition: opacity 0.3s cubic-bezier(0.1, 0, 0.3, 1),
+                  letter-spacing 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .tab-link::after {
@@ -108,7 +111,12 @@
       width: 0;
       height: 1px;
       background: currentColor;
-      transition: width 0.3s cubic-bezier(0.1, 0, 0.3, 1);
+      transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tab-link:hover {
+      letter-spacing: 0.16em;
+      transform: translateY(-1px);
     }
 
     .tab-link:hover::after { width: 100%; }
@@ -133,7 +141,8 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s cubic-bezier(0.1, 0, 0.3, 1),
-                  background-color 0.2s ease;
+                  background-color 0.2s ease,
+                  transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     #menu-btn.visible {
@@ -141,7 +150,7 @@
       pointer-events: auto;
     }
 
-    #menu-btn:hover { background: var(--grey-dark); }
+    #menu-btn:hover { background: var(--grey-dark); transform: scale(1.1); }
 
     /* ── NAV DROPDOWN ── */
     #nav-dropdown {
@@ -181,8 +190,26 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 1.4rem;
+      min-height: 100vh;
+      min-height: 100svh;
       padding: clamp(5rem, 10vh, 8rem) 2rem clamp(2.5rem, 5vh, 4rem);
+    }
+
+    .hero-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.4rem;
+      opacity: 0;
+      transform: scale(0.92) translateY(16px);
+      animation: heroIntro 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.65s forwards;
+    }
+
+    @keyframes heroIntro {
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
     }
 
     .hero-circle-wrap {
@@ -192,6 +219,11 @@
       overflow: hidden;
       flex-shrink: 0;
       will-change: transform;
+      transition: box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .hero-circle-wrap:hover {
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
     }
 
     .hero-name, .hero-sub {
@@ -240,7 +272,11 @@
       height: 100%;
       object-fit: cover;
       object-position: center;
-      transition: transform 0.18s ease, opacity 0.35s cubic-bezier(0.1, 0, 0.3, 1);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s cubic-bezier(0.1, 0, 0.3, 1);
+    }
+
+    .hero-circle-wrap:hover #hero-img {
+      transform: scale(1.08);
     }
 
     .hero-name {
@@ -250,6 +286,26 @@
       color: var(--black);
       letter-spacing: -0.03em;
       line-height: 1;
+      opacity: 0;
+    }
+
+    .hero-name.lettered {
+      opacity: 1;
+    }
+
+    .hero-letter {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(0.25em) scale(0.6);
+      animation: heroLetterReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: var(--letter-delay, 0s);
+    }
+
+    @keyframes heroLetterReveal {
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
     .hero-sub {
@@ -301,15 +357,53 @@
     /* ── SCROLL REVEAL ── */
     .reveal {
       opacity: 0;
-      transform: translateY(22px);
-      transition: opacity 0.7s cubic-bezier(0.1, 0, 0.3, 1),
-                  transform 0.7s cubic-bezier(0.1, 0, 0.3, 1);
+      transform: translateY(40px) scale(0.98);
+      filter: blur(6px);
+      transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                  filter 0.9s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .reveal.visible {
       opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0);
+    }
+
+    /* ── STAGGERED CHILD REVEAL ── */
+    .project-list .project-image-wrap,
+    .project-list .project-card-body,
+    .timeline .tl-entry {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal.visible .project-image-wrap,
+    .reveal.visible .project-card-body,
+    .reveal.visible .tl-entry {
+      opacity: 1;
       transform: translateY(0);
     }
+
+    .reveal.visible .project-card:nth-child(1) .project-image-wrap,
+    .reveal.visible .project-card:nth-child(1) .project-card-body { transition-delay: 0.05s; }
+    .reveal.visible .project-card:nth-child(2) .project-image-wrap,
+    .reveal.visible .project-card:nth-child(2) .project-card-body { transition-delay: 0.1s; }
+    .reveal.visible .project-card:nth-child(3) .project-image-wrap,
+    .reveal.visible .project-card:nth-child(3) .project-card-body { transition-delay: 0.15s; }
+    .reveal.visible .project-card:nth-child(4) .project-image-wrap,
+    .reveal.visible .project-card:nth-child(4) .project-card-body { transition-delay: 0.2s; }
+    .reveal.visible .project-card:nth-child(5) .project-image-wrap,
+    .reveal.visible .project-card:nth-child(5) .project-card-body { transition-delay: 0.25s; }
+    .reveal.visible .project-card:nth-child(6) .project-image-wrap,
+    .reveal.visible .project-card:nth-child(6) .project-card-body { transition-delay: 0.3s; }
+
+    .reveal.visible .tl-entry:nth-child(1) { transition-delay: 0.05s; }
+    .reveal.visible .tl-entry:nth-child(2) { transition-delay: 0.12s; }
+    .reveal.visible .tl-entry:nth-child(3) { transition-delay: 0.19s; }
+    .reveal.visible .tl-entry:nth-child(4) { transition-delay: 0.26s; }
 
     /* ── PROJECTS ── */
     .project-list {
@@ -325,26 +419,41 @@
       text-decoration: none;
       color: var(--black);
       border-bottom: 1px solid var(--grey-light);
-      transition: padding-left 0.3s cubic-bezier(0.1, 0, 0.3, 1),
-                  background-color 0.3s cubic-bezier(0.1, 0, 0.3, 1);
+      transition: padding-left 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  background-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .project-card:hover {
       padding-left: 0.75rem;
       background-color: #f7f7f7;
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    }
+
+    .project-image-wrap {
+      width: 160px;
+      height: 110px;
+      border-radius: 2px;
+      overflow: hidden;
+      flex-shrink: 0;
     }
 
     .project-image {
-      width: 160px;
-      height: 110px;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      border-radius: 2px;
-      flex-shrink: 0;
+      display: block;
       filter: grayscale(15%);
-      transition: filter 0.3s cubic-bezier(0.1, 0, 0.3, 1);
+      transition: filter 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .project-card:hover .project-image { filter: grayscale(0%); }
+    .project-card:hover .project-image {
+      filter: grayscale(0%);
+      transform: scale(1.08);
+    }
 
     .project-card-body { flex: 1; min-width: 0; }
 
@@ -471,6 +580,11 @@
       border-right: 3px solid transparent;
     }
 
+    .tl-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    }
+
     .tl-card-head {
       display: flex;
       justify-content: space-between;
@@ -561,12 +675,14 @@
       border-left: 3px solid transparent;
       margin-bottom: 0.5rem;
       transition: background-color 0.25s cubic-bezier(0.1, 0, 0.3, 1),
-                  border-color 0.25s cubic-bezier(0.1, 0, 0.3, 1);
+                  border-color 0.25s cubic-bezier(0.1, 0, 0.3, 1),
+                  transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .education-card:hover {
       background-color: #efefef;
       border-left-color: var(--black);
+      transform: translateX(6px);
     }
 
     .school-icon { width: 44px; height: auto; border-radius: 4px; }
@@ -611,12 +727,22 @@
       font-weight: 400;
       letter-spacing: 0.06em;
       transition: background-color 0.3s cubic-bezier(0.1, 0, 0.3, 1),
-                  transform 0.3s cubic-bezier(0.1, 0, 0.3, 1);
+                  transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .resume-button:hover {
       background-color: #666;
-      transform: translateY(-1px);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .resume-button i {
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .resume-button:hover i {
+      transform: translateX(4px);
     }
 
     /* ── FOOTER ── */
@@ -659,7 +785,8 @@
       justify-content: center;
       transition: border-color 0.3s cubic-bezier(0.1, 0, 0.3, 1),
                   background 0.3s cubic-bezier(0.1, 0, 0.3, 1),
-                  color 0.3s cubic-bezier(0.1, 0, 0.3, 1);
+                  color 0.3s cubic-bezier(0.1, 0, 0.3, 1),
+                  transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .contact-icon span {
@@ -671,7 +798,7 @@
     }
 
     .contact-icon:hover { transform: translateY(-3px); }
-    .contact-icon:hover i { background: var(--black); border-color: var(--black); color: #fff; }
+    .contact-icon:hover i { background: var(--black); border-color: var(--black); color: #fff; transform: scale(1.1) rotate(-8deg); }
     .contact-icon:hover span { color: var(--black); }
 
     .social-icons { margin-top: 0.5rem; }
@@ -704,7 +831,7 @@
 
       /* Project cards stack vertically */
       .project-card { flex-direction: column; }
-      .project-image { width: 100%; height: 180px; border-radius: 2px 2px 0 0; }
+      .project-image-wrap { width: 100%; height: 180px; border-radius: 2px 2px 0 0; }
 
       /* Experience card head allows wrapping */
       .tl-card-head { flex-wrap: wrap; gap: 0.5rem; }
@@ -734,8 +861,11 @@
     }
 
     [data-theme="dark"] .tl-card             { background: #1c1c1c; }
+    [data-theme="dark"] .tl-card:hover       { box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
     [data-theme="dark"] .tl-card.open        { box-shadow: 0 6px 24px rgba(0,0,0,0.5); }
-    [data-theme="dark"] .project-card:hover  { background-color: #1c1c1c; }
+    [data-theme="dark"] .project-card:hover  { background-color: #1c1c1c; box-shadow: 0 12px 30px rgba(0,0,0,0.4); }
+    [data-theme="dark"] .hero-circle-wrap:hover { box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    [data-theme="dark"] .resume-button:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
     [data-theme="dark"] .project-skills span { background-color: #272727; color: #8a8a8a; }
     [data-theme="dark"] .coursework          { background-color: #141414; }
     [data-theme="dark"] footer               { border-top-color: #222; }
@@ -761,10 +891,11 @@
       align-items: center;
       justify-content: center;
       font-size: 0.82rem;
-      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+                  transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    #theme-btn:hover { background: var(--grey-light); }
+    #theme-btn:hover { background: var(--grey-light); transform: scale(1.1) rotate(15deg); }
   </style>
 </head>
 <body>
@@ -789,22 +920,24 @@
   </div>
 
   <header>
-    <div class="hero-photo-row">
-      <div class="hero-circle-wrap" tabindex="0" id="hero-circle" onclick="cycleHeroPhoto(event)">
-        <img id="hero-img" src="images/PalaceFineArts.jpg" alt="Photo" />
+    <div class="hero-content">
+      <div class="hero-photo-row">
+        <div class="hero-circle-wrap" tabindex="0" id="hero-circle" onclick="cycleHeroPhoto(event)">
+          <img id="hero-img" src="images/PalaceFineArts.jpg" alt="Photo" />
+        </div>
+        <div class="hero-arrow-hint" id="hero-arrow-hint">
+          <span class="arrow-label">click me</span>
+          <svg width="88" height="42" viewBox="0 0 88 42" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 83,21 C 72,5 56,37 44,21 C 32,5 16,21 7,21"/>
+            <path d="M 7,21 L 15,13"/>
+            <path d="M 7,21 L 15,29"/>
+          </svg>
+        </div>
       </div>
-      <div class="hero-arrow-hint" id="hero-arrow-hint">
-        <span class="arrow-label">click me</span>
-        <svg width="88" height="42" viewBox="0 0 88 42" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M 83,21 C 72,5 56,37 44,21 C 32,5 16,21 7,21"/>
-          <path d="M 7,21 L 15,13"/>
-          <path d="M 7,21 L 15,29"/>
-        </svg>
+      <div class="hero-name">Matthew Diep</div>
+      <div class="hero-sub">
+        <p id="hero-sub">Data Science &amp; Economics — UC Berkeley</p>
       </div>
-    </div>
-    <div class="hero-name">Matthew Diep</div>
-    <div class="hero-sub">
-      <p id="hero-sub">Data Science &amp; Economics — UC Berkeley</p>
     </div>
   </header>
 
@@ -819,7 +952,7 @@
     <div class="project-list">
 
       <a class="project-card" href="https://devpost.com/software/save-dinos-a-visa-wallet" target="_blank">
-        <img src="images/clean_visadino.png" alt="Save Dinos" class="project-image" />
+        <div class="project-image-wrap"><img src="images/clean_visadino.png" alt="Save Dinos" class="project-image" /></div>
         <div class="project-card-body">
           <h3>Save Dinos: A Visa Wallet</h3>
           <p>Built a gamified student wallet with Next.js and MongoDB that turns budgeting into a game — hatch dinosaur goals, earn badges, and manage spending with Visa integration.</p>
@@ -830,7 +963,7 @@
       </a>
 
       <a class="project-card" href="https://github.com/mattdiep15/projects/tree/main/Waze_Churn_ML_Project" target="_blank">
-        <img src="images/cleanwaze.png" alt="Waze Churn Prediction" class="project-image" />
+        <div class="project-image-wrap"><img src="images/cleanwaze.png" alt="Waze Churn Prediction" class="project-image" /></div>
         <div class="project-card-body">
           <h3>Waze Churn Prediction Project</h3>
           <p>Built and evaluated churn prediction models using Python, logistic regression, random forests, and XGBoost on Waze user behavior data.</p>
@@ -841,7 +974,7 @@
       </a>
 
       <a class="project-card" href="https://github.com/mattdiep15/projects/blob/main/US_Regional_Sales_EDA_LR_Project.ipynb" target="_blank">
-        <img src="images/cleansalesdata.png" alt="Sales Data Analysis" class="project-image" />
+        <div class="project-image-wrap"><img src="images/cleansalesdata.png" alt="Sales Data Analysis" class="project-image" /></div>
         <div class="project-card-body">
           <h3>Sales Data Analysis &amp; Order Prediction</h3>
           <p>Performed EDA on 18,000+ US sales records and built a linear regression model to predict order quantity. Created time series visualizations and feature-engineered metrics like profit margin and delivery delay.</p>
@@ -852,7 +985,7 @@
       </a>
 
       <a class="project-card" href="https://github.com/mattdiep15/projects/tree/main/Sales_SQL_Analysis_Project" target="_blank">
-        <img src="images/cleanSQL.png" alt="Sales SQL Analysis" class="project-image" />
+        <div class="project-image-wrap"><img src="images/cleanSQL.png" alt="Sales SQL Analysis" class="project-image" /></div>
         <div class="project-card-body">
           <h3>Customer and Product Analysis with SQL</h3>
           <p>Built analytical SQL views and queries to generate insights from a sales database.</p>
@@ -863,7 +996,7 @@
       </a>
 
       <a class="project-card" href="https://github.com/mattdiep15/projects/blob/main/practice_projects/Titanic_Prediction_PracticeProject.ipynb" target="_blank">
-        <img src="images/cleantitanic.png" alt="Titanic ML Prediction Model" class="project-image" />
+        <div class="project-image-wrap"><img src="images/cleantitanic.png" alt="Titanic ML Prediction Model" class="project-image" /></div>
         <div class="project-card-body">
           <h3>Titanic ML Prediction Model</h3>
           <p>Built a machine learning model to predict passenger survival on the Titanic using Python, Pandas, and Scikit-learn.</p>
@@ -874,7 +1007,7 @@
       </a>
 
       <a class="project-card" href="https://public.tableau.com/app/profile/matthew.diep/vizzes" target="_blank">
-        <img src="images/cleantableau.png" alt="Tableau Viz" class="project-image" />
+        <div class="project-image-wrap"><img src="images/cleantableau.png" alt="Tableau Viz" class="project-image" /></div>
         <div class="project-card-body">
           <h3>Tableau Visualizations</h3>
           <p>Click to see all of my Tableau visualizations.</p>
@@ -1061,7 +1194,7 @@
     <span class="section-label">04 — Resume</span>
     <p style="color: var(--grey-mid); font-size: 0.95rem;">You can download my resume using the button below:</p>
     <a href="https://docs.google.com/document/d/1Hkpq5IFQXoEbVdSNWLQopGuJX12h_5ght_T3oZZ-EUA/edit?usp=sharing" target="_blank" class="resume-button">
-      See My Resume!
+      See My Resume! <i class="fas fa-arrow-right"></i>
     </a>
   </section>
 
@@ -1180,6 +1313,23 @@
   </script>
 
   <script>
+    // Hero name: split into per-letter spans for individual fade/grow-in
+    (function () {
+      var nameEl = document.querySelector('.hero-name');
+      var text = nameEl.textContent;
+      var baseDelay = 0.65;
+      var step = 0.06;
+      nameEl.textContent = '';
+      Array.prototype.forEach.call(text, function (ch, i) {
+        var span = document.createElement('span');
+        span.className = 'hero-letter';
+        span.style.setProperty('--letter-delay', (baseDelay + i * step) + 's');
+        span.textContent = ch === ' ' ? ' ' : ch;
+        nameEl.appendChild(span);
+      });
+      nameEl.classList.add('lettered');
+    })();
+
     // Subtitle slide-up on load
     document.getElementById('hero-sub').classList.add('slide-up');
 
