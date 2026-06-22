@@ -399,6 +399,8 @@
     .reveal.visible .project-card:nth-child(5) .project-card-body { transition-delay: 0.25s; }
     .reveal.visible .project-card:nth-child(6) .project-image-wrap,
     .reveal.visible .project-card:nth-child(6) .project-card-body { transition-delay: 0.3s; }
+    .reveal.visible .project-card:nth-child(7) .project-image-wrap,
+    .reveal.visible .project-card:nth-child(7) .project-card-body { transition-delay: 0.35s; }
 
     .reveal.visible .tl-entry:nth-child(1) { transition-delay: 0.05s; }
     .reveal.visible .tl-entry:nth-child(2) { transition-delay: 0.12s; }
@@ -486,6 +488,11 @@
       border-radius: 100vmax;
       font-size: 0.68rem;
       letter-spacing: 0.04em;
+    }
+
+    .project-skills .hackathon-tag {
+      background-color: #dbeafe;
+      color: #1d4ed8;
     }
 
     /* ── TIMELINE (Experience) ── */
@@ -867,6 +874,7 @@
     [data-theme="dark"] .hero-circle-wrap:hover { box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
     [data-theme="dark"] .resume-button:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
     [data-theme="dark"] .project-skills span { background-color: #272727; color: #8a8a8a; }
+    [data-theme="dark"] .project-skills .hackathon-tag { background-color: #1e3a5f; color: #93c5fd; }
     [data-theme="dark"] .coursework          { background-color: #141414; }
     [data-theme="dark"] footer               { border-top-color: #222; }
     [data-theme="dark"] .resume-button       { background-color: #444; }
@@ -951,13 +959,24 @@
     <span class="section-label">01 — Projects</span>
     <div class="project-list">
 
+      <a class="project-card" href="https://devpost.com/software/feynman-s6h3ke" target="_blank">
+        <div class="project-image-wrap"><img src="images/feynman_icon.png" alt="Feynman" class="project-image" /></div>
+        <div class="project-card-body">
+          <h3>Feynman</h3>
+          <p>A speech-driven AI learning coach that builds a personalized knowledge graph and guides you through the Feynman Technique — teach concepts out loud, get real-time feedback on gaps, and track your mastery visually across sessions.</p>
+          <div class="project-skills">
+            <span class="hackathon-tag">UC Berkeley AI Hackathon 2026</span><span>Next.js</span><span>TypeScript</span><span>Claude</span><span>Deepgram</span><span>Redis Cloud</span><span>Voyage AI</span><span>Vercel</span>
+          </div>
+        </div>
+      </a>
+
       <a class="project-card" href="https://devpost.com/software/save-dinos-a-visa-wallet" target="_blank">
         <div class="project-image-wrap"><img src="images/clean_visadino.png" alt="Save Dinos" class="project-image" /></div>
         <div class="project-card-body">
           <h3>Save Dinos: A Visa Wallet</h3>
           <p>Built a gamified student wallet with Next.js and MongoDB that turns budgeting into a game — hatch dinosaur goals, earn badges, and manage spending with Visa integration.</p>
           <div class="project-skills">
-            <span>Next.js</span><span>Tailwind CSS</span><span>MongoDB (NoSQL)</span><span>Figma</span><span>Claude Code</span>
+            <span class="hackathon-tag">Cal Hacks 2025</span><span>Next.js</span><span>Tailwind CSS</span><span>MongoDB (NoSQL)</span><span>Figma</span><span>Claude Code</span>
           </div>
         </div>
       </a>
@@ -991,17 +1010,6 @@
           <p>Built analytical SQL views and queries to generate insights from a sales database.</p>
           <div class="project-skills">
             <span>SQL</span><span>Window Functions</span><span>Data Modeling</span>
-          </div>
-        </div>
-      </a>
-
-      <a class="project-card" href="https://github.com/mattdiep15/projects/blob/main/practice_projects/Titanic_Prediction_PracticeProject.ipynb" target="_blank">
-        <div class="project-image-wrap"><img src="images/cleantitanic.png" alt="Titanic ML Prediction Model" class="project-image" /></div>
-        <div class="project-card-body">
-          <h3>Titanic ML Prediction Model</h3>
-          <p>Built a machine learning model to predict passenger survival on the Titanic using Python, Pandas, and Scikit-learn.</p>
-          <div class="project-skills">
-            <span>Python</span><span>Seaborn/Matplotlib</span><span>Scikit-learn</span>
           </div>
         </div>
       </a>
