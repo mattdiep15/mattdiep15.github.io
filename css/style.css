@@ -1,0 +1,992 @@
+/* ==========================================================================
+   Matthew Diep — Portfolio
+   --------------------------------------------------------------------------
+   TUNABLES — every knob you'll realistically want to turn lives in :root
+   below (plus the CONFIG object at the top of js/effects.js):
+
+     --accent             the one accent color (links, spotlight tint, tags)
+     --spotlight-radius   size of the cursor-following spotlight
+     --grain-opacity      film-grain strength (0 turns it off)
+     --intro-name-ms      how long the intro name takes to fade in
+                          (matched by INTRO.nameMs in js/intro.js)
+     --curtain-ms         page-transition curtain speed
+     magnetic pull / tilt amounts → CONFIG in js/effects.js
+   ========================================================================== */
+
+:root {
+  /* palette — full light theme */
+  --bg:        #f6f6f5;
+  --surface:   #ffffff;
+  --ink:       #131313;
+  --muted:     #6d6d6d;
+  --line:      #e4e4df;
+  --accent:    #2b4cff;
+  --accent-soft: rgba(43, 76, 255, 0.08);
+
+  /* effect intensity */
+  --spotlight-radius: 340px;
+  --grain-opacity: 0.05;
+
+  /* timing */
+  --intro-name-ms: 1500ms;
+  --curtain-ms: 420ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-io:  cubic-bezier(0.65, 0, 0.35, 1);
+
+  --font: 'Poppins', system-ui, -apple-system, sans-serif;
+  --font-display: 'Poppins', system-ui, sans-serif; /* titles: Light (300), tight tracking */
+}
+
+/* ── Reset / base ──────────────────────────────────────────────────────── */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+img { max-width: 100%; display: block; }
+
+a { color: inherit; }
+
+/* visible keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* hide the native cursor only when the JS effects engine is running
+   (html.fx is added by js/effects.js on fine-pointer devices only) */
+html.fx, html.fx * { cursor: none !important; }
+
+/* ── Display typography ────────────────────────────────────────────────── */
+
+.display {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 6vw, 4.6rem);
+  font-weight: 400;
+  letter-spacing: -0.06em;
+  line-height: 1.02;
+  color: var(--ink);
+}
+
+.section {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: clamp(4.5rem, 12vh, 8rem) clamp(1.4rem, 6vw, 4rem);
+  scroll-margin-top: 60px;
+}
+
+.section-head { margin-bottom: clamp(2rem, 6vh, 3.5rem); }
+
+.section-sub {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  font-weight: 300;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+/* ── Nav ───────────────────────────────────────────────────────────────── */
+
+nav#main-nav {
+  position: fixed;
+  top: 0;
+  right: 0;
+  padding: 2rem 2.6rem;
+  z-index: 1000;
+  display: flex;
+  gap: 2.1rem;
+  transition: opacity 0.3s var(--ease-out);
+}
+
+nav#main-nav.hidden { opacity: 0; pointer-events: none; }
+
+.tab-link {
+  text-decoration: none;
+  color: var(--ink);
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  position: relative;
+  display: inline-block;
+  will-change: transform;
+}
+
+.tab-link::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--accent);
+  transition: width 0.35s var(--ease-out);
+}
+
+.tab-link:hover::after,
+.tab-link:focus-visible::after { width: 100%; }
+
+/* collapsed circular menu button (appears after scrolling) */
+#menu-btn {
+  position: fixed;
+  top: 1.1rem;
+  right: 1.1rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+  will-change: transform;
+}
+
+#menu-btn.visible { opacity: 1; pointer-events: auto; }
+#menu-btn:hover { transform: scale(1.08); }
+
+#nav-dropdown {
+  position: fixed;
+  top: 4.2rem;
+  right: 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px) scale(0.97);
+  transform-origin: top right;
+  transition: opacity 0.25s var(--ease-out), transform 0.25s var(--ease-out);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.09);
+}
+
+#nav-dropdown.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+/* on small screens skip the inline nav entirely — button only */
+@media (max-width: 680px) {
+  nav#main-nav { display: none; }
+  #menu-btn { opacity: 1; pointer-events: auto; }
+}
+
+/* ── Intro preloader ───────────────────────────────────────────────────────
+   Markup is display:none by default; only html.intro-pending (set by the
+   tiny inline script in <head> when JS is on, no reduced-motion, and the
+   intro hasn't played this session) shows it. Fully invisible to no-JS. */
+
+#intro {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--bg);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1.1rem;
+  clip-path: inset(0 0 0 0);
+}
+
+html.intro-pending #intro { display: flex; }
+
+.intro-name {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5.5vw, 4.2rem);
+  font-weight: 400;
+  letter-spacing: -0.06em;
+  opacity: 0; /* js/intro.js drives 0 → 1 */
+}
+
+.intro-counter {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  color: var(--muted);
+}
+
+/* curtain wipe out */
+#intro.intro-leave {
+  transition: clip-path 0.7s var(--ease-io);
+  clip-path: inset(0 0 100% 0);
+  pointer-events: none;
+}
+
+/* keep hero hidden underneath until the intro lifts */
+html.intro-pending:not(.intro-done) .hero-content { opacity: 0; }
+
+/* ── Hero (pinned) ─────────────────────────────────────────────────────────
+   .hero-pin is taller than the viewport; .hero-sticky pins the content so
+   js/scroll.js can scale/fade it out as you scroll into the next section. */
+
+/* pin travel: height beyond 100vh is how long the hero stays pinned while
+   scaling out. At exactly 100vh there is no pause — the hero scrolls off
+   naturally and the next section follows immediately with no blank gap. */
+.hero-pin { height: 100vh; }
+
+.hero-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.6rem;
+  text-align: center;
+  will-change: transform, opacity;
+}
+
+/* staggered entrance — runs immediately on normal loads, or when the intro
+   finishes (html.intro-done). Static (visible) when JS is off. */
+html.js:not(.intro-pending) .hero-content > *,
+html.intro-done .hero-content > * {
+  animation: riseIn 1s var(--ease-out) both;
+}
+html.js:not(.intro-pending) .hero-content > :nth-child(2),
+html.intro-done .hero-content > :nth-child(2) { animation-delay: 0.12s; }
+html.js:not(.intro-pending) .hero-content > :nth-child(3),
+html.intro-done .hero-content > :nth-child(3) { animation-delay: 0.22s; }
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(26px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+.hero-photo-row { position: relative; }
+
+.hero-circle-wrap {
+  width: clamp(190px, 26vw, 320px);
+  height: clamp(190px, 26vw, 320px);
+  border-radius: 50%;
+  overflow: hidden;
+  will-change: transform;
+  transition: box-shadow 0.4s var(--ease-out);
+}
+
+.hero-circle-wrap:hover { box-shadow: 0 24px 70px rgba(0, 0, 0, 0.16); }
+
+#hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.5s var(--ease-out), opacity 0.28s ease;
+}
+
+.hero-circle-wrap:hover #hero-img { transform: scale(1.07); }
+
+.hero-name {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6.5vw, 5rem);
+  font-weight: 400;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  will-change: transform;
+}
+
+.hero-sub {
+  font-size: 0.8rem;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  will-change: transform;
+}
+
+/* ── Wind River statement (full-viewport moment) + project strip ───────── */
+
+/* pin length: the height beyond 100vh covers the glide-in plus the readable
+   hold before the statement releases and scrolls off with the page */
+.now-pin { height: 205vh; }
+
+/* no horizontal padding: line positions are computed by js/scroll.js from
+   the viewport's left edge (the 1/5 → 3/4 screen band) */
+.now-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: hidden; /* clips lines while they're mid-flight */
+}
+
+.now-line {
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 4.5vw, 3.4rem);
+  font-weight: 400;
+  letter-spacing: -0.06em;
+  line-height: 1.18;
+}
+
+/* one statement line: glides in and squish-fades out (js/scroll.js) */
+.now-l {
+  display: block;
+  width: max-content;
+  transform-origin: left center;
+  will-change: transform, opacity;
+}
+
+.now-line em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+/* overlap: Projects starts rising into view while the statement above is
+   still pinned — only afterwards does the statement scroll off */
+#work { margin-top: -30vh; }
+
+/* ── featured project rows (editorial: text left, image right) ── */
+
+.feature-list { margin-top: clamp(0.8rem, 2vh, 1.4rem); }
+
+.feature {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+  padding: clamp(2.2rem, 5vh, 3.5rem) 0;
+  border-bottom: 1px solid var(--line);
+  will-change: transform;
+}
+
+.feature:last-child { border-bottom: none; }
+
+.feature-text h3 {
+  font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.7rem;
+}
+
+.feature-text > p {
+  font-size: 0.95rem;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--muted);
+  max-width: 44ch;
+}
+
+.feature-text .project-skills { margin-top: 1.1rem; }
+
+.view-project {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.4rem;
+  text-decoration: none;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 0.3rem 0.1rem;
+  will-change: transform;
+}
+
+.view-project i { transition: transform 0.3s var(--ease-out); }
+.view-project:hover i { transform: translateX(5px); }
+
+/* inner wrapper carries the pointer tilt so it never fights the
+   scroll-driven transform on the row/card itself */
+.card-inner { will-change: transform; }
+
+.feature-img {
+  height: clamp(200px, 24vw, 310px);
+  border-radius: 20px;
+  overflow: hidden;
+  background: #f0f0ee;
+  will-change: transform;
+}
+
+.feature-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(10%);
+  transition: filter 0.4s var(--ease-out), transform 0.5s var(--ease-out);
+}
+
+.feature-img.contain img { object-fit: contain; padding: 20px; background: #fff; }
+
+.feature:hover .feature-img img { filter: none; transform: scale(1.04); }
+
+.view-all-wrap { text-align: center; margin-top: 2.2rem; }
+
+.view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.4rem;
+  text-decoration: none;
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.2rem;
+  will-change: transform;
+}
+
+.view-all i { transition: transform 0.3s var(--ease-out); color: var(--accent); }
+.view-all:hover i { transform: translateX(5px); }
+
+/* ── Projects page ─────────────────────────────────────────────────────── */
+
+/* projects-page title: staggered entrance on load (not scroll-linked —
+   it sits at the top of the viewport where a view-timeline would dim it) */
+html.js .page-head > * { animation: riseIn 0.9s var(--ease-out) both; }
+html.js .page-head > :nth-child(2) { animation-delay: 0.12s; }
+
+/* extra scroll room below the list so the last card can fully resolve
+   (scroll-linked entry needs it to reach the middle of the viewport) */
+main.section { padding-bottom: 32vh; }
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 2.2rem;
+  padding: 0.3rem 0.1rem;
+  will-change: transform;
+  transition: color 0.3s var(--ease-out);
+}
+
+.back-link:hover { color: var(--ink); }
+
+.project-list { display: flex; flex-direction: column; gap: 1.2rem; margin-top: 1rem; }
+
+.project-card {
+  display: block;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  text-decoration: none;
+  color: var(--ink);
+  scroll-margin-top: 100px;
+  will-change: transform;
+  transition: box-shadow 0.35s var(--ease-out), border-color 0.35s var(--ease-out);
+}
+
+.project-card:hover {
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.1);
+  border-color: transparent;
+}
+
+.project-card .card-inner {
+  display: flex;
+  align-items: center;
+  gap: 1.8rem;
+}
+
+.project-image-wrap {
+  width: 190px;
+  height: 130px;
+  border-radius: 15px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f0f0ee;
+}
+
+.project-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(12%);
+  transition: filter 0.4s var(--ease-out), transform 0.5s var(--ease-out);
+}
+
+.project-image-wrap.contain .project-image { object-fit: contain; padding: 12px; background: #fff; }
+
+.project-card:hover .project-image { filter: none; transform: scale(1.06); }
+
+.project-card-body { flex: 1; min-width: 0; }
+
+.project-card h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin-bottom: 0.4rem;
+}
+
+.project-card h3 i {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-left: 0.4rem;
+  vertical-align: 2px;
+}
+
+.project-card p {
+  font-size: 0.87rem;
+  line-height: 1.65;
+  color: var(--muted);
+  font-weight: 300;
+}
+
+.project-skills {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.project-skills span {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  padding: 0.22rem 0.68rem;
+  border-radius: 100vmax;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
+.project-skills .hackathon-tag {
+  background: var(--accent-soft);
+  border-color: transparent;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* ── Experience timeline ───────────────────────────────────────────────── */
+
+.timeline { position: relative; padding: 0.5rem 0; }
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--line);
+  transform: translateX(-50%);
+}
+
+.tl-entry {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr;
+  align-items: center;
+  margin-bottom: 2.6rem;
+}
+
+.tl-entry:last-child { margin-bottom: 0; }
+
+.tl-mid { display: flex; justify-content: center; align-items: center; position: relative; z-index: 1; }
+
+.tl-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--ink);
+  flex-shrink: 0;
+}
+
+.tl-l { display: flex; justify-content: flex-end; align-items: center; padding-right: 1.75rem; }
+.tl-r { display: flex; justify-content: flex-start; align-items: center; padding-left: 1.75rem; }
+
+.tl-logo {
+  width: 190px;
+  height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* auto width/height (not 100%) so the element hugs the drawn logo —
+   otherwise border-radius would clip invisible letterbox corners */
+.tl-logo img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
+
+.tl-logo img.rounded { border-radius: 12px; }
+
+/* wide wordmark logos (Wind River, Exceptional STEAM) get a broader box so
+   they render at a similar visual weight to the square logos */
+.tl-logo.wide { width: 270px; }
+
+.tl-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1.15rem 1.4rem;
+  width: 100%;
+  outline-offset: 3px;
+  user-select: none;
+  will-change: transform;
+  transition: box-shadow 0.3s var(--ease-out), border-color 0.3s var(--ease-out);
+}
+
+.tl-card:hover { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.08); }
+
+.tl-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.tl-info { flex: 1; min-width: 0; }
+.tl-title { font-weight: 600; font-size: 0.97rem; letter-spacing: -0.01em; }
+.tl-company { color: var(--muted); font-size: 0.86rem; margin-top: 2px; font-weight: 300; }
+
+.tl-meta { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
+.tl-date { color: var(--muted); font-size: 0.83rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.tl-chevron {
+  color: var(--muted);
+  font-size: 0.75rem;
+  transition: transform 0.25s var(--ease-out), color 0.25s var(--ease-out);
+  display: inline-block;
+}
+
+.tl-details {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s var(--ease-out), padding-top 0.2s ease;
+  padding-top: 0;
+}
+
+.tl-details ul {
+  padding-left: 1.1rem;
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.8;
+  color: var(--muted);
+  font-weight: 300;
+}
+
+.tl-card.open { border-color: var(--accent); }
+.tl-card.open .tl-details { max-height: 420px; padding-top: 0.8rem; }
+.tl-card.open .tl-chevron { transform: rotate(180deg); color: var(--accent); }
+
+/* no-JS: expander can't open, so show details statically */
+html.no-js .tl-details { max-height: none; padding-top: 0.8rem; }
+html.no-js .tl-chevron { display: none; }
+
+@media (max-width: 740px) {
+  .timeline::before { display: none; }
+  .tl-entry { grid-template-columns: 80px 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  .tl-mid { display: none; }
+  .tl-l { padding: 0; justify-content: flex-start; grid-row: 1; }
+  .tl-r { padding: 0; grid-row: 1; grid-column: 2; }
+  .tl-l:has(.tl-card) { grid-column: 2; }
+  .tl-r:has(.tl-logo) { grid-column: 1; }
+  .tl-logo { width: 80px !important; height: 80px !important; }
+  .tl-logo.wide { width: 115px !important; }
+}
+
+/* ── Education ─────────────────────────────────────────────────────────── */
+
+.school-icon { width: 44px; height: auto; border-radius: 4px; }
+
+.coursework-column { flex: 1; min-width: 180px; }
+.coursework-column p { font-size: 0.86rem; font-weight: 500; color: var(--muted); margin-bottom: 0.3rem; }
+.coursework-column ul {
+  padding-left: 1.1rem;
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.8;
+  color: var(--muted);
+  font-weight: 300;
+}
+
+/* education card reuses .tl-card; give the taller coursework room */
+#education .tl-card.open .tl-details { max-height: 900px; }
+
+/* ── Resume ────────────────────────────────────────────────────────────── */
+
+.resume-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.4rem;
+  padding: 0.85rem 2rem;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 100vmax;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  will-change: transform;
+  transition: background 0.3s ease, box-shadow 0.3s var(--ease-out);
+}
+
+.resume-button:hover {
+  background: var(--accent);
+  box-shadow: 0 12px 30px rgba(43, 76, 255, 0.3);
+}
+
+.resume-button i { transition: transform 0.3s var(--ease-out); }
+.resume-button:hover i { transform: translateX(4px); }
+
+/* ── Contact ───────────────────────────────────────────────────────────── */
+
+.contact-links {
+  display: flex;
+  gap: 0.9rem;
+  margin-top: 2.4rem;
+  flex-wrap: wrap;
+}
+
+.contact-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.7rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 100vmax;
+  text-decoration: none;
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  will-change: transform;
+  transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s var(--ease-out);
+}
+
+.contact-pill i { font-size: 1rem; }
+
+.contact-pill:hover {
+  background: var(--ink);
+  color: var(--bg);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+/* ── Footer ────────────────────────────────────────────────────────────── */
+
+footer {
+  text-align: center;
+  padding: 2.6rem 1rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.75rem;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+/* ══ POINTER-EFFECT LAYERS (activated by html.fx from js/effects.js) ════ */
+
+/* cursor spotlight: a faint dot-grid revealed through a radial mask that
+   follows the cursor (lerped), plus a soft accent tint. --mx/--my are set
+   each frame by the effects engine. */
+#spotlight {
+  position: fixed;
+  inset: 0;
+  /* negative z-index: the grid paints above the page background but BEHIND
+     all content, so it never overlays text or cards */
+  z-index: -1;
+  pointer-events: none;
+  display: none;
+  --mx: 50vw;
+  --my: 50vh;
+  background-image: radial-gradient(circle 1.2px, rgba(19, 19, 19, 0.38) 99%, transparent 100%);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(circle var(--spotlight-radius) at var(--mx) var(--my), rgba(0,0,0,0.85), transparent 72%);
+  mask-image: radial-gradient(circle var(--spotlight-radius) at var(--mx) var(--my), rgba(0,0,0,0.85), transparent 72%);
+}
+
+#spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle calc(var(--spotlight-radius) * 1.15) at var(--mx) var(--my), var(--accent-soft), transparent 70%);
+}
+
+html.fx #spotlight { display: block; }
+
+/* film grain — animated SVG turbulence, oversized layer jittered by steps() */
+#grain {
+  position: fixed;
+  inset: -100%;
+  z-index: 9997;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grainShift 0.8s steps(9) infinite;
+}
+
+@keyframes grainShift {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(-3%, 2%); }
+  40%  { transform: translate(2%, -3%); }
+  60%  { transform: translate(-2%, -2%); }
+  80%  { transform: translate(3%, 3%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* custom cursor: a single dot driven by the shared rAF loop; it grows over
+   interactive elements and shrinks on press (scale is applied in JS) */
+#cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  background: var(--ink);
+  pointer-events: none;
+  z-index: 9999;
+  border-radius: 50%;
+  display: none;
+  opacity: 0; /* invisible until the first real mouse move (see effects.js) */
+  will-change: transform;
+}
+
+html.fx #cursor-dot { display: block; }
+
+/* page-transition curtain */
+#curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: var(--ink);
+  transform: translateY(101%);
+  pointer-events: none;
+}
+
+#curtain.curtain-cover {
+  transform: translateY(0);
+  transition: transform var(--curtain-ms) var(--ease-io);
+}
+
+/* arriving from another page: start covered (set in <head> to avoid flash),
+   then main.js plays the lift */
+html.page-enter #curtain { transform: translateY(0); }
+html.page-enter #curtain.curtain-lift {
+  transform: translateY(-101%);
+  transition: transform calc(var(--curtain-ms) + 120ms) var(--ease-io);
+}
+
+/* ══ SCROLL-DRIVEN ANIMATION ════════════════════════════════════════════
+   Two paths, chosen by js/scroll.js:
+   1. html.native — browser supports animation-timeline: view(); pure CSS.
+   2. otherwise  — the JS engine writes transforms directly (no CSS here).
+   Elements opt in via data-scroll="head" (display type that grows/shrinks
+   with scroll) or data-scroll="card" (staggered rise that reverses).     */
+
+@supports (animation-timeline: view()) {
+  html.native [data-scroll="head"] {
+    animation: headScale linear both;
+    animation-timeline: view();
+    animation-range: cover 0% cover 100%;
+  }
+
+  /* two timelines per card: rise on entry, squish-fade while crossing the
+     top edge. cardRise uses `backwards` fill (its end state == base state)
+     so it stops applying after entry and lets cardSquish own the exit;
+     cardRise is listed last so it wins during entry. */
+  /* the squish runs over the last 24vh of the element's crossing (not the
+     element's own height) so short blocks like captions fade just as
+     visibly as tall cards */
+  html.native [data-scroll="card"] {
+    animation: cardSquish linear both, cardRise linear backwards;
+    animation-timeline: view(), view();
+    animation-range: cover calc(100% - 24vh) cover 100%, entry 0% cover 42%;
+  }
+
+}
+
+/* type grows to full size in the readable middle band, shrinks at edges —
+   entry starts well-visible so there's never an empty-looking screen */
+@keyframes headScale {
+  0%   { opacity: 0.4;  transform: scale(0.93) translateY(30px); }
+  22%  { opacity: 1;    transform: scale(1)    translateY(0); }
+  75%  { opacity: 1;    transform: scale(1)    translateY(0); }
+  100% { opacity: 0.3;  transform: scale(0.96, 0.8) translateY(-24px); } /* squish out */
+}
+
+@keyframes cardRise {
+  from { opacity: 0; transform: translateY(46px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* vertical squish + fade while an element slides under the top edge */
+@keyframes cardSquish {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(-22px) scale(0.96, 0.8); }
+}
+
+/* ══ REDUCED MOTION ═════════════════════════════════════════════════════
+   JS engines all bail out early; this kills the remaining CSS motion and
+   keeps everything static and readable. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .hero-pin { height: auto; }
+  .hero-sticky { position: static; height: auto; min-height: 100vh; }
+  .now-pin { height: auto; }
+  .now-sticky { position: static; height: auto; min-height: 40vh; padding: 2rem clamp(1.4rem, 6vw, 4rem); }
+  .now-l { transform: none !important; opacity: 1 !important; }
+  #work { margin-top: 0; } /* no pin → no overlap */
+  #grain, #spotlight, #cursor-dot { display: none !important; }
+  [data-scroll] { opacity: 1 !important; transform: none !important; animation: none !important; }
+}
+
+/* ══ RESPONSIVE ═════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .hero-pin { height: 100vh; }
+
+  .project-card .card-inner { flex-direction: column; align-items: stretch; gap: 1rem; }
+  .project-image-wrap { width: 100%; height: 170px; }
+
+  .tl-card-head { flex-wrap: wrap; gap: 0.5rem; }
+
+  /* long bullets wrap a lot on narrow screens — give the expander room */
+  .tl-card.open .tl-details { max-height: 900px; }
+}
+
+@media (max-width: 768px) {
+  /* featured rows stack under ~tablet width (text above image) */
+  .feature { grid-template-columns: 1fr; gap: 1.4rem; }
+}
+
+@media (max-width: 480px) {
+  .contact-links { flex-direction: column; align-items: flex-start; }
+}
