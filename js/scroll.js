@@ -65,8 +65,8 @@
                    gliding while the section is still rising into view
         Pin length (hold duration before release) is .now-pin height in CSS. ── */
   var NOW = {
-    stagger: 0.16,
-    enter: 0.52,
+    stagger: 0.12,
+    enter: 0.3,
     bandIn: 0.18,
     fadeIn: 0.4,
     lead: 0.15

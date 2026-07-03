@@ -331,7 +331,7 @@ html.intro-done .hero-content > :nth-child(3) { animation-delay: 0.22s; }
    negative margin overlaps the lower part of the hero so the statement
    reaches its centered (pinned) position while the hero is still on screen —
    this is what lets the lines start gliding in early (see NOW.lead). */
-.now-pin { height: 120vh; margin-top: -60vh; }
+.now-pin { height: 175vh; margin-top: -60vh; }
 
 /* no horizontal padding: line positions are computed by js/scroll.js from
    the viewport's left edge (the 1/5 → 3/4 screen band) */
@@ -368,14 +368,15 @@ html.intro-done .hero-content > :nth-child(3) { animation-delay: 0.22s; }
 }
 
 /* overlap: Projects starts rising into view while the statement above is
-   still pinned — only afterwards does the statement scroll off */
+   still pinned — only afterwards does the statement scroll off. A smaller
+   (less negative) value delays Projects, so it comes in later in the scroll. */
 #work { margin-top: -30vh; }
 
 /* tighter gap under "Things I've built :)" — scoped to Projects so other
    section heads keep the larger default spacing */
-#work .section-head { margin-bottom: clamp(0.3rem, 0.8vh, 0.6rem); }
+#work .section-head { margin-bottom: clamp(0.3rem, 0.8vh, -5rem); }
 /* push "Things I've built :)" further below the Projects heading */
-#work .section-sub { margin-top: clamp(1.6rem, 4vh, 2.75rem); }
+#work .section-sub { margin-top: clamp(1.6rem, 4vh, 2rem); }
 
 /* ── featured project rows (editorial: text left, image right) ── */
 
