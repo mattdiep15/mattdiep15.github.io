@@ -713,14 +713,17 @@ html.no-js .tl-chevron { display: none; }
 
 @media (max-width: 740px) {
   .timeline::before { display: none; }
-  .tl-entry { grid-template-columns: 80px 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  /* logo column must fit the widest logo (the wide wordmarks) so it never
+     overflows onto the card — see .tl-logo.wide below */
+  .tl-entry { grid-template-columns: 104px 1fr; gap: 1rem; margin-bottom: 1.5rem; align-items: start; }
   .tl-mid { display: none; }
   .tl-l { padding: 0; justify-content: flex-start; grid-row: 1; }
   .tl-r { padding: 0; grid-row: 1; grid-column: 2; }
   .tl-l:has(.tl-card) { grid-column: 2; }
   .tl-r:has(.tl-logo) { grid-column: 1; }
+  /* cap both dimensions to the column so logos stay contained */
   .tl-logo { width: 80px !important; height: 80px !important; }
-  .tl-logo.wide { width: 115px !important; }
+  .tl-logo.wide { width: 104px !important; }
 }
 
 /* ── Education ─────────────────────────────────────────────────────────── */
