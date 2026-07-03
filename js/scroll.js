@@ -69,7 +69,7 @@
     enter: 0.52,
     bandIn: 0.18,
     fadeIn: 0.4,
-    lead: 0.4
+    lead: 0.15
   };
   var nowPin = document.querySelector('.now-pin');
   var nowLines = Array.prototype.slice.call(document.querySelectorAll('.now-l'));

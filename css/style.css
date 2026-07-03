@@ -327,8 +327,11 @@ html.intro-done .hero-content > :nth-child(3) { animation-delay: 0.22s; }
 /* ── Wind River statement (full-viewport moment) + project strip ───────── */
 
 /* pin length: the height beyond 100vh covers the glide-in plus the readable
-   hold before the statement releases and scrolls off with the page */
-.now-pin { height: 205vh; }
+   hold before the statement releases and scrolls off with the page.
+   negative margin overlaps the lower part of the hero so the statement
+   reaches its centered (pinned) position while the hero is still on screen —
+   this is what lets the lines start gliding in early (see NOW.lead). */
+.now-pin { height: 120vh; margin-top: -60vh; }
 
 /* no horizontal padding: line positions are computed by js/scroll.js from
    the viewport's left edge (the 1/5 → 3/4 screen band) */
@@ -368,9 +371,15 @@ html.intro-done .hero-content > :nth-child(3) { animation-delay: 0.22s; }
    still pinned — only afterwards does the statement scroll off */
 #work { margin-top: -30vh; }
 
+/* tighter gap under "Things I've built :)" — scoped to Projects so other
+   section heads keep the larger default spacing */
+#work .section-head { margin-bottom: clamp(0.3rem, 0.8vh, 0.6rem); }
+/* push "Things I've built :)" further below the Projects heading */
+#work .section-sub { margin-top: clamp(1.6rem, 4vh, 2.75rem); }
+
 /* ── featured project rows (editorial: text left, image right) ── */
 
-.feature-list { margin-top: clamp(0.8rem, 2vh, 1.4rem); }
+.feature-list { margin-top: clamp(0.2rem, 0.6vh, 0.5rem); }
 
 .feature {
   display: grid;
