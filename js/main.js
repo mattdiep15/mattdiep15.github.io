@@ -61,7 +61,7 @@
   });
 
   /* ── hero photo: click to cycle, with a particle burst ── */
-  var heroPhotos = ['images/PalaceFineArts.jpg', 'images/WRportrait.jpg', 'images/abandonedhutphoto.jpg', 'images/chatpfp.png'];
+  var heroPhotos = ['images/PalaceFineArts.jpg', 'images/MOMA.jpg', 'images/abandonedhutphoto.jpg', 'images/chatpfp.png'];
   var heroIndex = 0;
   var heroFlipping = false;
   var heroCircle = document.getElementById('hero-circle');
