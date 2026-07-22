@@ -25,6 +25,9 @@
   var CONFIG = {
     spotlightLerp: 0.08,
     dotLerp: 0.55,
+    // the dot div is 24px (see #cursor-dot) but rests at an 8px look; scaling
+    // down instead of up keeps its GPU layer texture crisp when it grows
+    dotBaseScale: 8 / 24,
     dotHoverScale: 2.6,
     dotDownScale: 1.4,
     dotScaleLerp: 0.2,
@@ -68,11 +71,11 @@
   /* ── custom cursor ── */
   var dot = document.getElementById('cursor-dot');
   var dx = mx, dy = my;
-  var dotScale = 1, dotScaleTarget = 1;
+  var dotScale = CONFIG.dotBaseScale, dotScaleTarget = CONFIG.dotBaseScale;
   var hovering = false, pressing = false;
 
   function updateDotScaleTarget() {
-    dotScaleTarget = pressing ? CONFIG.dotDownScale : (hovering ? CONFIG.dotHoverScale : 1);
+    dotScaleTarget = CONFIG.dotBaseScale * (pressing ? CONFIG.dotDownScale : (hovering ? CONFIG.dotHoverScale : 1));
   }
 
   // grow the dot over anything interactive

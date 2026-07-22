@@ -331,7 +331,10 @@ html.intro-done .hero-content > :nth-child(3) { animation-delay: 0.22s; }
    negative margin overlaps the lower part of the hero so the statement
    reaches its centered (pinned) position while the hero is still on screen —
    this is what lets the lines start gliding in early (see NOW.lead). */
-.now-pin { height: 175vh; margin-top: -60vh; }
+/* pointer-events none: the -60vh pull-up overlaps the hero, and this section
+   (later in the DOM) would otherwise swallow clicks on the lower part of the
+   hero photo. It contains no interactive elements, so nothing is lost. */
+.now-pin { height: 175vh; margin-top: -60vh; pointer-events: none; }
 
 /* no horizontal padding: line positions are computed by js/scroll.js from
    the viewport's left edge (the 1/5 → 3/4 screen band) */
@@ -610,16 +613,28 @@ main.section { padding-bottom: 32vh; }
   transform: translateX(-50%);
 }
 
+/* top-aligned (not center) so an opening card grows downward without
+   re-centering the row — the logo and timeline dot stay put. Logos are the
+   tallest cell (190px), so they already sat at the row top when the row was
+   centered; the card and dot get fixed offsets below to recreate the
+   centered rest look. */
 .tl-entry {
   display: grid;
   grid-template-columns: 1fr 40px 1fr;
-  align-items: center;
+  align-items: start;
   margin-bottom: 2.6rem;
 }
 
 .tl-entry:last-child { margin-bottom: 0; }
 
 .tl-mid { display: flex; justify-content: center; align-items: center; position: relative; z-index: 1; }
+
+/* rest-state centering against the 190px logo column: the closed card is
+   ~78px tall, so (190 − 78) / 2 ≈ 56px — tune the offset if card padding or
+   type sizes change. The dot offset is exact: (190 − 12px dot) / 2. */
+.tl-l:has(.tl-card),
+.tl-r:has(.tl-card) { margin-top: 56px; }
+.tl-mid { margin-top: calc((190px - 12px) / 2); }
 
 .tl-dot {
   width: 12px;
@@ -703,12 +718,37 @@ main.section { padding-bottom: 32vh; }
   font-weight: 300;
 }
 
-.tl-card.open { border-color: var(--accent); }
+.tl-card.open { border-color: #c9c9c2; }
 .tl-card.open .tl-details { max-height: 420px; padding-top: 0.8rem; }
 .tl-card.open .tl-chevron { transform: rotate(180deg); color: var(--accent); }
 
+/* bullets slide + fade in from the right, one after another, when a card
+   opens; closing has no delay so they clear out immediately */
+.tl-details li,
+.tl-details .coursework-column p {
+  opacity: 0;
+  transform: translateX(28px);
+  transition: opacity 0.5s ease, transform 0.5s var(--ease-out);
+}
+.tl-card.open .tl-details li,
+.tl-card.open .tl-details .coursework-column p {
+  opacity: 1;
+  transform: none;
+}
+.tl-card.open .tl-details .coursework-column p { transition-delay: 0.1s; }
+.tl-card.open .tl-details li:nth-child(1) { transition-delay: 0.15s; }
+.tl-card.open .tl-details li:nth-child(2) { transition-delay: 0.3s; }
+.tl-card.open .tl-details li:nth-child(3) { transition-delay: 0.45s; }
+.tl-card.open .tl-details li:nth-child(4) { transition-delay: 0.6s; }
+.tl-card.open .tl-details li:nth-child(5) { transition-delay: 0.75s; }
+.tl-card.open .tl-details li:nth-child(6) { transition-delay: 0.9s; }
+.tl-card.open .tl-details li:nth-child(7) { transition-delay: 1.05s; }
+.tl-card.open .tl-details li:nth-child(8) { transition-delay: 1.2s; }
+
 /* no-JS: expander can't open, so show details statically */
 html.no-js .tl-details { max-height: none; padding-top: 0.8rem; }
+html.no-js .tl-details li,
+html.no-js .tl-details .coursework-column p { opacity: 1; transform: none; }
 html.no-js .tl-chevron { display: none; }
 
 @media (max-width: 740px) {
@@ -717,6 +757,8 @@ html.no-js .tl-chevron { display: none; }
      overflows onto the card — see .tl-logo.wide below */
   .tl-entry { grid-template-columns: 104px 1fr; gap: 1rem; margin-bottom: 1.5rem; align-items: start; }
   .tl-mid { display: none; }
+  /* desktop rest-state centering offsets don't apply to the stacked layout */
+  .tl-l:has(.tl-card), .tl-r:has(.tl-card) { margin-top: 0; }
   .tl-l { padding: 0; justify-content: flex-start; grid-row: 1; }
   .tl-r { padding: 0; grid-row: 1; grid-column: 2; }
   .tl-l:has(.tl-card) { grid-column: 2; }
@@ -869,13 +911,16 @@ html.fx #spotlight { display: block; }
 }
 
 /* custom cursor: a single dot driven by the shared rAF loop; it grows over
-   interactive elements and shrinks on press (scale is applied in JS) */
+   interactive elements and shrinks on press (scale is applied in JS).
+   Rendered at its LARGEST needed size (hover ≈ 8px × 2.6) and scaled DOWN
+   at rest — scaling ≤1 keeps the GPU layer texture crisp (no pixelation).
+   The rest-state 8px look comes from dotBaseScale in effects.js. */
 #cursor-dot {
   position: fixed;
   top: 0;
   left: 0;
-  width: 8px;
-  height: 8px;
+  width: 24px;
+  height: 24px;
   background: var(--ink);
   pointer-events: none;
   z-index: 9999;
@@ -969,6 +1014,7 @@ html.page-enter #curtain.curtain-lift {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important; /* no staggered waits (e.g. card bullets) */
   }
 
   .hero-pin { height: auto; }
