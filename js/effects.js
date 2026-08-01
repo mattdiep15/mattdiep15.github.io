@@ -2,40 +2,31 @@
    effects.js — pointer effects engine
    --------------------------------------------------------------------------
    Everything cursor-related runs through ONE requestAnimationFrame loop:
-     • cursor spotlight (lerped --mx/--my on #spotlight)
-     • custom cursor (a dot that grows over interactive elements)
      • magnetic elements (.magnetic pull toward the cursor on hover;
        per-element strength via data-magnet="0.1")
      • card tilt ([data-tilt] rotates slightly toward the cursor)
      • hero pointer parallax (photo / name / subtitle drift)
 
+   Two effects that used to live here are gone: the custom dot cursor (which
+   also set `cursor: none` site-wide) and the cursor-following dot-grid
+   spotlight. The native cursor and a plain background are used instead.
+
    TUNABLES — adjust the CONFIG object below:
-     spotlightLerp   how loosely the spotlight trails the cursor (0–1; lower = lazier)
-     dotLerp         cursor follow speed
-     dotHoverScale   how much the dot grows over links/buttons
      magnetStrength  default magnetic pull (override per element w/ data-magnet)
      tiltMax         max card tilt in degrees
      parallax        hero drift distances in px
-   Spotlight radius + grain opacity live in css/style.css (:root).
+   Grain opacity lives in css/style.css (:root).
    ========================================================================== */
 
 (function () {
   'use strict';
 
   var CONFIG = {
-    spotlightLerp: 0.08,
-    dotLerp: 0.55,
-    // the dot div is 24px (see #cursor-dot) but rests at an 8px look; scaling
-    // down instead of up keeps its GPU layer texture crisp when it grows
-    dotBaseScale: 8 / 24,
-    dotHoverScale: 2.6,
-    dotDownScale: 1.4,
-    dotScaleLerp: 0.2,
     magnetStrength: 0.32,
     magnetLerp: 0.18,
     tiltMax: 4,        // degrees
     tiltLerp: 0.12,
-    parallax: { img: 10, name: 6, sub: 3.5, lerp: 0.06 }
+    parallax: { name: 6, lerp: 0.06 }
   };
 
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -44,54 +35,14 @@
   // Non-negotiable: no pointer effects on touch devices or for reduced motion.
   if (reducedMotion || touchDevice) return;
 
-  document.documentElement.classList.add('fx'); // enables layers + cursor:none
-
   /* ── shared pointer state ── */
   var mx = window.innerWidth / 2;   // raw cursor position (target)
   var my = window.innerHeight / 2;
-  var seen = false;                 // don't render cursor until first move
 
   document.addEventListener('mousemove', function (e) {
     mx = e.clientX;
     my = e.clientY;
-    if (!seen) {
-      seen = true;
-      // snap everything to the pointer and reveal the cursor — avoids the
-      // dot sitting in the corner or swooshing in from screen center
-      sx = dx = mx;
-      sy = dy = my;
-      dot.style.opacity = '1';
-    }
   }, { passive: true });
-
-  /* ── spotlight ── */
-  var spotlight = document.getElementById('spotlight');
-  var sx = mx, sy = my;
-
-  /* ── custom cursor ── */
-  var dot = document.getElementById('cursor-dot');
-  var dx = mx, dy = my;
-  var dotScale = CONFIG.dotBaseScale, dotScaleTarget = CONFIG.dotBaseScale;
-  var hovering = false, pressing = false;
-
-  function updateDotScaleTarget() {
-    dotScaleTarget = CONFIG.dotBaseScale * (pressing ? CONFIG.dotDownScale : (hovering ? CONFIG.dotHoverScale : 1));
-  }
-
-  // grow the dot over anything interactive
-  var HOVERABLE = 'a, button, [role="button"], [tabindex="0"]';
-  document.addEventListener('mouseover', function (e) {
-    if (e.target.closest(HOVERABLE)) { hovering = true; updateDotScaleTarget(); }
-  });
-  document.addEventListener('mouseout', function (e) {
-    if (e.target.closest(HOVERABLE)) { hovering = false; updateDotScaleTarget(); }
-  });
-  document.addEventListener('mousedown', function () { pressing = true; updateDotScaleTarget(); });
-  document.addEventListener('mouseup', function () { pressing = false; updateDotScaleTarget(); });
-
-  // hide the cursor when the pointer leaves the window
-  document.addEventListener('mouseleave', function () { dot.style.opacity = '0'; });
-  document.addEventListener('mouseenter', function () { dot.style.opacity = '1'; });
 
   /* ── magnetic elements ── */
   // Each .magnetic element stores its own current/target offset; while
@@ -129,10 +80,9 @@
     tilts.push(t);
   });
 
-  /* ── hero parallax ── */
-  var heroImg = document.querySelector('.hero-circle-wrap');
+  /* ── hero parallax ──
+     The circular photo and the subtitle are gone; the name is all that drifts. */
   var heroName = document.querySelector('.hero-name');
-  var heroSub = document.querySelector('.hero-sub');
   var heroPin = document.querySelector('.hero-pin');
   var px = 0, py = 0; // lerped normalized (-1..1) pointer
 
@@ -140,21 +90,6 @@
 
   /* ── THE loop ── */
   function frame() {
-    // spotlight trails the cursor with easing
-    sx = lerp(sx, mx, CONFIG.spotlightLerp);
-    sy = lerp(sy, my, CONFIG.spotlightLerp);
-    spotlight.style.setProperty('--mx', sx.toFixed(1) + 'px');
-    spotlight.style.setProperty('--my', sy.toFixed(1) + 'px');
-
-    // cursor dot: quick follow + eased grow/shrink over interactive elements
-    if (seen) {
-      dx = lerp(dx, mx, CONFIG.dotLerp);
-      dy = lerp(dy, my, CONFIG.dotLerp);
-      dotScale = lerp(dotScale, dotScaleTarget, CONFIG.dotScaleLerp);
-      // the trailing -50% centers the dot without reading layout
-      dot.style.transform = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px) translate(-50%,-50%) scale(' + dotScale.toFixed(3) + ')';
-    }
-
     // magnetic pull
     for (var i = 0; i < magnets.length; i++) {
       var m = magnets[i];
@@ -192,16 +127,14 @@
     }
 
     // hero parallax — only while the hero is on screen
-    if (heroPin && heroImg) {
+    if (heroPin && heroName) {
       var rect = heroPin.getBoundingClientRect();
       if (rect.bottom > 0 && rect.top < window.innerHeight) {
         var ntx = (mx - window.innerWidth / 2) / (window.innerWidth / 2);
         var nty = (my - window.innerHeight / 2) / (window.innerHeight / 2);
         px = lerp(px, ntx, CONFIG.parallax.lerp);
         py = lerp(py, nty, CONFIG.parallax.lerp);
-        heroImg.style.transform = 'translate(' + (px * CONFIG.parallax.img) + 'px,' + (py * CONFIG.parallax.img) + 'px)';
-        if (heroName) heroName.style.transform = 'translate(' + (px * CONFIG.parallax.name) + 'px,' + (py * CONFIG.parallax.name) + 'px)';
-        if (heroSub) heroSub.style.transform = 'translate(' + (px * CONFIG.parallax.sub) + 'px,' + (py * CONFIG.parallax.sub) + 'px)';
+        heroName.style.transform = 'translate(' + (px * CONFIG.parallax.name) + 'px,' + (py * CONFIG.parallax.name) + 'px)';
       }
     }
 

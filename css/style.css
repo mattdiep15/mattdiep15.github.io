@@ -4,14 +4,43 @@
    TUNABLES — every knob you'll realistically want to turn lives in :root
    below (plus the CONFIG object at the top of js/effects.js):
 
-     --accent             the one accent color (links, spotlight tint, tags)
-     --spotlight-radius   size of the cursor-following spotlight
+     --accent             the one accent color (links, tags)
      --grain-opacity      film-grain strength (0 turns it off)
      --intro-name-ms      how long the intro name takes to fade in
                           (matched by INTRO.nameMs in js/intro.js)
      --curtain-ms         page-transition curtain speed
      magnetic pull / tilt amounts → CONFIG in js/effects.js
    ========================================================================== */
+
+/* ── Satoshi (self-hosted) ─────────────────────────────────────────────────
+   Two faces for the whole site: Regular for body text, Medium for headings.
+   Self-hosted from Fontshare (free for commercial use) — no font CDN.
+
+   Each face claims a weight RANGE rather than a single value, so the ~24
+   font-weight declarations scattered through this file resolve onto the two
+   files we ship without needing to be rewritten:
+       100–450 → Regular      451–900 → Medium
+   In practice that means 300 and 400 render Regular, 500 and 600 render
+   Medium. Headings are set to 500 explicitly further down.
+
+   (This replaced PP Mori. fonts/PPMori-*.woff2 and the "PP Mori/" folder of
+   .otf originals are now unreferenced and safe to delete.) */
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('../fonts/Satoshi-Regular.woff2') format('woff2');
+  font-weight: 100 450;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('../fonts/Satoshi-Medium.woff2') format('woff2');
+  font-weight: 451 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   /* palette — full light theme */
@@ -23,8 +52,16 @@
   --accent:    #2b4cff;
   --accent-soft: rgba(43, 76, 255, 0.08);
 
+  /* dark bands: the hero, the role statement and the closing card */
+  --ink-deep:  #0e100f;
+  --paper:     #f4f4f2;
+
+  /* Wind River's brand teal, for the company name in the role statement.
+     DARK BACKGROUNDS ONLY — 6.83:1 on --ink-deep (AA), but only 2.58:1 on
+     --bg, which fails. Don't reuse it on the light panel. */
+  --wr-teal:   #00ada4;
+
   /* effect intensity */
-  --spotlight-radius: 340px;
   --grain-opacity: 0.05;
 
   /* timing */
@@ -33,23 +70,30 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-io:  cubic-bezier(0.65, 0, 0.35, 1);
 
-  --font: 'Poppins', system-ui, -apple-system, sans-serif;
-  --font-display: 'Poppins', system-ui, sans-serif; /* titles: Light (300), tight tracking */
+  --font: 'Satoshi', system-ui, -apple-system, sans-serif;
+  --font-display: 'Satoshi', system-ui, sans-serif; /* titles: tight tracking */
 }
 
 /* ── Reset / base ──────────────────────────────────────────────────────── */
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; }
+/* auto, not smooth: ScrollSmoother owns scrolling and native smooth behaviour
+   fights it. js/smooth.js routes anchor links through smoother.scrollTo. */
+html { scroll-behavior: auto; }
 
 body {
   font-family: var(--font);
   background: var(--bg);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
 }
+
+/* no overflow-x:hidden on body — it forces overflow-y:auto, which makes body
+   a scroll container and conflicts with ScrollSmoother's wrapper. The wrapper
+   is overflow:hidden already, so horizontal overflow is still clipped.
+   #smooth-content carries it for the no-JS / no-GSAP case. */
+#smooth-content { overflow-x: hidden; }
 
 img { max-width: 100%; display: block; }
 
@@ -62,16 +106,12 @@ a { color: inherit; }
   border-radius: 2px;
 }
 
-/* hide the native cursor only when the JS effects engine is running
-   (html.fx is added by js/effects.js on fine-pointer devices only) */
-html.fx, html.fx * { cursor: none !important; }
-
 /* ── Display typography ────────────────────────────────────────────────── */
 
 .display {
   font-family: var(--font-display);
-  font-size: clamp(2.2rem, 6vw, 4.6rem);
-  font-weight: 400;
+  font-size: clamp(2.6rem, 7.08vw, 5.43rem);
+  font-weight: 500; /* Satoshi Medium — section headings */
   letter-spacing: -0.06em;
   line-height: 1.02;
   color: var(--ink);
@@ -88,121 +128,120 @@ html.fx, html.fx * { cursor: none !important; }
 
 .section-sub {
   margin-top: 1rem;
-  font-size: 0.95rem;
+  font-size: 1.12rem;
   font-weight: 300;
   color: var(--muted);
   letter-spacing: 0.02em;
 }
 
-/* ── Nav ───────────────────────────────────────────────────────────────── */
+/* ── Pill nav ──────────────────────────────────────────────────────────────
+   No bubble and no panel — collapsed it is just three bare lines, and it
+   widens into a bare row of links. js/pill-nav.js animates ONLY the width
+   (and the items/bars inside); the rest is static here.
 
-nav#main-nav {
+   `difference` computes |backdrop - source|, so WHITE marks render white over
+   the dark hero and closing card, and flip to black over the light middle
+   panel. That's what makes it readable everywhere with no background, no
+   shadow and no scroll logic — everything below is therefore white.
+
+   overflow:hidden is load-bearing: it's what clips the links away while the
+   element is collapsed, so no separate hide/show is needed. */
+
+#pill-nav {
   position: fixed;
-  top: 0;
-  right: 0;
-  padding: 2rem 2.6rem;
-  z-index: 1000;
-  display: flex;
-  gap: 2.1rem;
-  transition: opacity 0.3s var(--ease-out);
-}
-
-nav#main-nav.hidden { opacity: 0; pointer-events: none; }
-
-.tab-link {
-  text-decoration: none;
-  color: var(--ink);
-  font-size: 0.74rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  position: relative;
-  display: inline-block;
-  will-change: transform;
-}
-
-.tab-link::after {
-  content: '';
-  position: absolute;
-  bottom: -3px;
-  left: 0;
-  width: 0;
-  height: 1.5px;
-  background: var(--accent);
-  transition: width 0.35s var(--ease-out);
-}
-
-.tab-link:hover::after,
-.tab-link:focus-visible::after { width: 100%; }
-
-/* collapsed circular menu button (appears after scrolling) */
-#menu-btn {
-  position: fixed;
-  top: 1.1rem;
-  right: 1.1rem;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--ink);
-  color: var(--bg);
-  border: none;
+  top: 1.4rem;
+  right: 1.4rem;
   z-index: 1001;
+  height: 64px;
+  width: 64px;            /* collapsed; JS animates this */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  mix-blend-mode: difference;
+}
+
+/* while pill-nav.js reads the natural expanded width */
+#pill-nav.measuring { visibility: hidden; }
+
+#pill-items {
+  display: flex;
+  align-items: center;
+  gap: 1.9rem;
+  list-style: none;
+  margin: 0;
+  padding: 0 1.6rem 0 1.9rem;
+  white-space: nowrap;
+}
+
+#pill-items a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: #fff; /* inverted by the blend mode above — not var(--ink) */
+  font-family: var(--font); /* Satoshi, matching the rest of the site */
+  font-weight: 400;         /* Regular */
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: opacity 0.2s var(--ease-out);
+}
+
+#pill-items a:hover { opacity: 0.55; }
+
+/* the toggle never moves; the row of links grows out to its left */
+#pill-toggle {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out);
-  will-change: transform;
 }
 
-#menu-btn.visible { opacity: 1; pointer-events: auto; }
-#menu-btn:hover { transform: scale(1.08); }
-
-#nav-dropdown {
-  position: fixed;
-  top: 4.2rem;
-  right: 1.1rem;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 1rem 1.4rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  z-index: 1000;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-6px) scale(0.97);
-  transform-origin: top right;
-  transition: opacity 0.25s var(--ease-out), transform 0.25s var(--ease-out);
-  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.09);
+.pill-bars {
+  position: relative;
+  width: 20px;
+  height: 14px;
+  display: block;
 }
 
-#nav-dropdown.open {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0) scale(1);
+.pill-bars i {
+  position: absolute;
+  left: 0;
+  width: 20px;
+  height: 2px;
+  border-radius: 2px;
+  background: #fff; /* inverted by the blend mode — see #pill-nav */
 }
 
-/* on small screens skip the inline nav entirely — button only */
-@media (max-width: 680px) {
-  nav#main-nav { display: none; }
-  #menu-btn { opacity: 1; pointer-events: auto; }
-}
+.pill-bars i:nth-child(1) { top: 0; }
+.pill-bars i:nth-child(2) { top: 6px; }
+.pill-bars i:nth-child(3) { top: 12px; }
+
+/* no JS: it can't expand, so show the links inline rather than trapping them
+   inside a 64px box */
+html.no-js #pill-nav { width: auto; }
+html.no-js #pill-toggle { display: none; }
 
 /* ── Intro preloader ───────────────────────────────────────────────────────
    Markup is display:none by default; only html.intro-pending (set by the
    tiny inline script in <head> when JS is on, no reduced-motion, and the
    intro hasn't played this session) shows it. Fully invisible to no-JS. */
 
+/* dark to match the hero it wipes away to reveal — on --bg it flashed light */
 #intro {
   display: none;
   position: fixed;
   inset: 0;
   z-index: 10000;
-  background: var(--bg);
+  background: var(--ink-deep);
+  color: var(--paper);
   align-items: center;
   justify-content: center;
   flex-direction: column;
@@ -214,7 +253,7 @@ html.intro-pending #intro { display: flex; }
 
 .intro-name {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 5.5vw, 4.2rem);
+  font-size: clamp(2.36rem, 6.49vw, 4.96rem);
   font-weight: 400;
   letter-spacing: -0.06em;
   opacity: 0; /* js/intro.js drives 0 → 1 */
@@ -222,7 +261,7 @@ html.intro-pending #intro { display: flex; }
 
 .intro-counter {
   font-variant-numeric: tabular-nums;
-  font-size: 0.8rem;
+  font-size: 0.94rem;
   font-weight: 400;
   letter-spacing: 0.22em;
   color: var(--muted);
@@ -238,14 +277,20 @@ html.intro-pending #intro { display: flex; }
 /* keep hero hidden underneath until the intro lifts */
 html.intro-pending:not(.intro-done) .hero-content { opacity: 0; }
 
-/* ── Hero (pinned) ─────────────────────────────────────────────────────────
-   .hero-pin is taller than the viewport; .hero-sticky pins the content so
-   js/scroll.js can scale/fade it out as you scroll into the next section. */
-
-/* pin travel: height beyond 100vh is how long the hero stays pinned while
-   scaling out. At exactly 100vh there is no pause — the hero scrolls off
-   naturally and the next section follows immediately with no blank gap. */
-.hero-pin { height: 100vh; }
+/* ── Hero ──────────────────────────────────────────────────────────────────
+   At exactly 100vh .hero-sticky has no sticky travel, so nothing actually
+   pins — the hero fills the first screen, then scrolls off naturally and the
+   statement below follows with no blank gap. It has no scroll animation at
+   all; only the load-time riseIn entrance below. */
+/* The hero and the role statement form one unbroken dark band. The background
+   lives on these two sections rather than on body, because projects.html shares
+   this stylesheet and has neither of them — a dark body would break that page.
+   .now-pin's -45vh pull-up overlaps the hero, and both being the same black
+   makes that seam invisible. */
+.hero-pin {
+  height: 100vh;
+  background: var(--ink-deep);
+}
 
 .hero-sticky {
   position: sticky;
@@ -267,113 +312,203 @@ html.intro-pending:not(.intro-done) .hero-content { opacity: 0; }
   will-change: transform, opacity;
 }
 
-/* staggered entrance — runs immediately on normal loads, or when the intro
-   finishes (html.intro-done). Static (visible) when JS is off. */
+/* entrance — runs immediately on normal loads, or when the intro finishes
+   (html.intro-done). Static (visible) when JS is off. .hero-content holds a
+   single <h1> now, so there's no stagger. */
 html.js:not(.intro-pending) .hero-content > *,
 html.intro-done .hero-content > * {
   animation: riseIn 1s var(--ease-out) both;
 }
-html.js:not(.intro-pending) .hero-content > :nth-child(2),
-html.intro-done .hero-content > :nth-child(2) { animation-delay: 0.12s; }
-html.js:not(.intro-pending) .hero-content > :nth-child(3),
-html.intro-done .hero-content > :nth-child(3) { animation-delay: 0.22s; }
 
+/* hero entrance on page LOAD (not scroll). Rise + fade, no scale. */
 @keyframes riseIn {
-  from { opacity: 0; transform: translateY(26px) scale(0.98); }
+  from { opacity: 0; transform: translateY(26px); }
   to   { opacity: 1; transform: none; }
 }
 
-.hero-photo-row { position: relative; }
-
-.hero-circle-wrap {
-  width: clamp(190px, 26vw, 320px);
-  height: clamp(190px, 26vw, 320px);
-  border-radius: 50%;
-  overflow: hidden;
+.hero-name {
+  font-family: var(--font-display);
+  /* Stays Regular (400) while section headings are Medium (500) — this and the
+     role statement read as display statements, not headings. The divisor below
+     is measured from Satoshi Regular, so weight and divisor must change
+     together. */
+  font-weight: 400;
+  /* The clamp is the size we WANT. The calc is a hard ceiling that keeps the
+     name inside the viewport: "Matthew Diep" measures 5.377em wide in Satoshi
+     (summed advance widths minus 0.06em tracking x 12 chars), PLUS 0.360em of
+     .letter padding (12 letters x 2 sides x 0.015em) = 5.737em. .hero-sticky
+     pads 2rem a side, so any font-size above (100vw - padding) / 5.78 would
+     overflow. It can't wrap (a non-wrapping flex row, see below) and
+     #smooth-content is overflow-x:hidden, so overflow would CLIP the name.
+     NB: 5.78 is tied to this string, this font, the tracking AND the .letter
+     padding — re-measure if any of them change. It was 6.15 under PP Mori,
+     which is 5.6% wider for this string. */
+  font-size: min(clamp(4.25rem, 11.5vw, 8.85rem), calc((100vw - 4.5rem) / 5.78));
+  letter-spacing: -0.06em;
+  line-height: 1;
+  color: var(--paper); /* on the dark band */
   will-change: transform;
-  transition: box-shadow 0.4s var(--ease-out);
 }
 
-.hero-circle-wrap:hover { box-shadow: 0 24px 70px rgba(0, 0, 0, 0.16); }
+/* ── Hero letter photos ────────────────────────────────────────────────────
+   js/hero-letters.js splits the name into one .letter per character. Three of
+   them carry a hidden .thumb; hovering pops the photo in over the glyph while
+   the neighbouring letters slide aside to make room.
 
-#hero-img {
+   Every letter is plain --ink at rest — the photos only ever appear on hover.
+   The flex row is what lets neighbours be shifted independently, and is only
+   applied once the split has actually happened (html.hero-split), so without
+   JS this stays an ordinary centred heading. */
+
+html.hero-split .hero-name {
+  display: flex;
+  justify-content: center;
+  user-select: none;
+}
+
+.hero-name .letter {
+  position: relative;
+  display: inline-block;
+  /* Guarantees a gap that the settle overshoot can never close — see the
+     settleEase note in js/hero-letters.js. Kept small so the wordmark stays
+     tight: 0.015em a side against -0.06em tracking nets -0.03em between
+     letters, i.e. still tighter than neutral. Changing this value means
+     recomputing the 6.15 divisor in .hero-name's font-size above, and checking
+     it still exceeds the settle overshoot. */
+  padding: 0 0.015em;
+  will-change: transform;
+}
+
+.hero-name .letter.has-media { cursor: pointer; }
+
+.hero-name .char {
+  display: inline-block;
+  position: relative;
+  z-index: 1;
+}
+
+/* centring and the rest state (scale 0.3, opacity 0) are set by GSAP via
+   xPercent/yPercent so it owns the whole transform — no CSS transform here
+   for it to clobber */
+.hero-name .thumb {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.05em;
+  height: 1.05em;
+  border-radius: 12px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hero-name .thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
-  transition: transform 0.5s var(--ease-out), opacity 0.28s ease;
-}
-
-.hero-circle-wrap:hover #hero-img { transform: scale(1.07); }
-
-.hero-name {
-  font-family: var(--font-display);
-  font-size: clamp(2.4rem, 6.5vw, 5rem);
-  font-weight: 400;
-  letter-spacing: -0.06em;
-  line-height: 1;
-  will-change: transform;
-}
-
-.hero-sub {
-  font-size: 0.8rem;
-  font-weight: 300;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--muted);
-  will-change: transform;
+  display: block;
 }
 
 /* ── Wind River statement (full-viewport moment) + project strip ───────── */
 
-/* pin length: the height beyond 100vh covers the glide-in plus the readable
-   hold before the statement releases and scrolls off with the page.
-   negative margin overlaps the lower part of the hero so the statement
-   reaches its centered (pinned) position while the hero is still on screen —
-   this is what lets the lines start gliding in early (see NOW.lead). */
-/* pointer-events none: the -60vh pull-up overlaps the hero, and this section
-   (later in the DOM) would otherwise swallow clicks on the lower part of the
-   hero photo. It contains no interactive elements, so nothing is lost. */
-.now-pin { height: 175vh; margin-top: -60vh; pointer-events: none; }
+/* No fixed height: js/now-line.js pins .now-sticky and ScrollTrigger's pin
+   spacer supplies the runway (TUNE.pinVh viewport heights).
 
-/* no horizontal padding: line positions are computed by js/scroll.js from
-   the viewport's left edge (the 1/5 → 3/4 screen band) */
+   The negative margin pulls this section up over the hero so the statement
+   starts while "Matthew Diep" is only just leaving the top of the screen.
+   now-line.js pins at `top top` — when this section's top reaches the viewport
+   top — which at margin-top:0 would be scrollY 100vh, a full screen after the
+   name has gone. The name is centred at ~50vh with a ~7vh half-height, so it
+   clears the top around 57vh; -45vh brings the pin forward to ~55vh, catching
+   it right as it exits.
+
+   pointer-events:none because the pinned .now-sticky is a full-viewport box
+   with no background, and during the overlap it sits ON TOP of the hero —
+   without this it would swallow hover on the photo letters. The statement has
+   no interactive elements, so nothing is lost. */
+.now-pin {
+  height: auto;
+  margin-top: -45vh;
+  pointer-events: none;
+  background: var(--ink-deep); /* continues the hero's dark band */
+}
+
+/* Default state is the FALLBACK — a plain wrapped statement that reads fine
+   with no JS, a blocked GSAP CDN, or reduced motion. js/now-line.js adds
+   html.now-anim once it's actually running, which switches on the animated
+   layout below. */
 .now-sticky {
-  position: sticky;
-  top: 0;
-  height: 100vh;
+  min-height: 60vh;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  padding: 2rem clamp(1.4rem, 6vw, 4rem);
+}
+
+/* animated mode: full-viewport pinned frame, statement centred in it */
+html.now-anim .now-sticky {
+  height: 100vh;
+  min-height: 0;
+  padding: 0;
+  align-items: center;
   justify-content: center;
-  align-items: flex-start;
-  overflow: hidden; /* clips lines while they're mid-flight */
+  overflow: hidden; /* clips each line while it's off-screen right, then left */
+}
+
+/* left-aligned so all three share one left edge — centring each line on its own
+   width made the short first line sit noticeably inset from the other two.
+   The block as a whole is still centred in the viewport (.now-sticky's
+   justify-content), it's the lines inside it that align left. */
+html.now-anim .now-line { text-align: left; }
+
+html.now-anim .now-l {
+  display: block;
+  white-space: nowrap; /* a line must not re-wrap mid-glide */
+  will-change: transform, opacity;
 }
 
 .now-line {
   font-family: var(--font-display);
-  font-size: clamp(1.7rem, 4.5vw, 3.4rem);
+  font-size: clamp(2.01rem, 5.31vw, 4.01rem);
   font-weight: 400;
   letter-spacing: -0.06em;
   line-height: 1.18;
+  color: var(--paper); /* on the dark band */
 }
 
-/* one statement line: glides in and squish-fades out (js/scroll.js) */
-.now-l {
-  display: block;
-  width: max-content;
-  transform-origin: left center;
-  will-change: transform, opacity;
+/* ── Light panel ───────────────────────────────────────────────────────────
+   Holds Projects, Experience and Education, riding up over the dark band with
+   rounded top corners — the inverse of the .closing card at the page bottom.
+
+   The negative margin is load-bearing: border-radius cuts the panel's own
+   corners away, revealing whatever sits BEHIND it, which in normal flow is
+   body (light). Pulling it 40px up into the dark section above means the
+   corners reveal black instead, which is what makes it read as a panel sliding
+   over rather than a shape with pale notches.
+
+   --bg rather than pure white on purpose: .tl-card and .project-image-wrap are
+   #ffffff, and on a pure-white panel they'd lose their fill contrast entirely.
+   Against the black above, --bg reads as white anyway. */
+.light-panel {
+  position: relative;
+  background: var(--bg);
+  border-radius: 40px 40px 0 0;
+  margin-top: -40px;
+  /* breathing room below the rounded top edge, on top of the first section's
+     own padding. The -40px pull-up means the top 40px sits over the dark band,
+     so this is what actually separates the corner from the first heading. */
+  padding-top: clamp(2rem, 5vh, 4rem);
 }
 
 .now-line em {
   font-style: normal;
-  color: var(--accent);
+  color: var(--wr-teal);
 }
 
-/* overlap: Projects starts rising into view while the statement above is
-   still pinned — only afterwards does the statement scroll off. A smaller
-   (less negative) value delays Projects, so it comes in later in the scroll. */
-#work { margin-top: -30vh; }
+/* no overlap: the statement above now owns a real pinned runway, so Projects
+   simply follows it. (Was -30vh, when the statement pinned with pinSpacing
+   disabled and needed Projects pulled up over it.) */
+#work { margin-top: 0; }
 
 /* tighter gap under "Things I've built :)" — scoped to Projects so other
    section heads keep the larger default spacing */
@@ -398,14 +533,14 @@ html.intro-done .hero-content > :nth-child(3) { animation-delay: 0.22s; }
 .feature:last-child { border-bottom: none; }
 
 .feature-text h3 {
-  font-size: clamp(1.3rem, 2.4vw, 1.7rem);
-  font-weight: 600;
+  font-size: clamp(1.53rem, 2.83vw, 2.01rem);
+  font-weight: 500; /* Satoshi Medium */
   letter-spacing: -0.02em;
   margin-bottom: 0.7rem;
 }
 
 .feature-text > p {
-  font-size: 0.95rem;
+  font-size: 1.12rem;
   font-weight: 300;
   line-height: 1.7;
   color: var(--muted);
@@ -421,7 +556,7 @@ html.intro-done .hero-content > :nth-child(3) { animation-delay: 0.22s; }
   margin-top: 1.4rem;
   text-decoration: none;
   color: var(--accent);
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 500;
   letter-spacing: 0.04em;
   padding: 0.3rem 0.1rem;
@@ -448,12 +583,15 @@ html.intro-done .hero-content > :nth-child(3) { animation-delay: 0.22s; }
   height: 100%;
   object-fit: cover;
   filter: grayscale(10%);
-  transition: filter 0.4s var(--ease-out), transform 0.5s var(--ease-out);
+  /* `scale`, not `transform: scale()` — ScrollSmoother owns `transform` on the
+     [data-speed] images below, and an inline transform would override a CSS
+     one. `scale` is an independent property, so the two compose instead. */
+  transition: filter 0.4s var(--ease-out), scale 0.5s var(--ease-out);
 }
 
 .feature-img.contain img { object-fit: contain; padding: 20px; background: #fff; }
 
-.feature:hover .feature-img img { filter: none; transform: scale(1.04); }
+.feature:hover .feature-img img { filter: none; scale: 1.04; }
 
 .view-all-wrap { text-align: center; margin-top: 2.2rem; }
 
@@ -464,7 +602,7 @@ html.intro-done .hero-content > :nth-child(3) { animation-delay: 0.22s; }
   margin-top: 1.4rem;
   text-decoration: none;
   color: var(--ink);
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -492,7 +630,7 @@ main.section { padding-bottom: 32vh; }
   gap: 0.5rem;
   text-decoration: none;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.92rem;
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -544,31 +682,47 @@ main.section { padding-bottom: 32vh; }
   height: 100%;
   object-fit: cover;
   filter: grayscale(12%);
-  transition: filter 0.4s var(--ease-out), transform 0.5s var(--ease-out);
+  /* `scale` rather than `transform: scale()` — see .feature-img img above */
+  transition: filter 0.4s var(--ease-out), scale 0.5s var(--ease-out);
 }
 
 .project-image-wrap.contain .project-image { object-fit: contain; padding: 12px; background: #fff; }
 
-.project-card:hover .project-image { filter: none; transform: scale(1.06); }
+.project-card:hover .project-image { filter: none; scale: 1.06; }
+
+/* ── ScrollSmoother parallax ──────────────────────────────────────────────
+   data-speed="auto" derives its travel from the gap between the image and
+   its clipping frame — an image that exactly fills its box computes to zero
+   movement, and any fixed speed would expose a bare edge. So parallaxed
+   images overfill by 28%, centred, giving "auto" room to work and
+   guaranteeing the frame stays covered at both ends of the scroll.
+   Only cover-fit photos are targeted; .contain logos sit on white padding
+   and would look wrong drifting. */
+.feature-img img[data-speed],
+.project-image-wrap img[data-speed] {
+  position: relative;
+  height: 128%;
+  top: -14%;
+}
 
 .project-card-body { flex: 1; min-width: 0; }
 
 .project-card h3 {
-  font-size: 1.15rem;
-  font-weight: 600;
+  font-size: 1.36rem;
+  font-weight: 500; /* Satoshi Medium */
   letter-spacing: -0.015em;
   margin-bottom: 0.4rem;
 }
 
 .project-card h3 i {
-  font-size: 0.7rem;
+  font-size: 0.83rem;
   color: var(--muted);
   margin-left: 0.4rem;
   vertical-align: 2px;
 }
 
 .project-card p {
-  font-size: 0.87rem;
+  font-size: 1.03rem;
   line-height: 1.65;
   color: var(--muted);
   font-weight: 300;
@@ -587,7 +741,7 @@ main.section { padding-bottom: 32vh; }
   color: var(--muted);
   padding: 0.22rem 0.68rem;
   border-radius: 100vmax;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   letter-spacing: 0.04em;
 }
 
@@ -689,15 +843,15 @@ main.section { padding-bottom: 32vh; }
 }
 
 .tl-info { flex: 1; min-width: 0; }
-.tl-title { font-weight: 600; font-size: 0.97rem; letter-spacing: -0.01em; }
-.tl-company { color: var(--muted); font-size: 0.86rem; margin-top: 2px; font-weight: 300; }
+.tl-title { font-weight: 500; font-size: 1.14rem; letter-spacing: -0.01em; }
+.tl-company { color: var(--muted); font-size: 1.01rem; margin-top: 2px; font-weight: 300; }
 
 .tl-meta { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
-.tl-date { color: var(--muted); font-size: 0.83rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tl-date { color: var(--muted); font-size: 0.98rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 .tl-chevron {
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.89rem;
   transition: transform 0.25s var(--ease-out), color 0.25s var(--ease-out);
   display: inline-block;
 }
@@ -712,7 +866,7 @@ main.section { padding-bottom: 32vh; }
 .tl-details ul {
   padding-left: 1.1rem;
   margin: 0;
-  font-size: 0.86rem;
+  font-size: 1.01rem;
   line-height: 1.8;
   color: var(--muted);
   font-weight: 300;
@@ -773,11 +927,11 @@ html.no-js .tl-chevron { display: none; }
 .school-icon { width: 44px; height: auto; border-radius: 4px; }
 
 .coursework-column { flex: 1; min-width: 180px; }
-.coursework-column p { font-size: 0.86rem; font-weight: 500; color: var(--muted); margin-bottom: 0.3rem; }
+.coursework-column p { font-size: 1.01rem; font-weight: 500; color: var(--muted); margin-bottom: 0.3rem; }
 .coursework-column ul {
   padding-left: 1.1rem;
   margin: 0;
-  font-size: 0.86rem;
+  font-size: 1.01rem;
   line-height: 1.8;
   color: var(--muted);
   font-weight: 300;
@@ -788,107 +942,89 @@ html.no-js .tl-chevron { display: none; }
 
 /* ── Resume ────────────────────────────────────────────────────────────── */
 
-.resume-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1.4rem;
-  padding: 0.85rem 2rem;
-  background: var(--ink);
-  color: var(--bg);
-  border-radius: 100vmax;
-  text-decoration: none;
-  font-size: 0.8rem;
-  font-weight: 500;
+/* ── Closing card ──────────────────────────────────────────────────────────
+   The page's final block: a near-black card with rounded top corners holding
+   the contact heading, four pills (incl. the resume link) and the credit.
+   It replaced the separate #resume section, #contact section and <footer>.
+
+   Full-bleed on purpose — it does NOT use .section (which caps width at
+   1160px); .closing-inner constrains the contents instead. */
+
+.closing {
+  background: var(--ink-deep);
+  color: var(--paper);
+  border-radius: 40px 40px 0 0;
+  margin-top: clamp(3rem, 10vh, 6rem);
+  padding: clamp(4rem, 12vh, 7rem) clamp(1.4rem, 6vw, 4rem) 2.2rem;
+  text-align: center;
+}
+
+.closing-inner { max-width: 1160px; margin: 0 auto; }
+
+/* .display hard-codes color: var(--ink) — inherit the card's light text */
+.closing-title { color: inherit; }
+
+.closing-credit {
+  margin-top: clamp(3rem, 8vh, 5rem);
+  font-size: 0.89rem;
+  font-weight: 300;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
-  will-change: transform;
-  transition: background 0.3s ease, box-shadow 0.3s var(--ease-out);
+  color: rgba(244, 244, 242, 0.55);
 }
-
-.resume-button:hover {
-  background: var(--accent);
-  box-shadow: 0 12px 30px rgba(43, 76, 255, 0.3);
-}
-
-.resume-button i { transition: transform 0.3s var(--ease-out); }
-.resume-button:hover i { transform: translateX(4px); }
-
-/* ── Contact ───────────────────────────────────────────────────────────── */
 
 .contact-links {
   display: flex;
+  justify-content: center;
   gap: 0.9rem;
   margin-top: 2.4rem;
   flex-wrap: wrap;
 }
 
+/* light-on-dark: these only ever appear inside .closing */
 .contact-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
   padding: 0.85rem 1.7rem;
-  border: 1.5px solid var(--ink);
+  border: 1.5px solid rgba(244, 244, 242, 0.45);
   border-radius: 100vmax;
   text-decoration: none;
-  color: var(--ink);
-  font-size: 0.8rem;
+  color: var(--paper);
+  font-size: 0.94rem;
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   will-change: transform;
-  transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s var(--ease-out);
+  transition: background 0.3s ease, color 0.3s ease,
+              border-color 0.3s ease, box-shadow 0.3s var(--ease-out);
 }
 
-.contact-pill i { font-size: 1rem; }
+.contact-pill i { font-size: 1.18rem; }
 
 .contact-pill:hover {
-  background: var(--ink);
-  color: var(--bg);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+  background: var(--paper);
+  border-color: var(--paper);
+  color: var(--ink-deep);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 }
 
-/* ── Footer ────────────────────────────────────────────────────────────── */
+/* ── Plain footer ──────────────────────────────────────────────────────────
+   projects.html still ends with a simple <footer>. :not(.closing) keeps this
+   off the closing card, which is itself a <footer>. */
 
-footer {
+footer:not(.closing) {
   text-align: center;
   padding: 2.6rem 1rem;
   border-top: 1px solid var(--line);
-  font-size: 0.75rem;
+  font-size: 0.89rem;
   font-weight: 300;
   letter-spacing: 0.08em;
   color: var(--muted);
 }
 
-/* ══ POINTER-EFFECT LAYERS (activated by html.fx from js/effects.js) ════ */
-
-/* cursor spotlight: a faint dot-grid revealed through a radial mask that
-   follows the cursor (lerped), plus a soft accent tint. --mx/--my are set
-   each frame by the effects engine. */
-#spotlight {
-  position: fixed;
-  inset: 0;
-  /* negative z-index: the grid paints above the page background but BEHIND
-     all content, so it never overlays text or cards */
-  z-index: -1;
-  pointer-events: none;
-  display: none;
-  --mx: 50vw;
-  --my: 50vh;
-  background-image: radial-gradient(circle 1.2px, rgba(19, 19, 19, 0.38) 99%, transparent 100%);
-  background-size: 26px 26px;
-  -webkit-mask-image: radial-gradient(circle var(--spotlight-radius) at var(--mx) var(--my), rgba(0,0,0,0.85), transparent 72%);
-  mask-image: radial-gradient(circle var(--spotlight-radius) at var(--mx) var(--my), rgba(0,0,0,0.85), transparent 72%);
-}
-
-#spotlight::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle calc(var(--spotlight-radius) * 1.15) at var(--mx) var(--my), var(--accent-soft), transparent 70%);
-}
-
-html.fx #spotlight { display: block; }
+/* ══ OVERLAY LAYERS ═════════════════════════════════════════════════════
+   The cursor-following dot-grid spotlight that used to live here was removed;
+   the page background is now plain --bg. Only the film grain remains.      */
 
 /* film grain — animated SVG turbulence, oversized layer jittered by steps() */
 #grain {
@@ -910,99 +1046,75 @@ html.fx #spotlight { display: block; }
   100% { transform: translate(0, 0); }
 }
 
-/* custom cursor: a single dot driven by the shared rAF loop; it grows over
-   interactive elements and shrinks on press (scale is applied in JS).
-   Rendered at its LARGEST needed size (hover ≈ 8px × 2.6) and scaled DOWN
-   at rest — scaling ≤1 keeps the GPU layer texture crisp (no pixelation).
-   The rest-state 8px look comes from dotBaseScale in effects.js. */
-#cursor-dot {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 24px;
-  height: 24px;
-  background: var(--ink);
-  pointer-events: none;
-  z-index: 9999;
-  border-radius: 50%;
-  display: none;
-  opacity: 0; /* invisible until the first real mouse move (see effects.js) */
-  will-change: transform;
-}
-
-html.fx #cursor-dot { display: block; }
-
 /* page-transition curtain */
+/* The curtain carries a rounded LEADING edge as it travels, easing to square
+   as it lands — so it reads as a panel sliding over the page rather than a
+   plain wipe, matching .light-panel and .closing. The radius is animated
+   alongside the transform, which is why it's square at full cover (no slivers
+   of the old page showing through the corners). */
 #curtain {
   position: fixed;
   inset: 0;
   z-index: 9998;
   background: var(--ink);
   transform: translateY(101%);
+  border-radius: 40px 40px 0 0; /* leading top edge, rising from below */
   pointer-events: none;
 }
 
 #curtain.curtain-cover {
   transform: translateY(0);
-  transition: transform var(--curtain-ms) var(--ease-io);
+  border-radius: 0;             /* square once it fully covers */
+  transition: transform var(--curtain-ms) var(--ease-io),
+              border-radius var(--curtain-ms) var(--ease-io);
 }
 
 /* arriving from another page: start covered (set in <head> to avoid flash),
-   then main.js plays the lift */
-html.page-enter #curtain { transform: translateY(0); }
+   then main.js plays the lift. Here the BOTTOM edge is the trailing one, so
+   the radius grows on the way out — the mirror of the cover. */
+html.page-enter #curtain {
+  transform: translateY(0);
+  border-radius: 0;
+}
+
 html.page-enter #curtain.curtain-lift {
   transform: translateY(-101%);
-  transition: transform calc(var(--curtain-ms) + 120ms) var(--ease-io);
+  border-radius: 0 0 40px 40px;
+  transition: transform calc(var(--curtain-ms) + 120ms) var(--ease-io),
+              border-radius calc(var(--curtain-ms) + 120ms) var(--ease-io);
 }
 
-/* ══ SCROLL-DRIVEN ANIMATION ════════════════════════════════════════════
-   Two paths, chosen by js/scroll.js:
-   1. html.native — browser supports animation-timeline: view(); pure CSS.
-   2. otherwise  — the JS engine writes transforms directly (no CSS here).
-   Elements opt in via data-scroll="head" (display type that grows/shrinks
-   with scroll) or data-scroll="card" (staggered rise that reverses).     */
+/* ══ LINE-SPLIT HEADINGS ════════════════════════════════════════════════
+   [data-split] headings are broken into per-line masks by js/split-lines.js
+   (GSAP SplitText). SplitText builds each mask as a clone of the line and
+   names it after the line's class + "-mask", so .sline → .sline-mask.
 
-@supports (animation-timeline: view()) {
-  html.native [data-scroll="head"] {
-    animation: headScale linear both;
-    animation-timeline: view();
-    animation-range: cover 0% cover 100%;
-  }
+   .display sets line-height: 1.02, but Satoshi's em box is 1.25em tall
+   (ascent 1.010 + descent 0.240), so glyphs overflow the line box by 0.115em
+   top and bottom — the mask's overflow:clip would cut the tail off the "j" in
+   Projects and the "p" in Experience. 0.14em of padding clears that 0.115em;
+   the matching negative margin pulls it back out so line spacing and the
+   heading's layout height are exactly what they were before the split.
+   (js/split-lines.js starts lines at yPercent 120, not 100, so nothing peeks
+   into this padding at the start of the reveal.)                          */
 
-  /* two timelines per card: rise on entry, squish-fade while crossing the
-     top edge. cardRise uses `backwards` fill (its end state == base state)
-     so it stops applying after entry and lets cardSquish own the exit;
-     cardRise is listed last so it wins during entry. */
-  /* the squish runs over the last 24vh of the element's crossing (not the
-     element's own height) so short blocks like captions fade just as
-     visibly as tall cards */
-  html.native [data-scroll="card"] {
-    animation: cardSquish linear both, cardRise linear backwards;
-    animation-timeline: view(), view();
-    animation-range: cover calc(100% - 24vh) cover 100%, entry 0% cover 42%;
-  }
-
+.sline-mask {
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
 }
 
-/* type grows to full size in the readable middle band, shrinks at edges —
-   entry starts well-visible so there's never an empty-looking screen */
-@keyframes headScale {
-  0%   { opacity: 0.4;  transform: scale(0.93) translateY(30px); }
-  22%  { opacity: 1;    transform: scale(1)    translateY(0); }
-  75%  { opacity: 1;    transform: scale(1)    translateY(0); }
-  100% { opacity: 0.3;  transform: scale(0.96, 0.8) translateY(-24px); } /* squish out */
-}
+/* ══ SCROLL ENTRANCES — none ════════════════════════════════════════════
+   Page content has NO scroll-driven entrance. Sections, project rows,
+   timeline entries and cards simply scroll into view with the page, at full
+   opacity and their natural position — nothing rises, fades or scales.
 
-@keyframes cardRise {
-  from { opacity: 0; transform: translateY(46px) scale(0.96); }
-  to   { opacity: 1; transform: none; }
-}
+   The former js/scroll.js engine (a data-scroll="card" rise+fade, with both a
+   native animation-timeline path and a JS/IntersectionObserver fallback) was
+   removed entirely for this reason.
 
-/* vertical squish + fade while an element slides under the top edge */
-@keyframes cardSquish {
-  from { opacity: 1; transform: none; }
-  to   { opacity: 0; transform: translateY(-22px) scale(0.96, 0.8); }
-}
+   The two deliberate motion pieces that remain are separate systems:
+     • [data-split] display headings — masked per-line reveal, js/split-lines.js
+     • .now-l statement lines — glide in from the right, js/now-line.js       */
 
 /* ══ REDUCED MOTION ═════════════════════════════════════════════════════
    JS engines all bail out early; this kills the remaining CSS motion and
@@ -1019,12 +1131,19 @@ html.page-enter #curtain.curtain-lift {
 
   .hero-pin { height: auto; }
   .hero-sticky { position: static; height: auto; min-height: 100vh; }
-  .now-pin { height: auto; }
-  .now-sticky { position: static; height: auto; min-height: 40vh; padding: 2rem clamp(1.4rem, 6vw, 4rem); }
+  /* no pin here (now-line.js bails), so the base rule's -45vh pull-up would
+     just collide the statement into the hero — neutralise it */
+  .now-pin { height: auto; margin-top: 0; pointer-events: auto; }
+  .now-sticky { height: auto; min-height: 40vh; }
+  /* now-line.js bails before animating, so this is belt-and-braces: keep the
+     statement wrapped and at rest even if it ever survives a pref change */
+  .now-line { white-space: normal !important; }
   .now-l { transform: none !important; opacity: 1 !important; }
-  #work { margin-top: 0; } /* no pin → no overlap */
-  #grain, #spotlight, #cursor-dot { display: none !important; }
-  [data-scroll] { opacity: 1 !important; transform: none !important; animation: none !important; }
+  #grain { display: none !important; }
+  /* split-lines.js bails before splitting, so headings are still plain text;
+     this is belt-and-braces in case a split ever survives a preference change */
+  [data-split], .sline, .sline-mask { opacity: 1 !important; transform: none !important; }
+  .sline-mask { overflow: visible !important; padding-bottom: 0; margin-bottom: 0; }
 }
 
 /* ══ RESPONSIVE ═════════════════════════════════════════════════════════ */

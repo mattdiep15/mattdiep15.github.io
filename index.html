@@ -30,9 +30,10 @@
     })();
   </script>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Satoshi is self-hosted (see @font-face in css/style.css) — no font CDN.
+       Regular carries most of the page, so preload it; the stylesheet would
+       otherwise not request it until the CSS itself has parsed. -->
+  <link rel="preload" href="fonts/Satoshi-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -44,101 +45,72 @@
     <div class="intro-counter">0</div>
   </div>
 
-  <nav id="main-nav" aria-label="Main">
-    <a href="projects.html" class="tab-link magnetic" data-transition>Projects</a>
-    <a href="#experience" class="tab-link magnetic">Experience</a>
-    <a href="#education" class="tab-link magnetic">Education</a>
-    <a href="#resume" class="tab-link magnetic">Resume</a>
-    <a href="#contact" class="tab-link magnetic">Contact</a>
+  <!-- Floating pill nav: one element that collapses to a 64px circle and
+       widens into a pill (js/pill-nav.js). No .magnetic on these links —
+       js/effects.js writes style.transform to magnetic elements every frame
+       and the GSAP stagger writes transform to the same nodes; they'd fight. -->
+  <nav id="pill-nav" aria-label="Main">
+    <ul id="pill-items" aria-hidden="true">
+      <li><a href="projects.html" data-transition>Projects</a></li>
+      <li><a href="#experience">Experience</a></li>
+      <li><a href="#education">Education</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <button id="pill-toggle" aria-expanded="false" aria-controls="pill-items" aria-label="Open menu">
+      <span class="pill-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
   </nav>
 
-  <button id="menu-btn" aria-label="Open menu" aria-expanded="false"><i class="fas fa-bars"></i></button>
-
-  <div id="nav-dropdown">
-    <a href="projects.html" class="tab-link" data-transition>Projects</a>
-    <a href="#experience" class="tab-link">Experience</a>
-    <a href="#education" class="tab-link">Education</a>
-    <a href="#resume" class="tab-link">Resume</a>
-    <a href="#contact" class="tab-link">Contact</a>
-  </div>
+  <!-- ScrollSmoother scrolls #smooth-content by transforming it. A transform
+       makes an element a containing block, so every position:fixed layer
+       (nav, menu button, dropdown, intro, grain, curtain) MUST stay outside
+       this wrapper or it would fix to the content instead of the viewport.
+       Only scrollable page content goes inside. -->
+  <div id="smooth-wrapper">
+  <div id="smooth-content">
 
   <!-- ── Hero (pinned: scales/fades out as you scroll past) ── -->
   <header class="hero-pin" id="top">
     <div class="hero-sticky">
       <div class="hero-content">
-        <div class="hero-photo-row">
-          <div class="hero-circle-wrap" tabindex="0" role="button" aria-label="Cycle through photos" id="hero-circle">
-            <img id="hero-img" src="images/PalaceFineArts.jpg" alt="Palace of Fine Arts" />
-          </div>
-        </div>
-        <div><h1 class="hero-name">Matthew Diep</h1></div>
-        <div><p class="hero-sub">Data Science &amp; Economics — UC Berkeley</p></div>
+        <!-- Plain text is the source of truth; js/hero-letters.js splits it
+             into per-letter spans and attaches a photo to the first "t", the
+             first "e" and the "i". Without JS this stays a normal heading. -->
+        <h1 class="hero-name">Matthew Diep</h1>
       </div>
     </div>
   </header>
 
-  <!-- ── Now: pinned statement — sweeps in from the left, holds centered,
-       then exits right as you scroll on (driven by nowFrame in js/scroll.js) ── -->
+  <!-- ── Now: pinned statement. Each line glides in from the right, decelerates
+       into place and STAYS; once all three are up they hold, then leave together
+       (js/now-line.js). Without JS this is a plain wrapped statement — see
+       .now-sticky in css/style.css. ── -->
   <section id="now" class="now-pin">
     <div class="now-sticky">
       <h2 class="now-line">
         <span class="now-l">I'm currently a</span>
         <span class="now-l">Data Platform Engineer</span>
-        <span class="now-l">at <em>Wind River Systems</em>!</span>
+        <span class="now-l">at <em>Wind River Systems!</em></span>
       </h2>
     </div>
   </section>
 
-  <!-- ── Featured projects (editorial rows, per documents/Project Layout.png) ── -->
-  <section id="work" class="section">
-    <div class="section-head">
-      <h2 class="display" data-scroll="head">Projects</h2>
-      <p class="section-sub" data-scroll="card">Things I've built :)</p>
-    </div>
-
-    <div class="feature-list">
-
-      <article class="feature" data-scroll="card">
-        <div class="feature-text">
-          <h3>Feynman</h3>
-          <p>A speech-driven AI learning coach that helps you master any topic using the Feynman Technique.</p>
-          <div class="project-skills">
-            <span class="hackathon-tag">UC Berkeley AI Hackathon 2026</span><span>Next.js</span><span>TypeScript</span><span>Claude</span>
-          </div>
-          <a class="view-project magnetic" href="https://devpost.com/software/feynman-s6h3ke" target="_blank" rel="noopener">View project <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
-        </div>
-        <div class="feature-img contain" data-tilt><img src="images/feynman_icon.png" alt="Feynman" /></div>
-      </article>
-
-      <article class="feature" data-scroll="card">
-        <div class="feature-text">
-          <h3>Save Dinos: A Visa Wallet</h3>
-          <p>A gamified student wallet that turns budgeting into a game and rewards smart spending.</p>
-          <div class="project-skills">
-            <span class="hackathon-tag">Cal Hacks 2025</span><span>Next.js</span><span>Tailwind CSS</span><span>MongoDB</span>
-          </div>
-          <a class="view-project magnetic" href="https://devpost.com/software/save-dinos-a-visa-wallet" target="_blank" rel="noopener">View project <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
-        </div>
-        <div class="feature-img" data-tilt><img src="images/clean_visadino.png" alt="Save Dinos: A Visa Wallet" /></div>
-      </article>
-
-    </div>
-
-    <div class="view-all-wrap" data-scroll="card">
-      <a class="view-all magnetic" href="projects.html" data-transition>View all projects <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
-    </div>
-  </section>
+  <!-- ── Light panel: rides up over the dark band above with rounded top
+       corners, and runs until the black closing card. A wrapper is needed
+       because .section caps width at 1160px, so a background on the sections
+       themselves would not be full-bleed. ── -->
+  <div class="light-panel">
 
   <!-- ── Experience ── -->
   <section id="experience" class="section">
     <div class="section-head">
-      <h2 class="display" data-scroll="head">Experience</h2>
+      <h2 class="display" data-split>Experience</h2>
     </div>
 
     <div class="timeline">
 
       <!-- 1: logo LEFT · card RIGHT -->
-      <div class="tl-entry" data-scroll="card">
+      <div class="tl-entry">
         <div class="tl-l">
           <div class="tl-logo wide"><img src="images/windriver.png" alt="Wind River" class="rounded" /></div>
         </div>
@@ -166,7 +138,7 @@
       </div>
 
       <!-- 2: card LEFT · logo RIGHT — TASA -->
-      <div class="tl-entry" data-scroll="card">
+      <div class="tl-entry">
         <div class="tl-l">
           <div class="tl-card" tabindex="0" role="button" aria-expanded="false">
             <div class="tl-card-head">
@@ -194,7 +166,7 @@
       </div>
 
       <!-- 3: logo LEFT · card RIGHT — Ignite XL -->
-      <div class="tl-entry" data-scroll="card">
+      <div class="tl-entry">
         <div class="tl-l">
           <div class="tl-logo"><img src="images/ignitexl.png" alt="Ignite XL" class="rounded" /></div>
         </div>
@@ -222,7 +194,7 @@
       </div>
 
       <!-- 4: card LEFT · logo RIGHT — Exceptional STEAM -->
-      <div class="tl-entry" data-scroll="card">
+      <div class="tl-entry">
         <div class="tl-l">
           <div class="tl-card" tabindex="0" role="button" aria-expanded="false">
             <div class="tl-card-head">
@@ -252,13 +224,53 @@
     </div>
   </section>
 
+  <!-- ── Featured projects (editorial rows, per documents/Project Layout.png) ── -->
+  <section id="work" class="section">
+    <div class="section-head">
+      <h2 class="display" data-split>Projects</h2>
+      <p class="section-sub">Things I've built :)</p>
+    </div>
+
+    <div class="feature-list">
+
+      <article class="feature">
+        <div class="feature-text">
+          <h3>Feynman</h3>
+          <p>A speech-driven AI learning coach that helps you master any topic using the Feynman Technique.</p>
+          <div class="project-skills">
+            <span class="hackathon-tag">UC Berkeley AI Hackathon 2026</span><span>Next.js</span><span>TypeScript</span><span>Claude</span>
+          </div>
+          <a class="view-project magnetic" href="https://devpost.com/software/feynman-s6h3ke" target="_blank" rel="noopener">View project <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+        </div>
+        <div class="feature-img contain" data-tilt><img src="images/feynman_icon.png" alt="Feynman" /></div>
+      </article>
+
+      <article class="feature">
+        <div class="feature-text">
+          <h3>Save Dinos: A Visa Wallet</h3>
+          <p>A gamified student wallet that turns budgeting into a game and rewards smart spending.</p>
+          <div class="project-skills">
+            <span class="hackathon-tag">Cal Hacks 2025</span><span>Next.js</span><span>Tailwind CSS</span><span>MongoDB</span>
+          </div>
+          <a class="view-project magnetic" href="https://devpost.com/software/save-dinos-a-visa-wallet" target="_blank" rel="noopener">View project <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+        </div>
+        <div class="feature-img" data-tilt><img src="images/clean_visadino.png" alt="Save Dinos: A Visa Wallet" data-speed="auto" /></div>
+      </article>
+
+    </div>
+
+    <div class="view-all-wrap">
+      <a class="view-all magnetic" href="projects.html" data-transition>View all projects <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+    </div>
+  </section>
+
   <!-- ── Education ── -->
   <section id="education" class="section">
     <div class="section-head">
-      <h2 class="display" data-scroll="head">Education</h2>
+      <h2 class="display" data-split>Education</h2>
     </div>
 
-    <div data-scroll="card">
+    <div>
       <div class="tl-card" tabindex="0" role="button" aria-expanded="false">
         <div class="tl-card-head">
           <div class="tl-info" style="display:flex;align-items:center;gap:0.75rem;">
@@ -306,50 +318,62 @@
     </div>
   </section>
 
-  <!-- ── Resume ── -->
-  <section id="resume" class="section">
-    <div class="section-head">
-      <h2 class="display" data-scroll="head">Resume</h2>
-      <p class="section-sub" data-scroll="card">You can download my resume using the button below:</p>
-    </div>
-    <div data-scroll="card">
-      <a href="https://docs.google.com/document/d/1Hkpq5IFQXoEbVdSNWLQopGuJX12h_5ght_T3oZZ-EUA/edit?usp=sharing" target="_blank" rel="noopener" class="resume-button magnetic" data-magnet="0.1">
-        See My Resume! <i class="fas fa-arrow-right" aria-hidden="true"></i>
-      </a>
-    </div>
-  </section>
+  </div><!-- /.light-panel -->
 
-  <!-- ── Contact ── -->
-  <section id="contact" class="section">
-    <div class="section-head">
-      <h2 class="display" data-scroll="head">Let's connect!</h2>
-    </div>
-    <div class="contact-links" data-scroll="card">
-      <a href="mailto:matthewdiep@berkeley.edu" class="contact-pill magnetic" data-magnet="0.1" aria-label="Email">
-        <i class="fas fa-envelope" aria-hidden="true"></i> Email
-      </a>
-      <a href="https://github.com/mattdiep15" target="_blank" rel="noopener" class="contact-pill magnetic" data-magnet="0.1" aria-label="GitHub">
-        <i class="fab fa-github" aria-hidden="true"></i> GitHub
-      </a>
-      <a href="https://www.linkedin.com/in/matthewdiep15/" target="_blank" rel="noopener" class="contact-pill magnetic" data-magnet="0.1" aria-label="LinkedIn">
-        <i class="fab fa-linkedin-in" aria-hidden="true"></i> LinkedIn
-      </a>
-    </div>
-  </section>
+  <!-- ── Closing card ──
+       One element is both the semantic footer and the #contact anchor target,
+       so the nav link lands here with no extra wrapper. It deliberately does
+       NOT carry .section — that caps width at 1160px, and this card is
+       full-bleed with only its contents constrained (.closing-inner). -->
+  <footer id="contact" class="closing">
+    <div class="closing-inner">
+      <h2 class="display closing-title" data-split>Let's Connect!</h2>
 
-  <footer>
-    <p>Designed by Matthew</p>
+      <div class="contact-links">
+        <a href="mailto:matthewdiep@berkeley.edu" class="contact-pill magnetic" data-magnet="0.1" aria-label="Email">
+          <i class="fas fa-envelope" aria-hidden="true"></i> Email
+        </a>
+        <a href="https://github.com/mattdiep15" target="_blank" rel="noopener" class="contact-pill magnetic" data-magnet="0.1" aria-label="GitHub">
+          <i class="fab fa-github" aria-hidden="true"></i> GitHub
+        </a>
+        <a href="https://www.linkedin.com/in/matthewdiep15/" target="_blank" rel="noopener" class="contact-pill magnetic" data-magnet="0.1" aria-label="LinkedIn">
+          <i class="fab fa-linkedin-in" aria-hidden="true"></i> LinkedIn
+        </a>
+        <a href="https://docs.google.com/document/d/1Hkpq5IFQXoEbVdSNWLQopGuJX12h_5ght_T3oZZ-EUA/edit?usp=sharing" target="_blank" rel="noopener" class="contact-pill magnetic" data-magnet="0.1" aria-label="Resume">
+          <i class="fas fa-file-lines" aria-hidden="true"></i> Resume
+        </a>
+      </div>
+
+      <p class="closing-credit">Designed by Matthew</p>
+    </div>
   </footer>
 
-  <!-- effect layers (inert without JS) -->
-  <div id="spotlight" aria-hidden="true"></div>
+  </div><!-- /#smooth-content -->
+  </div><!-- /#smooth-wrapper -->
+
+  <!-- effect layers (inert without JS) — outside the wrapper, see above -->
   <div id="grain" aria-hidden="true"></div>
-  <div id="cursor-dot" aria-hidden="true"></div>
   <div id="curtain" aria-hidden="true"></div>
 
+  <!-- GSAP: ScrollSmoother (smooth scrolling + data-speed parallax) and
+       SplitText (per-line heading reveal). defer preserves execution order,
+       so the plugins are ready before our modules run. If these fail to load
+       every module bails and the page degrades to plain native scrolling. -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollSmoother.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js" defer></script>
+
+  <script src="js/pill-nav.js" defer></script>
   <script src="js/main.js" defer></script>
   <script src="js/effects.js" defer></script>
-  <script src="js/scroll.js" defer></script>
+  <script src="js/hero-letters.js" defer></script>
+  <script src="js/smooth.js" defer></script>
+  <!-- before split-lines.js: ScrollTrigger measures pinned triggers most
+       reliably when they're created in DOM order, and .now-pin sits above
+       every [data-split] heading. -->
+  <script src="js/now-line.js" defer></script>
+  <script src="js/split-lines.js" defer></script>
   <script src="js/intro.js" defer></script>
 </body>
 </html>

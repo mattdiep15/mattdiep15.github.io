@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Letter Image Swap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --fg: #ffffff;
+    --thumb-size: 84px;
+    --thumb-pad: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    overflow: hidden;
+  }
+
+  .mwg_effect093 {
+    position: relative;
+    padding: 0 clamp(60px, 12vw, 160px);
+  }
+
+  .word {
+    display: flex;
+    font-size: clamp(34px, 7vw, 90px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--fg);
+    user-select: none;
+  }
+
+  .letter {
+    position: relative;
+    display: inline-block;
+    will-change: transform;
+  }
+
+  .letter.has-media { cursor: pointer; }
+
+  .letter .char {
+    display: inline-block;
+    position: relative;
+    z-index: 1;
+  }
+
+  .letter .thumb {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    border-radius: 8px;
+    overflow: hidden;
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .letter .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .caption {
+    position: absolute;
+    bottom: -2.5rem;
+    left: clamp(60px, 12vw, 160px);
+    font-size: 0.8rem;
+    color: #777;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<section class="mwg_effect093">
+  <p class="word" id="word">Celebrations</p>
+  <span class="caption">hover every third letter</span>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+  const text = "Celebrations";
+  const wordEl = document.getElementById('word');
+
+  const images = [
+    'https://picsum.photos/seed/a1/300/300',
+    'https://picsum.photos/seed/a2/300/300',
+    'https://picsum.photos/seed/a3/300/300',
+    'https://picsum.photos/seed/a4/300/300',
+    'https://picsum.photos/seed/a5/300/300',
+    'https://picsum.photos/seed/a6/300/300'
+  ];
+
+  const MEDIA_EVERY = 3;
+  const OPEN_DUR = 0.45;
+  const HOLD = 1;
+  const IMAGE_OUT = 0.22;
+
+  wordEl.innerHTML = '';
+  const letterEls = [];
+  let mediaCount = 0;
+
+  [...text].forEach((ch, i) => {
+    const span = document.createElement('span');
+    span.className = 'letter';
+
+    const charSpan = document.createElement('span');
+    charSpan.className = 'char';
+    charSpan.textContent = ch === ' ' ? '\u00A0' : ch;
+    span.appendChild(charSpan);
+
+    const hasMedia = ch !== ' ' && i % MEDIA_EVERY === 0;
+    if (hasMedia) {
+      span.classList.add('has-media');
+      const thumb = document.createElement('span');
+      thumb.className = 'thumb';
+      const img = document.createElement('img');
+      img.src = images[mediaCount % images.length];
+      img.alt = '';
+      thumb.appendChild(img);
+      span.appendChild(thumb);
+      mediaCount++;
+    }
+
+    wordEl.appendChild(span);
+    letterEls.push(span);
+  });
+
+  const styles = getComputedStyle(document.documentElement);
+  const THUMB = parseFloat(styles.getPropertyValue('--thumb-size'));
+  const PAD = parseFloat(styles.getPropertyValue('--thumb-pad'));
+
+  const baseWidths = letterEls.map(el => el.offsetWidth);
+  const shiftFor = k => Math.max(0, (THUMB + PAD * 2 - baseWidths[k]) / 2);
+
+  const openSet = new Set();
+
+  function layout(duration, ease) {
+    letterEls.forEach((el, j) => {
+      let x = 0;
+      openSet.forEach(k => {
+        if (k === j) return;
+        x += (j < k ? -1 : 1) * shiftFor(k);
+      });
+      gsap.killTweensOf(el);
+      gsap.to(el, { x, duration, ease });
+    });
+  }
+
+  letterEls.forEach((el, i) => {
+    if (!el.classList.contains('has-media')) return;
+
+    const thumb = el.querySelector('.thumb');
+    const charEl = el.querySelector('.char');
+    const state = { openTween: null, exitTween: null };
+
+    el.addEventListener('mouseenter', () => {
+      if (state.exitTween) {
+        state.exitTween.kill();
+        state.exitTween = null;
+      }
+
+      gsap.killTweensOf(charEl);
+      gsap.set(charEl, { opacity: 0 });
+
+      if (!state.openTween || !state.openTween.isActive()) {
+        state.openTween = gsap.to(thumb, {
+          scale: 1,
+          opacity: 1,
+          duration: OPEN_DUR,
+          ease: 'back.out(2.2)'
+        });
+      }
+
+      openSet.add(i);
+      layout(0.4, 'power3.out');
+    });
+
+    el.addEventListener('mouseleave', () => {
+      const t = state.openTween;
+      const remaining = t && t.isActive() ? t.duration() - t.time() : 0;
+
+      state.exitTween = gsap.to(thumb, {
+        scale: 0.3,
+        opacity: 0,
+        duration: IMAGE_OUT,
+        delay: remaining + HOLD,
+        ease: 'power2.in',
+        onComplete: () => {
+          state.exitTween = null;
+          openSet.delete(i);
+          gsap.to(charEl, { opacity: 1, duration: 0.18, ease: 'power2.out' });
+          layout(0.7, 'elastic.out(1, 0.4)');
+        }
+      });
+    });
+  });
+</script>
+
+</body>
+</html>
