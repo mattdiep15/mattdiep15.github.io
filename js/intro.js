@@ -1,8 +1,7 @@
 /* ==========================================================================
    intro.js — intro preloader (inspired by opacity.com)
    --------------------------------------------------------------------------
-   "Matthew Diep" resolves from 0% → 100% opacity alongside a 0–100 counter,
-   then a curtain wipe reveals the hero.
+   A 0–100 counter runs, then a curtain wipe reveals the hero.
 
    The decision to SHOW the intro is made by the tiny inline script in
    <head> (html.intro-pending) so no-JS visitors, reduced-motion users,
@@ -10,7 +9,7 @@
    never see it. Any click or keypress fast-forwards.
 
    TUNABLES:
-     INTRO.nameMs   fade/counter duration (mirror --intro-name-ms in CSS)
+     INTRO.nameMs   how long the 0-100 count takes (mirror --intro-name-ms in CSS)
      INTRO.holdMs   pause at 100 before the curtain lifts
      (curtain speed itself is the CSS clip-path transition on #intro.intro-leave)
    ========================================================================== */
@@ -24,7 +23,6 @@
   var INTRO = { nameMs: 1500, holdMs: 250 };
 
   var intro = document.getElementById('intro');
-  var nameEl = intro.querySelector('.intro-name');
   var counterEl = intro.querySelector('.intro-counter');
 
   var start = null;
@@ -37,7 +35,6 @@
     if (start === null) start = now;
     var t = Math.min((now - start) / INTRO.nameMs, 1);
     var e = easeInOut(t);
-    nameEl.style.opacity = e.toFixed(3);
     counterEl.textContent = Math.round(e * 100);
     if (t < 1) {
       rafId = requestAnimationFrame(tick);
@@ -53,7 +50,6 @@
 
     try { sessionStorage.setItem('introSeen', '1'); } catch (e) { /* private mode */ }
 
-    nameEl.style.opacity = '1';
     counterEl.textContent = '100';
 
     // curtain wipe (CSS transition), hero entrance starts underneath

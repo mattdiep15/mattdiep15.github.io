@@ -6,7 +6,7 @@
 
      --accent             the one accent color (links, tags)
      --grain-opacity      film-grain strength (0 turns it off)
-     --intro-name-ms      how long the intro name takes to fade in
+     --intro-name-ms      how long the intro's 0-100 count takes
                           (matched by INTRO.nameMs in js/intro.js)
      --curtain-ms         page-transition curtain speed
      magnetic pull / tilt amounts → CONFIG in js/effects.js
@@ -53,7 +53,7 @@
   --accent-soft: rgba(43, 76, 255, 0.08);
 
   /* dark bands: the hero, the role statement and the closing card */
-  --ink-deep:  #0e100f;
+  --ink-deep:  #000000;
   --paper:     #f4f4f2;
 
   /* Wind River's brand teal, for the company name in the role statement.
@@ -250,14 +250,6 @@ html.no-js #pill-toggle { display: none; }
 }
 
 html.intro-pending #intro { display: flex; }
-
-.intro-name {
-  font-family: var(--font-display);
-  font-size: clamp(2.36rem, 6.49vw, 4.96rem);
-  font-weight: 400;
-  letter-spacing: -0.06em;
-  opacity: 0; /* js/intro.js drives 0 → 1 */
-}
 
 .intro-counter {
   font-variant-numeric: tabular-nums;
