@@ -18,6 +18,12 @@
    Contract:
      data-split   on a block of display type — reveals line by line on entry
 
+   Applies to whatever carries the attribute, but that's deliberately just one
+   heading — "Let's Connect!". The other section titles (Experience, Projects,
+   Education) had it and gave it up: as a closing flourish it lands, as a thing
+   every heading does it's noise. Adding it back to more is a one-attribute
+   change, which is exactly the point.
+
    Degrades to plain static text when: reduced motion is on, JS is off, or the
    GSAP CDN is unreachable. The tween is a `from`, so the heading's resting
    state IS its normal rendered state — nothing is hidden by default.

@@ -446,6 +446,35 @@ html.now-anim .now-sticky {
   align-items: center;
   justify-content: center;
   overflow: hidden; /* clips each line while it's off-screen right, then left */
+  position: relative; /* anchors the absolutely-placed .now-welcome below */
+}
+
+/* ── the "Welcome to my Website!" greeting ──
+   Plays first, in the same pinned frame, then clears out before the statement
+   arrives. Hidden by default and switched on only by html.welcome-anim, which
+   js/now-line.js adds when it has actually tweened it — so no JS, a blocked
+   CDN or reduced motion all leave the statement's own layout untouched rather
+   than showing a stray line.
+
+   Taken out of flow (the statement is the only thing in the flex box) and
+   centred by its own full-size flex box, so nothing writes a base transform
+   that GSAP would then have to fight over. */
+.now-welcome { display: none; }
+
+html.welcome-anim .now-welcome {
+  display: flex;
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+/* the tween drives this inner span, not the flex box itself — the box is what
+   does the centring, so writing a transform onto it would fight the layout */
+html.welcome-anim .now-w {
+  white-space: nowrap;
+  will-change: transform, opacity;
 }
 
 /* left-aligned so all three share one left edge — centring each line on its own
@@ -1078,16 +1107,20 @@ html.page-enter #curtain.curtain-lift {
 }
 
 /* ══ LINE-SPLIT HEADINGS ════════════════════════════════════════════════
-   [data-split] headings are broken into per-line masks by js/split-lines.js
+   A [data-split] heading is broken into per-line masks by js/split-lines.js
    (GSAP SplitText). SplitText builds each mask as a clone of the line and
    names it after the line's class + "-mask", so .sline → .sline-mask.
 
-   .display sets line-height: 1.02, but Satoshi's em box is 1.25em tall
-   (ascent 1.010 + descent 0.240), so glyphs overflow the line box by 0.115em
-   top and bottom — the mask's overflow:clip would cut the tail off the "j" in
-   Projects and the "p" in Experience. 0.14em of padding clears that 0.115em;
-   the matching negative margin pulls it back out so line spacing and the
-   heading's layout height are exactly what they were before the split.
+   Only "Let's Connect!" carries the attribute now, but this stays written for
+   any heading: .display sets line-height: 1.02 while Satoshi's em box is
+   1.25em tall (ascent 1.010 + descent 0.240), so glyphs overflow the line box
+   by 0.115em top and bottom, and the mask's overflow:clip cuts descenders off
+   — it took the tail off the "j" in Projects and the "p" in Experience back
+   when those were split too. 0.14em of padding clears that 0.115em; the
+   matching negative margin pulls it back out so line spacing and the heading's
+   layout height are exactly what they were before the split. The current text
+   happens to have no descenders, so this is doing nothing visible today —
+   leave it in, or the first heading that grows one silently gets clipped.
    (js/split-lines.js starts lines at yPercent 120, not 100, so nothing peeks
    into this padding at the start of the reveal.)                          */
 
@@ -1097,7 +1130,7 @@ html.page-enter #curtain.curtain-lift {
 }
 
 /* ══ SCROLL ENTRANCES — none ════════════════════════════════════════════
-   Page content has NO scroll-driven entrance. Sections, project rows,
+   Page content has NO scroll-driven entrance. Section headings, project rows,
    timeline entries and cards simply scroll into view with the page, at full
    opacity and their natural position — nothing rises, fades or scales.
 
@@ -1106,8 +1139,10 @@ html.page-enter #curtain.curtain-lift {
    removed entirely for this reason.
 
    The two deliberate motion pieces that remain are separate systems:
-     • [data-split] display headings — masked per-line reveal, js/split-lines.js
-     • .now-l statement lines — glide in from the right, js/now-line.js       */
+     • the closing [data-split] heading — masked per-line reveal, one heading
+       only, js/split-lines.js
+     • the pinned .now-pin timeline — the greeting and the .now-l statement
+       lines, js/now-line.js                                                */
 
 /* ══ REDUCED MOTION ═════════════════════════════════════════════════════
    JS engines all bail out early; this kills the remaining CSS motion and
@@ -1132,8 +1167,10 @@ html.page-enter #curtain.curtain-lift {
      statement wrapped and at rest even if it ever survives a pref change */
   .now-line { white-space: normal !important; }
   .now-l { transform: none !important; opacity: 1 !important; }
+  /* the greeting is pure motion — there's nothing to show when it can't play */
+  .now-welcome { display: none !important; }
   #grain { display: none !important; }
-  /* split-lines.js bails before splitting, so headings are still plain text;
+  /* split-lines.js bails before splitting, so the heading is still plain text;
      this is belt-and-braces in case a split ever survives a preference change */
   [data-split], .sline, .sline-mask { opacity: 1 !important; transform: none !important; }
   .sline-mask { overflow: visible !important; padding-bottom: 0; margin-bottom: 0; }

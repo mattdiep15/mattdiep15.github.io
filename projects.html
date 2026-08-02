@@ -43,7 +43,6 @@
       <li><a href="index.html" data-transition>Home</a></li>
       <li><a href="index.html#experience" data-transition>Experience</a></li>
       <li><a href="index.html#education" data-transition>Education</a></li>
-      <li><a href="index.html#contact" data-transition>Contact</a></li>
     </ul>
     <button id="pill-toggle" aria-expanded="false" aria-controls="pill-items" aria-label="Open menu">
       <span class="pill-bars" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -166,6 +165,8 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollSmoother.min.js" defer></script>
 
   <script src="js/pill-nav.js" defer></script>
+  <!-- before smooth.js: it calls PageCurtain.sweep() for the in-page nav tabs -->
+  <script src="js/curtain.js" defer></script>
   <script src="js/main.js" defer></script>
   <script src="js/effects.js" defer></script>
   <script src="js/smooth.js" defer></script>

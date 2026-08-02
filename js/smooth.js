@@ -57,10 +57,14 @@
      would fight. Nothing to pin here. */
 
   /* ── anchor links ──
-     The smoother bypasses native hash scrolling, so #experience etc. would
-     jump or land short. Route them through smoother.scrollTo instead.
-     Links marked data-transition are cross-page and belong to the curtain
-     handler in js/main.js — leave those alone. */
+     These are the nav's in-page tabs, and they transition rather than scroll:
+     the curtain covers, the page jumps to the section instantly while hidden,
+     the curtain lifts — the same wipe the cross-page Projects tab plays. The
+     jump goes through smoother.scrollTo because the smoother bypasses native
+     hash scrolling (#experience would land short otherwise); it's the same
+     non-animated call the deep-link path below uses.
+     Links marked data-transition are cross-page and belong to js/curtain.js —
+     leave those alone. */
   document.querySelectorAll('a[href^="#"]').forEach(function (link) {
     if (link.hasAttribute('data-transition')) return;
     link.addEventListener('click', function (e) {
@@ -69,7 +73,9 @@
       var target = document.querySelector(href);
       if (!target) return;
       e.preventDefault();
-      smoother.scrollTo(target, true, 'top ' + SMOOTH.anchorOffset + 'px');
+      function jump() { smoother.scrollTo(target, false, 'top ' + SMOOTH.anchorOffset + 'px'); }
+      if (window.PageCurtain) window.PageCurtain.sweep(jump);
+      else smoother.scrollTo(target, true, 'top ' + SMOOTH.anchorOffset + 'px'); // no curtain
       if (history.pushState) history.pushState(null, '', href);
     });
   });
