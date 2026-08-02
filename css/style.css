@@ -710,6 +710,31 @@ main.section { padding-bottom: 32vh; }
 
 .project-image-wrap.contain .project-image { object-fit: contain; padding: 12px; background: #fff; }
 
+/* ── optical sizing for .contain logos ────────────────────────────────────
+   object-fit: contain sizes the CANVAS, not the drawing inside it, so two
+   logos that fill their canvases to different degrees render at visibly
+   different sizes in an identical frame.
+
+   feynman_icon.png (560×400) is cropped tight — its drawing covers ~89% of
+   the canvas width and ~47% of the height. clean_visadino.png (2048×2048) is
+   loose: ~66% × ~48% of a *square* canvas. Fitted to the same box height that
+   works out to roughly 336×128 vs 178×131 — the same height, but barely half
+   the width, which is what read as "the dino is smaller".
+
+   1.35 = sqrt of the ratio between the two bounding-box areas, i.e. the linear
+   scale that matches them by area. Matching by height instead would mean no
+   change at all (they already agree); by width it would mean ~1.9, which
+   overshoots badly. Area is the compromise the eye actually reads.
+
+   Only empty canvas overflows the frame at this scale — the drawing itself
+   still clears every edge with room to spare, at both the feature size and
+   the smaller project-card one.
+
+   `transform`, not `scale` — the hover lift on these images owns the `scale`
+   property. The two are independent, so they multiply (1.35 × 1.04 on hover)
+   instead of the hover clobbering the base size. */
+.contain.art-small img { transform: scale(1.35); }
+
 .project-card:hover .project-image { filter: none; scale: 1.06; }
 
 /* ── ScrollSmoother parallax ──────────────────────────────────────────────
