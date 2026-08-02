@@ -94,7 +94,12 @@
      four that DO something nudge themselves occasionally. Only those four —
      wiggling a letter with no photo would be a false affordance. */
   var WIGGLE = {
-    gap: [2.2, 4.5],      // random seconds between hints
+    // The cadence ramps: eager right after the hero appears, easing to a
+    // calmer steady rate once there's been a chance to notice. The wait for
+    // hint i interpolates between these two ranges at min(i/rampHints, 1).
+    gapStart: [0.5, 1.0], // seconds between hints, on arrival
+    gapEnd: [1.6, 3.0],   // ...and once settled
+    rampHints: 7,         // hints taken to travel from one to the other
     rot: 6,               // degrees
     lift: -3,             // px
     dur: 0.5,
@@ -255,7 +260,8 @@
       });
     });
 
-    startWiggle();
+    // not here directly — the intro may still be covering the hero
+    whenHeroRevealed(startWiggle);
   });
 
   /* ── idle hint ──
@@ -276,20 +282,52 @@
     return r.bottom > 0 && r.top < window.innerHeight;
   }
 
+  /* The intro preloader covers the screen for ~1.75s of counting plus a 0.7s
+     wipe, and holds .hero-content at opacity:0 the whole time. document.fonts
+     .ready resolves long before that, so starting the hints there would spend
+     the eager ones on a hero nobody can see. heroVisible() doesn't catch it —
+     it only tests the scroll rect, and the intro is a fixed overlay.
+
+     Repeat visits, reduced motion and no-JS all skip the intro, so
+     intro-pending is absent and this runs straight through. */
+  function whenHeroRevealed(cb) {
+    var d = document.documentElement;
+    if (!d.classList.contains('intro-pending')) return cb();
+    var obs = new MutationObserver(function () {
+      if (d.classList.contains('intro-done')) { obs.disconnect(); cb(); }
+    });
+    obs.observe(d, { attributes: true, attributeFilter: ['class'] });
+  }
+
   function startWiggle() {
     var media = letters.filter(function (el) {
       return el.classList.contains('has-media');
     });
     if (!media.length) return;
 
+    var fired = 0;
+    var lastIndex = -1;
+
     function schedule() {
-      var wait = gsap.utils.random(WIGGLE.gap[0], WIGGLE.gap[1]) * 1000;
+      // ease from the eager range toward the settled one
+      var t = Math.min(fired / WIGGLE.rampHints, 1);
+      var lo = WIGGLE.gapStart[0] + (WIGGLE.gapEnd[0] - WIGGLE.gapStart[0]) * t;
+      var hi = WIGGLE.gapStart[1] + (WIGGLE.gapEnd[1] - WIGGLE.gapStart[1]) * t;
+      var wait = gsap.utils.random(lo, hi) * 1000;
+
       wiggleTimer = setTimeout(function () {
         if (WIGGLE.stopOnDiscovery && discovered) return; // stop for good
 
         // don't compete with an open photo, and don't animate off-screen
         if (!openSet.length && heroVisible()) {
-          var el = media[Math.floor(Math.random() * media.length)];
+          // re-roll once on a repeat — with only four candidates at this
+          // cadence, straight random visibly picks the same letter twice
+          var n = Math.floor(Math.random() * media.length);
+          if (n === lastIndex) n = (n + 1 + Math.floor(Math.random() * (media.length - 1))) % media.length;
+          lastIndex = n;
+          fired++;
+
+          var el = media[n];
           var ch = el.querySelector('.char');
           gsap.timeline()
             .to(ch, {

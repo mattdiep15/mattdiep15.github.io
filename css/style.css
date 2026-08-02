@@ -57,9 +57,10 @@
   --paper:     #f4f4f2;
 
   /* Wind River's brand teal, for the company name in the role statement.
-     DARK BACKGROUNDS ONLY — 6.83:1 on --ink-deep (AA), but only 2.58:1 on
-     --bg, which fails. Don't reuse it on the light panel. */
-  --wr-teal:   #00ada4;
+     This is their brighter accent cut; their primary is the deeper #00ada4.
+     DARK BACKGROUNDS ONLY — 13.13:1 on --ink-deep (AAA), but 1.48:1 on --bg,
+     which fails badly. Don't reuse it on the light panel. */
+  --wr-teal:   #30e4d0;
 
   /* effect intensity */
   --grain-opacity: 0.05;
