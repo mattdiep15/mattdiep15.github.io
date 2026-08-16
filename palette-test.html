@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Dark palette test — Matthew Diep</title>
+
+<!--
+  SCRATCH FILE — not part of the site. Not linked from anywhere, not deployed.
+
+  Mirrors the three dark bands of index.html (hero, role statement, closing card)
+  so palettes can be judged in situ. Every dark-section color in css/style.css
+  resolves through exactly two custom properties, so swapping a palette is a
+  two-variable change:
+
+      --ink-deep   the dark background
+      --paper      the light text (the 55% / 45% alphas derive from it here)
+
+  --wr-teal is deliberately NOT part of the palette — it's Wind River's brand
+  color for that one phrase, and stays fixed across every combination.
+
+  Serve this, don't double-click it: Chrome blocks @font-face over file://, and
+  without Satoshi the type reads differently enough to mislead.
+      python -m http.server 8000   →   http://localhost:8000/palette-test.html
+-->
+
+<link rel="preload" href="fonts/Satoshi-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+/* ── Satoshi, copied from css/style.css ──────────────────────────────────── */
+@font-face {
+  font-family: 'Satoshi';
+  src: url('fonts/Satoshi-Regular.woff2') format('woff2');
+  font-weight: 100 450;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('fonts/Satoshi-Medium.woff2') format('woff2');
+  font-weight: 451 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Tokens — the dark-section subset ────────────────────────────────────── */
+:root {
+  --ink-deep: #000000;   /* SWAPPED by the panel */
+  --paper:    #f4f4f2;   /* SWAPPED by the panel */
+
+  --wr-teal:  #30e4d0;   /* FIXED — Wind River brand, never themed */
+  --bg:       #f6f6f5;   /* the light panel, for the seam only */
+  --accent:   #2b4cff;   /* focus ring */
+
+  /* Derived from --paper via color-mix so they track the swap automatically.
+     style.css hardcodes these as rgba(244,244,242,.55/.45) — same values while
+     --paper is #f4f4f2, but here they must follow whatever it becomes. */
+  --paper-55: color-mix(in srgb, var(--paper) 55%, transparent);
+  --paper-45: color-mix(in srgb, var(--paper) 45%, transparent);
+
+  --grain-opacity: 0.05;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --font: 'Satoshi', system-ui, -apple-system, sans-serif;
+  --font-display: 'Satoshi', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--ink-deep);
+  color: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+/* ── Hero ────────────────────────────────────────────────────────────────── */
+.hero-pin { height: 100vh; background: var(--ink-deep); }
+
+.hero-sticky {
+  height: 100vh;
+  height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.hero-name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: min(clamp(4.25rem, 11.5vw, 8.85rem), calc((100vw - 4.5rem) / 5.78));
+  letter-spacing: -0.06em;
+  line-height: 1;
+  color: var(--paper);
+  text-align: center;
+}
+
+/* ── Role statement ──────────────────────────────────────────────────────── */
+/* The real .now-pin pulls up -45vh and is pinned by js/now-line.js. This is the
+   no-JS fallback layout — same band, same type, no scroll choreography. */
+.now-pin { background: var(--ink-deep); }
+
+.now-sticky {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2rem clamp(1.4rem, 6vw, 4rem);
+}
+
+.now-line {
+  font-family: var(--font-display);
+  font-size: clamp(2.01rem, 5.31vw, 4.01rem);
+  font-weight: 400;
+  letter-spacing: -0.06em;
+  line-height: 1.18;
+  color: var(--paper);
+}
+
+/* hidden on the real site until js/now-line.js has tweened it — shown here so
+   the greeting's color is testable too */
+.now-welcome { margin-bottom: 1.4rem; }
+
+.now-line em { font-style: normal; color: var(--wr-teal); }
+
+/* ── Light panel — present only for the seam it cuts ─────────────────────── */
+.light-panel {
+  position: relative;
+  background: var(--bg);
+  color: #131313;
+  border-radius: 40px 40px 0 0;
+  margin-top: -40px;
+  padding: clamp(3rem, 8vh, 5rem) clamp(1.4rem, 6vw, 4rem);
+  text-align: center;
+}
+
+.light-panel p {
+  max-width: 46ch;
+  margin: 0 auto;
+  font-size: 1.02rem;
+  font-weight: 300;
+  color: #6d6d6d;
+  letter-spacing: 0.02em;
+}
+
+/* ── Closing card ────────────────────────────────────────────────────────── */
+.closing {
+  background: var(--ink-deep);
+  color: var(--paper);
+  border-radius: 40px 40px 0 0;
+  margin-top: clamp(3rem, 10vh, 6rem);
+  padding: clamp(4rem, 12vh, 7rem) clamp(1.4rem, 6vw, 4rem) 2.2rem;
+  text-align: center;
+}
+
+.closing-inner { max-width: 1160px; margin: 0 auto; }
+
+.display {
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 7.08vw, 5.43rem);
+  font-weight: 500;
+  letter-spacing: -0.06em;
+  line-height: 1.02;
+}
+
+.closing-title { color: inherit; }
+
+.closing-credit {
+  margin-top: clamp(3rem, 8vh, 5rem);
+  font-size: 0.89rem;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: var(--paper-55);
+}
+
+.contact-links {
+  display: flex;
+  justify-content: center;
+  gap: 0.9rem;
+  margin-top: 2.4rem;
+  flex-wrap: wrap;
+}
+
+.contact-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.7rem;
+  border: 1.5px solid var(--paper-45);
+  border-radius: 100vmax;
+  text-decoration: none;
+  color: var(--paper);
+  font-size: 0.94rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: background 0.3s ease, color 0.3s ease,
+              border-color 0.3s ease, box-shadow 0.3s var(--ease-out);
+}
+
+.contact-pill i { font-size: 1.18rem; }
+
+.contact-pill:hover {
+  background: var(--paper);
+  border-color: var(--paper);
+  color: var(--ink-deep);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Film grain — without it the flat fill reads wrong ───────────────────── */
+#grain {
+  position: fixed;
+  inset: -100%;
+  z-index: 9997;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grainShift 0.8s steps(9) infinite;
+}
+
+@keyframes grainShift {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(-3%, 2%); }
+  40%  { transform: translate(2%, -3%); }
+  60%  { transform: translate(-2%, -2%); }
+  80%  { transform: translate(3%, 3%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ══ CONTROL PANEL ═══════════════════════════════════════════════════════════
+   Every color below is HARDCODED on purpose — the panel must stay legible no
+   matter what the palette is set to, so it must not touch the theme tokens.   */
+
+#panel {
+  position: fixed;
+  bottom: 1.2rem;
+  left: 1.2rem;
+  z-index: 10000;
+  width: 268px;
+  padding: 1rem 1.1rem 1.1rem;
+  background: #16181d;
+  border: 1px solid #303540;
+  border-radius: 14px;
+  color: #e8eaee;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+}
+
+#panel h2 {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7e8595;
+  margin-bottom: 0.75rem;
+}
+
+#panel .row { margin-bottom: 0.85rem; }
+#panel .row:last-child { margin-bottom: 0; }
+
+#panel label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7e8595;
+  margin-bottom: 0.35rem;
+}
+
+.preset {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.35rem;
+  background: #1e222a;
+  border: 1px solid #303540;
+  border-radius: 8px;
+  color: #e8eaee;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.preset:hover { background: #262b35; }
+.preset[aria-pressed="true"] { border-color: #6f8cff; background: #232a3d; }
+
+/* the two-tone chip previews the combination without applying it */
+.chip {
+  flex: none;
+  width: 26px;
+  height: 15px;
+  border-radius: 3px;
+  border: 1px solid #444b58;
+  display: inline-block;
+}
+
+.picker { display: flex; align-items: center; gap: 0.45rem; }
+
+.picker input[type="color"] {
+  flex: none;
+  width: 34px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #303540;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+/* strip the native swatch chrome so the color fills the control */
+.picker input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
+.picker input[type="color"]::-webkit-color-swatch { border: none; border-radius: 4px; }
+
+.picker input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.45rem 0.5rem;
+  background: #1e222a;
+  border: 1px solid #303540;
+  border-radius: 6px;
+  color: #e8eaee;
+  font: inherit;
+  text-transform: uppercase;
+}
+.picker input[type="text"]:focus { outline: none; border-color: #6f8cff; }
+.picker input[type="text"].invalid { border-color: #ff6b6b; }
+
+#contrast {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  background: #1e222a;
+  border-radius: 8px;
+}
+#ratio { font-size: 15px; font-weight: 600; }
+#grade { font-size: 10px; letter-spacing: 0.1em; font-weight: 600; }
+#grade.aaa  { color: #4ade80; }
+#grade.aa   { color: #fbbf24; }
+#grade.fail { color: #ff6b6b; }
+
+#panel .note {
+  margin-top: 0.75rem;
+  font-size: 10px;
+  line-height: 1.45;
+  color: #6b7280;
+}
+
+#panel .note b { color: #30e4d0; font-weight: 400; }
+
+/* collapse, so the panel can get out of the way while judging */
+#collapse {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 22px;
+  height: 22px;
+  background: #1e222a;
+  border: 1px solid #303540;
+  border-radius: 6px;
+  color: #7e8595;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+#collapse:hover { color: #e8eaee; }
+
+#panel.collapsed { width: auto; padding: 0.55rem 0.8rem; }
+#panel.collapsed > *:not(#collapse):not(h2) { display: none; }
+#panel.collapsed h2 { margin: 0; padding-right: 1.6rem; }
+#panel.collapsed #collapse { top: 0.4rem; right: 0.4rem; }
+
+@media (max-width: 620px) {
+  #panel { right: 1.2rem; width: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Hero ── -->
+<header class="hero-pin">
+  <div class="hero-sticky">
+    <h1 class="hero-name">Matthew Diep</h1>
+  </div>
+</header>
+
+<!-- ── Role statement ── -->
+<section class="now-pin">
+  <div class="now-sticky">
+    <p class="now-line now-welcome">Welcome to my Website!</p>
+    <h2 class="now-line">I'm currently a</h2>
+    <h2 class="now-line">Data Platform Engineer</h2>
+    <h2 class="now-line">at <em>Wind River Systems!</em></h2>
+  </div>
+</section>
+
+<!-- ── Light panel — stands in for Experience / Projects / Education. It is not
+     being themed; it's here because the 40px radius seam where light meets dark
+     is one of the things that changes most with the palette. ── -->
+<div class="light-panel">
+  <p>Light panel stand-in. Only here so you can see how the rounded seam reads
+     where the light content meets the dark band above and below it.</p>
+</div>
+
+<!-- ── Closing card ── -->
+<footer class="closing">
+  <div class="closing-inner">
+    <h2 class="display closing-title">Let's Connect!</h2>
+
+    <div class="contact-links">
+      <a href="#" class="contact-pill"><i class="fas fa-envelope" aria-hidden="true"></i> Email</a>
+      <a href="#" class="contact-pill"><i class="fab fa-github" aria-hidden="true"></i> GitHub</a>
+      <a href="#" class="contact-pill"><i class="fab fa-linkedin-in" aria-hidden="true"></i> LinkedIn</a>
+      <a href="#" class="contact-pill"><i class="fas fa-file-lines" aria-hidden="true"></i> Resume</a>
+    </div>
+
+    <p class="closing-credit">Designed by Matthew</p>
+  </div>
+</footer>
+
+<div id="grain" aria-hidden="true"></div>
+
+<!-- ── Controls ── -->
+<div id="panel">
+  <h2>Dark palette</h2>
+  <button id="collapse" type="button" title="Collapse">–</button>
+
+  <div class="row" id="presets"></div>
+
+  <div class="row">
+    <label for="bg-color">Background &nbsp;<code>--ink-deep</code></label>
+    <div class="picker">
+      <input type="color" id="bg-color" aria-label="Background color">
+      <input type="text" id="bg-hex" spellcheck="false" aria-label="Background hex">
+    </div>
+  </div>
+
+  <div class="row">
+    <label for="fg-color">Text &nbsp;<code>--paper</code></label>
+    <div class="picker">
+      <input type="color" id="fg-color" aria-label="Text color">
+      <input type="text" id="fg-hex" spellcheck="false" aria-label="Text hex">
+    </div>
+  </div>
+
+  <div class="row" id="contrast">
+    <span id="ratio">—</span>
+    <span id="grade">—</span>
+  </div>
+
+  <p class="note">
+    <b>#30e4d0</b> stays fixed — Wind River's brand color for that one phrase,
+    not part of the theme.
+  </p>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* Add a combination by adding a line here — nothing else needs to change. */
+  var PALETTES = [
+    { id: 'classic', name: 'Classic',      bg: '#000000', fg: '#F4F4F2' },
+    { id: 'navy',    name: 'Navy / Cream', bg: '#020C20', fg: '#FFEBD6' }  // live
+  ];
+
+  // Bumped when PALETTES changes, so a saved selection from the previous set
+  // doesn't quietly override the new one on reload.
+  var STORE = 'palette-test-dark-v3';
+  var root  = document.documentElement;
+
+  var els = {
+    presets: document.getElementById('presets'),
+    bgColor: document.getElementById('bg-color'),
+    bgHex:   document.getElementById('bg-hex'),
+    fgColor: document.getElementById('fg-color'),
+    fgHex:   document.getElementById('fg-hex'),
+    ratio:   document.getElementById('ratio'),
+    grade:   document.getElementById('grade'),
+    panel:   document.getElementById('panel'),
+    collapse: document.getElementById('collapse')
+  };
+
+  /* ── WCAG 2.1 relative luminance + contrast ratio ───────────────────────── */
+  function luminance(hex) {
+    var channels = [1, 3, 5].map(function (i) {
+      var c = parseInt(hex.substr(i, 2), 16) / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+  }
+
+  function contrast(a, b) {
+    var la = luminance(a), lb = luminance(b);
+    return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+  }
+
+  /* ── State ──────────────────────────────────────────────────────────────── */
+  var state = { bg: PALETTES[0].bg, fg: PALETTES[0].fg };
+
+  function normalize(value) {
+    var v = String(value).trim().replace(/^#/, '');
+    if (/^[0-9a-f]{3}$/i.test(v)) {                 // #abc → #aabbcc
+      v = v[0] + v[0] + v[1] + v[1] + v[2] + v[2];
+    }
+    return /^[0-9a-f]{6}$/i.test(v) ? '#' + v.toUpperCase() : null;
+  }
+
+  function apply() {
+    root.style.setProperty('--ink-deep', state.bg);
+    root.style.setProperty('--paper', state.fg);
+
+    els.bgColor.value = state.bg.toLowerCase();
+    els.fgColor.value = state.fg.toLowerCase();
+    els.bgHex.value = state.bg;
+    els.fgHex.value = state.fg;
+    els.bgHex.classList.remove('invalid');
+    els.fgHex.classList.remove('invalid');
+
+    var ratio = contrast(state.bg, state.fg);
+    els.ratio.textContent = ratio.toFixed(2) + ':1';
+    // 7:1 is AAA for body text, 4.5:1 is AA. The display type here is large
+    // enough to pass at looser thresholds, so treat this as the strict read.
+    var grade = ratio >= 7 ? 'aaa' : ratio >= 4.5 ? 'aa' : 'fail';
+    els.grade.textContent = grade.toUpperCase();
+    els.grade.className = grade;
+
+    // highlight whichever preset matches exactly, if any
+    Array.prototype.forEach.call(els.presets.children, function (btn) {
+      var p = PALETTES[btn.dataset.index];
+      btn.setAttribute('aria-pressed',
+        p.bg.toUpperCase() === state.bg && p.fg.toUpperCase() === state.fg);
+    });
+
+    try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {}
+  }
+
+  /* ── Presets ────────────────────────────────────────────────────────────── */
+  PALETTES.forEach(function (p, i) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'preset';
+    btn.dataset.index = i;
+    btn.setAttribute('aria-pressed', 'false');
+
+    var chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.style.background = 'linear-gradient(90deg, ' + p.bg + ' 50%, ' + p.fg + ' 50%)';
+
+    btn.appendChild(chip);
+    btn.appendChild(document.createTextNode(p.name));
+    btn.addEventListener('click', function () {
+      state.bg = p.bg.toUpperCase();
+      state.fg = p.fg.toUpperCase();
+      apply();
+    });
+    els.presets.appendChild(btn);
+  });
+
+  /* ── Pickers — color input and hex field stay in sync both ways ─────────── */
+  function bindPair(colorEl, hexEl, key) {
+    colorEl.addEventListener('input', function () {
+      state[key] = colorEl.value.toUpperCase();
+      apply();
+    });
+    hexEl.addEventListener('input', function () {
+      var hex = normalize(hexEl.value);
+      if (!hex) { hexEl.classList.add('invalid'); return; }
+      hexEl.classList.remove('invalid');
+      state[key] = hex;
+      // apply() would rewrite the field mid-typing; update everything else
+      root.style.setProperty(key === 'bg' ? '--ink-deep' : '--paper', hex);
+      colorEl.value = hex.toLowerCase();
+      refreshReadout();
+    });
+    hexEl.addEventListener('blur', apply);   // normalise the field on the way out
+  }
+
+  function refreshReadout() {
+    var ratio = contrast(state.bg, state.fg);
+    els.ratio.textContent = ratio.toFixed(2) + ':1';
+    var grade = ratio >= 7 ? 'aaa' : ratio >= 4.5 ? 'aa' : 'fail';
+    els.grade.textContent = grade.toUpperCase();
+    els.grade.className = grade;
+  }
+
+  bindPair(els.bgColor, els.bgHex, 'bg');
+  bindPair(els.fgColor, els.fgHex, 'fg');
+
+  els.collapse.addEventListener('click', function () {
+    var collapsed = els.panel.classList.toggle('collapsed');
+    els.collapse.textContent = collapsed ? '+' : '–';
+    els.collapse.title = collapsed ? 'Expand' : 'Collapse';
+  });
+
+  /* ── Restore, so a half-tuned color survives a reload ───────────────────── */
+  try {
+    var saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (saved && normalize(saved.bg) && normalize(saved.fg)) {
+      state.bg = normalize(saved.bg);
+      state.fg = normalize(saved.fg);
+    }
+  } catch (e) {}
+
+  apply();
+})();
+</script>
+
+</body>
+</html>

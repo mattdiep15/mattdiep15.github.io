@@ -3,3 +3,16 @@ title: mattdiep
 description: Economics & Data Science @ Berkeley
 #show_downloads: true
 theme: jekyll-theme-minimal
+
+# Scratch files that live in the repo but should never be published.
+# NB: setting `exclude` replaces Jekyll's built-in list, so the usual defaults
+# are repeated here rather than lost.
+exclude:
+  - palette-test.html
+  - Gemfile
+  - Gemfile.lock
+  - gemfiles
+  - node_modules
+  - vendor
+  - .sass-cache
+  - .jekyll-cache

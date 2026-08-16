@@ -53,12 +53,19 @@
   --accent-soft: rgba(43, 76, 255, 0.08);
 
   /* dark bands: the hero, the role statement and the closing card */
-  --ink-deep:  #000000;
-  --paper:     #f4f4f2;
+  --ink-deep:  #020C20;
+  --paper:     #FFEBD6;
+
+  /* Translucent cuts of --paper, for muted text and borders on the dark bands.
+     Derived rather than hardcoded so they follow --ink-deep/--paper whenever the
+     dark palette is retuned — these were rgba(244,244,242,…) literals and went
+     stale the moment the palette moved off black. */
+  --paper-55:  color-mix(in srgb, var(--paper) 55%, transparent);
+  --paper-45:  color-mix(in srgb, var(--paper) 45%, transparent);
 
   /* Wind River's brand teal, for the company name in the role statement.
      This is their brighter accent cut; their primary is the deeper #00ada4.
-     DARK BACKGROUNDS ONLY — 13.13:1 on --ink-deep (AAA), but 1.48:1 on --bg,
+     DARK BACKGROUNDS ONLY — 12.21:1 on --ink-deep (AAA), but 1.48:1 on --bg,
      which fails badly. Don't reuse it on the light panel. */
   --wr-teal:   #30e4d0;
 
@@ -1016,7 +1023,7 @@ html.no-js .tl-chevron { display: none; }
   font-size: 0.89rem;
   font-weight: 300;
   letter-spacing: 0.08em;
-  color: rgba(244, 244, 242, 0.55);
+  color: var(--paper-55);
 }
 
 .contact-links {
@@ -1033,7 +1040,7 @@ html.no-js .tl-chevron { display: none; }
   align-items: center;
   gap: 0.6rem;
   padding: 0.85rem 1.7rem;
-  border: 1.5px solid rgba(244, 244, 242, 0.45);
+  border: 1.5px solid var(--paper-45);
   border-radius: 100vmax;
   text-decoration: none;
   color: var(--paper);
@@ -1103,7 +1110,11 @@ footer:not(.closing) {
   position: fixed;
   inset: 0;
   z-index: 9998;
-  background: var(--ink);
+  /* --ink-deep, not --ink: the curtain lands on the hero and the closing card,
+     so it has to be the same dark as they are. While both were near-black the
+     #131313 of --ink passed unnoticed; against the navy it reads as a different
+     colour mid-wipe. */
+  background: var(--ink-deep);
   transform: translateY(101%);
   border-radius: 40px 40px 0 0; /* leading top edge, rising from below */
   pointer-events: none;
