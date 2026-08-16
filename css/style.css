@@ -73,7 +73,7 @@
   --grain-opacity: 0.05;
 
   /* timing */
-  --intro-name-ms: 1500ms;
+  --intro-name-ms: 2000ms;
   --curtain-ms: 420ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-io:  cubic-bezier(0.65, 0, 0.35, 1);
@@ -259,11 +259,18 @@ html.no-js #pill-toggle { display: none; }
 
 html.intro-pending #intro { display: flex; }
 
+/* Display-scale, so the count reads as the moment rather than a status line.
+   tabular-nums is load-bearing at this size: without it the counter visibly
+   jerks sideways every time a digit changes width, and again at 9→10 and
+   99→100. The wide 0.22em tracking that suited it at 0.94rem would sprawl
+   here, so it flips to the display type's negative tracking instead. */
 .intro-counter {
+  font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
-  font-size: 0.94rem;
+  font-size: clamp(2.25rem, 7vw, 4rem);
   font-weight: 400;
-  letter-spacing: 0.22em;
+  letter-spacing: -0.03em;
+  line-height: 1;
   color: var(--muted);
 }
 

@@ -20,7 +20,7 @@
   var docEl = document.documentElement;
   if (!docEl.classList.contains('intro-pending')) return;
 
-  var INTRO = { nameMs: 1500, holdMs: 250 };
+  var INTRO = { nameMs: 2000, holdMs: 250 };
 
   var intro = document.getElementById('intro');
   var counterEl = intro.querySelector('.intro-counter');
