@@ -9,6 +9,7 @@ theme: jekyll-theme-minimal
 # are repeated here rather than lost.
 exclude:
   - palette-test.html
+  - line-sweep-demo.html
   - Gemfile
   - Gemfile.lock
   - gemfiles

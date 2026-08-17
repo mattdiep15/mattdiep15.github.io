@@ -192,8 +192,15 @@
   document.fonts.ready.then(function () {
     measure();
 
+    /* Width-only: every measurement here is a horizontal one, so a height change
+       cannot invalidate it. That matters on mobile, where the URL bar sliding
+       fires resize constantly — each one would otherwise read offsetWidth on all
+       12 letters (a forced layout) and issue 24 GSAP calls, mid-scroll. */
+    var lastWidth = window.innerWidth;
     var resizeTimer;
     window.addEventListener('resize', function () {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(function () {
         measure();

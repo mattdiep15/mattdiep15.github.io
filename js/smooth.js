@@ -32,8 +32,14 @@
   if (!window.gsap || !window.ScrollTrigger || !window.ScrollSmoother) return; // CDN blocked
   if (!document.getElementById('smooth-wrapper')) return;
 
+  /* Touch scrolling is a different problem from wheel scrolling. A wheel emits
+     small steady deltas that 1.5s of catch-up smooths pleasantly; a flick emits
+     one huge delta, and the same 1.5s reads as rubbery overshoot. 0.8 is GSAP's
+     own default and is what touch gets. */
+  var isTouch = window.matchMedia('(max-width: 768px), (pointer: coarse)').matches;
+
   var SMOOTH = {
-    smooth: 1.5,       // seconds the content takes to catch up to real scroll
+    smooth: isTouch ? 0.8 : 1.5,  // seconds the content takes to catch up
     speed: 1,          // overall scroll speed multiplier
     anchorOffset: 60   // px gap above an anchor target (was scroll-margin-top)
   };
@@ -45,7 +51,20 @@
     content: '#smooth-content',
     smooth: SMOOTH.smooth,
     speed: SMOOTH.speed,
-    effects: true,            // activates [data-speed] / [data-lag]
+
+    /* The fix for shaky mobile scrolling. Without it the browser scrolls on the
+       compositor thread while the smoother writes its transform on the main
+       thread; the two disagree every frame and each flick overshoots and
+       settles. This hands touch scrolling to GSAP so there is only one source of
+       truth, and it absorbs the iOS address-bar jump as a side effect.
+
+       It intercepts touch, so any nested scrollable pane would have to be
+       excluded — the site has none (no overflow:auto/scroll anywhere), which is
+       what makes this safe here. */
+    normalizeScroll: true,
+
+    // load-bearing on projects.html, whose project images carry data-speed="auto"
+    effects: true,
     ignoreMobileResize: true  // don't re-measure when mobile toolbars slide
   });
 

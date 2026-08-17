@@ -373,12 +373,16 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollSmoother.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js" defer></script>
 
+  <script src="js/scroll-bar.js" defer></script>
   <script src="js/pill-nav.js" defer></script>
   <!-- before smooth.js: it calls PageCurtain.sweep() for the in-page nav tabs -->
   <script src="js/curtain.js" defer></script>
   <script src="js/main.js" defer></script>
   <script src="js/effects.js" defer></script>
   <script src="js/hero-letters.js" defer></script>
+  <!-- after hero-letters.js: the sweep opens the "w" by dispatching a synthetic
+       mouseenter, so the letters must exist and be listening first. -->
+  <script src="js/hero-sweep.js" defer></script>
   <script src="js/smooth.js" defer></script>
   <!-- before split-lines.js: ScrollTrigger measures pinned triggers most
        reliably when they're created in DOM order, and .now-pin sits above the

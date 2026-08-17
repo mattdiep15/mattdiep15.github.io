@@ -157,6 +157,10 @@
       pin: sticky,
       scrub: true,              // scrub: 1 would add catch-up lag on top
       animation: tl,
+      // Mobile browsers scroll asynchronously, so the pin can latch a frame late
+      // and visibly jolt at the handoff from the hero. This looks ahead by one
+      // frame's worth of scroll to catch it in time.
+      anticipatePin: 1,
       invalidateOnRefresh: true // re-evaluate the x offsets on resize
     });
   });

@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Hero line sweep — demo</title>
+
+<!--
+  SCRATCH FILE — not part of the site. Not linked from anywhere, not deployed.
+
+  A diagonal line sweeps from the top-left corner to the bottom-right and, as its
+  head crosses the "w" of "Matthew", pops that letter's photo open — the same
+  effect a hover produces.
+
+  This page links the REAL css/style.css and the REAL js/hero-letters.js, both
+  unmodified. The photo pop is driven by dispatching a synthetic mouseenter on
+  the letter, because hero-letters.js exposes no API — its enlarge logic lives
+  inside per-letter closures. That means what you see here is the production
+  mechanism, not a reimplementation that could drift from it.
+
+  It must live at the REPO ROOT: hero-letters.js hardcodes its image paths
+  document-relative ('images/MOMA.jpg'), so from animations_etc/ they'd 404.
+
+  Serve it, don't double-click: Chrome blocks @font-face over file://, and the
+  letter geometry depends on Satoshi being the actual rendered font.
+      python -m http.server 8000  ->  http://localhost:8000/line-sweep-demo.html
+-->
+
+<!-- same boot script as index.html, minus the intro/curtain branches: this page
+     has no preloader, and .hero-content's riseIn entrance is gated on html.js -->
+<script>
+  (function () {
+    var d = document.documentElement;
+    d.classList.remove('no-js');
+    d.classList.add('js');
+  })();
+</script>
+
+<link rel="preload" href="fonts/Satoshi-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+
+<style>
+  /* Dark rather than the real --bg: this page only carries the two dark bands,
+     so a light body would flash pale under the pin spacer. */
+  body { background: var(--ink-deep); }
+
+  /* Gives .hero-content its own stacking context so the sweep can be layered
+     behind the name (svg z-index 0) or in front of it (z-index 3). The real
+     site would need this same line for the "behind" option. */
+  .hero-content { position: relative; z-index: 1; }
+
+  /* The sweep lives INSIDE the hero rather than as a fixed overlay. Under
+     ScrollSmoother #smooth-wrapper is its own stacking context, so a fixed
+     sibling outside it can never paint behind .hero-content — the "behind the
+     name" toggle would silently stop working. As a child of .hero-pin it shares
+     a stacking context with the name, and it scrolls away with the hero, which
+     is what it belongs to anyway. */
+  .hero-pin { position: relative; }
+
+  /* width/height are load-bearing, not decoration. <svg> is a REPLACED element,
+     so with width:auto an absolutely positioned box resolves to the intrinsic
+     300x150 default and ignores right/bottom as over-constrained — inset:0
+     alone leaves a 300x150 box in the corner that clips the line to a stub. */
+  #sweep {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    overflow: visible;
+  }
+  #sweep.front { z-index: 3; }
+
+  /* Behind the greeting by default (DOM order puts the text after it, and the
+     text's own positioning wins at equal z-index). */
+  /* style.css only sets this under html.now-anim; make it unconditional so the
+     svg anchors correctly even if now-line.js bails. */
+  .now-sticky { position: relative; }
+
+  #wpath {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+  #wpath.front { z-index: 3; }
+
+  /* CSS filter rather than the SVG filter="" attribute, which expects url(#id) */
+  #glow { filter: blur(10px); }
+
+  .sweep-label {
+    font-family: var(--font);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    /* the label sits ON the line, in the gap the stroke leaves for it */
+    dominant-baseline: central;
+  }
+
+  #dbg { display: none; }
+  #dbg.on { display: block; }
+
+  /* ── warning banner, shown when hero-letters.js has bailed ──────────────── */
+  #warn {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 10001;
+    padding: 0.9rem 1.2rem;
+    background: #7f1d1d;
+    color: #fff;
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  #warn.on { display: block; }
+  #warn b { display: block; margin-bottom: 0.25rem; font-weight: 600; }
+
+  /* ══ CONTROL PANEL ══════════════════════════════════════════════════════
+     Hardcoded colours throughout — the panel must stay legible regardless of
+     what the site's palette is doing behind it.                            */
+  #panel {
+    position: fixed;
+    bottom: 1.2rem;
+    left: 1.2rem;
+    z-index: 10000;
+    width: 280px;
+    padding: 1rem 1.1rem 1.1rem;
+    background: #16181d;
+    border: 1px solid #303540;
+    border-radius: 14px;
+    color: #e8eaee;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+    max-height: calc(100vh - 2.4rem);
+    overflow-y: auto;
+  }
+  #panel h2 {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: #7e8595; margin-bottom: 0.75rem;
+  }
+  #panel .row { margin-bottom: 0.7rem; }
+  #panel .row:last-child { margin-bottom: 0; }
+  #panel label {
+    display: block; font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: #7e8595; margin-bottom: 0.3rem;
+  }
+  #panel .val { float: right; color: #e8eaee; letter-spacing: 0; text-transform: none; }
+
+  #panel button.act {
+    width: 100%; padding: 0.55rem;
+    background: #2b3550; border: 1px solid #4a5a80; border-radius: 8px;
+    color: #dce4ff; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  #panel button.act:hover { background: #35426a; }
+
+  #panel .mini {
+    padding: 0.3rem 0.5rem; margin-left: 0.3rem;
+    background: #1e222a; border: 1px solid #303540; border-radius: 6px;
+    color: #9aa3b2; font: inherit; font-size: 10px; cursor: pointer;
+  }
+  #panel .mini:hover { color: #e8eaee; }
+
+  #panel input[type="range"] { width: 100%; accent-color: #6f8cff; }
+  #panel select,
+  #panel input[type="text"],
+  #panel input[type="number"] {
+    width: 100%; padding: 0.4rem 0.5rem;
+    background: #1e222a; border: 1px solid #303540; border-radius: 6px;
+    color: #e8eaee; font: inherit;
+  }
+  #panel textarea {
+    width: 100%;
+    padding: 0.4rem 0.5rem;
+    background: #1e222a; border: 1px solid #303540; border-radius: 6px;
+    color: #cfd6e2; font: inherit; font-size: 10px; line-height: 1.35;
+    resize: vertical;
+  }
+  #panel textarea:focus { outline: none; border-color: #6f8cff; }
+  #panel textarea.invalid { border-color: #ff6b6b; }
+
+  #panel input[type="color"] {
+    width: 34px; height: 26px; padding: 0; vertical-align: middle;
+    background: none; border: 1px solid #303540; border-radius: 6px; cursor: pointer;
+  }
+  #panel .check { display: flex; align-items: center; gap: 0.45rem; }
+  #panel .check input { accent-color: #6f8cff; }
+  #panel .check label { margin: 0; text-transform: none; letter-spacing: 0; font-size: 11px; }
+
+  #readout, #wreadout {
+    padding: 0.5rem 0.6rem; background: #1e222a; border-radius: 8px;
+    font-size: 11px; color: #9aa3b2;
+  }
+  #readout b, #wreadout b { color: #30e4d0; font-weight: 600; }
+
+  #collapse {
+    position: absolute; top: 0.6rem; right: 0.6rem;
+    width: 22px; height: 22px;
+    background: #1e222a; border: 1px solid #303540; border-radius: 6px;
+    color: #7e8595; font: inherit; line-height: 1; cursor: pointer;
+  }
+  #collapse:hover { color: #e8eaee; }
+  #panel.collapsed { width: auto; padding: 0.55rem 0.8rem; overflow: visible; }
+  #panel.collapsed > *:not(#collapse):not(h2) { display: none; }
+  #panel.collapsed h2 { margin: 0; padding-right: 1.6rem; }
+  #panel.collapsed #collapse { top: 0.4rem; right: 0.4rem; }
+</style>
+</head>
+<body>
+
+<div id="warn"></div>
+
+<!-- ScrollSmoother transforms #smooth-content, and a transform makes an element
+     a containing block — so every position:fixed layer (the sweep, the grain,
+     the panel) MUST stay outside this wrapper or it would fix to the content
+     instead of the viewport. Same rule index.html follows. -->
+<div id="smooth-wrapper">
+<div id="smooth-content">
+
+  <!-- hero + role statement, lifted verbatim from index.html -->
+  <header class="hero-pin" id="top">
+
+    <svg id="sweep" aria-hidden="true">
+      <!-- fill="none" is mandatory on an open path: without it the browser fills
+           the implied closed area and washes colour across half the screen. -->
+      <path id="glow" fill="none" stroke="#30e4d0" stroke-width="18"
+            opacity="0.18" stroke-linecap="round"></path>
+      <path id="line" fill="none" stroke="#30e4d0" stroke-width="3"
+            stroke-linecap="round"></path>
+      <!-- labels ride the same path via <textPath>; the stroke opens a gap for
+           each one so the words read as part of the line, not on top of it -->
+      <g id="sweep-labels"></g>
+      <g id="dbg">
+        <polyline id="dbg-pts" fill="none" stroke="#8b93a5" stroke-width="1"
+                  stroke-dasharray="2 4"></polyline>
+        <rect id="dbg-box" fill="none" stroke="#ff5c8a" stroke-width="1" stroke-dasharray="4 3"></rect>
+        <circle id="dbg-hit" r="4" fill="#ff5c8a"></circle>
+        <circle id="dbg-strike" r="6" fill="none" stroke="#4ade80" stroke-width="2"></circle>
+      </g>
+    </svg>
+
+    <div class="hero-sticky">
+      <div class="hero-content">
+        <h1 class="hero-name">Matthew Diep</h1>
+      </div>
+    </div>
+  </header>
+
+  <section id="now" class="now-pin">
+    <div class="now-sticky">
+
+      <!-- Traced from animations_etc/path_1.png. Lives inside .now-sticky, which
+           now-line.js pins — so it holds still for the whole pinned section,
+           which is exactly when it draws. That element already has
+           overflow:hidden, which clips the stroke to the viewport for free.
+           preserveAspectRatio="none" stretches the drawing to fill, keeping the
+           entry/exit glued to the screen edges at any window shape. -->
+      <!-- No viewBox on purpose. The path is orthogonal, so it's generated in
+           PIXEL space from fractional waypoints — which keeps every corner a
+           true quarter-circle. A stretched viewBox would squash them into
+           ellipses on any window that isn't the drawing's aspect ratio. -->
+      <svg id="wpath" aria-hidden="true">
+        <path id="wpath-glow" fill="none" stroke="#FFEBD6" stroke-width="9"
+              opacity="0.16" stroke-linecap="round"></path>
+        <path id="wpath-line" fill="none" stroke="#FFEBD6" stroke-width="3"
+              stroke-linecap="round"></path>
+      </svg>
+
+      <p class="now-line now-welcome"><span class="now-w">Welcome to my Website!</span></p>
+      <h2 class="now-line">
+        <span class="now-l">I'm currently a</span>
+        <span class="now-l">Data Platform Engineer</span>
+        <span class="now-l">at <em>Wind River Systems!</em></span>
+      </h2>
+    </div>
+  </section>
+
+</div><!-- /#smooth-content -->
+</div><!-- /#smooth-wrapper -->
+
+<div id="grain" aria-hidden="true"></div>
+
+<div id="panel">
+  <h2>Line sweep</h2>
+  <button id="collapse" type="button" title="Collapse">–</button>
+
+  <div class="row"><button class="act" id="replay" type="button">Replay &nbsp;(R)</button></div>
+
+  <div class="row">
+    <label>Start delay <span class="val" id="delay-v"></span>
+      <button class="mini" id="delay-intro" type="button">intro (2250)</button>
+      <button class="mini" id="delay-zero" type="button">0</button>
+    </label>
+    <input type="range" id="delay" min="0" max="4000" step="50">
+  </div>
+
+  <div class="row">
+    <label>Draw duration <span class="val" id="dur-v"></span></label>
+    <input type="range" id="dur" min="0.3" max="4" step="0.05">
+  </div>
+
+  <div class="row">
+    <label for="ease">Ease</label>
+    <select id="ease">
+      <option value="none">none (linear)</option>
+      <option value="power2.out">power2.out</option>
+      <option value="power4.out">power4.out</option>
+      <option value="expo.out">expo.out</option>
+      <option value="power1.inOut">power1.inOut</option>
+      <option value="power2.in">power2.in</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <label>Thickness <span class="val" id="thick-v"></span></label>
+    <input type="range" id="thick" min="1" max="40" step="0.5">
+  </div>
+
+  <div class="row">
+    <!-- a TIME lag, not a fixed length: under an eased profile the head races
+         ahead early and the body stretches, then contracts as the tail catches
+         up. Linear ease is the only case where body length == this figure. -->
+    <label>Snake tail lag <span class="val" id="body-v"></span></label>
+    <input type="range" id="body" min="0.05" max="0.9" step="0.01">
+  </div>
+
+  <h2 style="margin-top:1rem">Serpentine shape</h2>
+
+  <div class="row">
+    <label>Waves <span class="val" id="waves-v"></span></label>
+    <input type="range" id="waves" min="0.5" max="4" step="0.1">
+  </div>
+  <div class="row">
+    <label>Amplitude <span class="val" id="amp-v"></span></label>
+    <input type="range" id="amp" min="0" max="0.3" step="0.005">
+  </div>
+  <div class="row">
+    <label>Phase <span class="val" id="phase-v"></span></label>
+    <input type="range" id="phase" min="0" max="6.28" step="0.05">
+  </div>
+  <div class="row">
+    <label>Start Y <span class="val" id="startY-v"></span></label>
+    <input type="range" id="startY" min="0" max="0.5" step="0.01">
+  </div>
+  <div class="row">
+    <label>End Y <span class="val" id="endY-v"></span></label>
+    <input type="range" id="endY" min="0.5" max="1" step="0.01">
+  </div>
+  <div class="row">
+    <label>Aim tightness (&sigma;) <span class="val" id="sigma-v"></span></label>
+    <input type="range" id="sigma" min="0.05" max="0.5" step="0.01">
+  </div>
+
+  <div class="row">
+    <label>Photo hold before close <span class="val" id="hold-v"></span></label>
+    <input type="range" id="hold" min="0" max="3000" step="50">
+  </div>
+
+  <div class="row">
+    <label for="color">Colour</label>
+    <input type="color" id="color">
+    <span id="color-hex" style="margin-left:.4rem"></span>
+  </div>
+
+  <div class="row check"><input type="checkbox" id="glow-on"><label for="glow-on">Glow</label></div>
+  <div class="row check"><input type="checkbox" id="front"><label for="front">Line in front of name</label></div>
+  <div class="row check"><input type="checkbox" id="debug"><label for="debug">Debug overlay</label></div>
+
+  <div class="row">
+    <label for="labelText">Words on the line</label>
+    <input type="text" id="labelText" spellcheck="false">
+  </div>
+  <div class="row">
+    <label>How many <span class="val" id="labelCount-v"></span></label>
+    <input type="range" id="labelCount" min="0" max="5" step="1">
+  </div>
+  <div class="row">
+    <label>Word size <span class="val" id="labelSize-v"></span></label>
+    <input type="range" id="labelSize" min="8" max="40" step="1">
+  </div>
+  <div class="row">
+    <label>Gap padding <span class="val" id="labelPad-v"></span></label>
+    <input type="range" id="labelPad" min="0" max="60" step="1">
+  </div>
+
+  <div class="row" id="readout">—</div>
+
+  <h2 style="margin-top:1rem">Welcome path (scroll)</h2>
+
+  <div class="row">
+    <label>Draw runway <span class="val" id="wRunway-v"></span></label>
+    <input type="range" id="wRunway" min="0.1" max="1" step="0.01">
+  </div>
+  <div class="row">
+    <label>Tail lag <span class="val" id="wLag-v"></span></label>
+    <input type="range" id="wLag" min="0.05" max="0.95" step="0.01">
+  </div>
+  <div class="row">
+    <label>Thickness <span class="val" id="wThick-v"></span></label>
+    <input type="range" id="wThick" min="1" max="40" step="0.5">
+  </div>
+  <div class="row">
+    <label for="wColor">Colour</label>
+    <input type="color" id="wColor">
+    <span id="wColor-hex" style="margin-left:.4rem"></span>
+  </div>
+  <div class="row check"><input type="checkbox" id="wGlow"><label for="wGlow">Glow</label></div>
+  <div class="row check"><input type="checkbox" id="wFront"><label for="wFront">In front of greeting</label></div>
+
+  <div class="row">
+    <label>Corner radius <span class="val" id="wRadius-v"></span></label>
+    <input type="range" id="wRadius" min="0" max="160" step="2">
+  </div>
+
+  <div class="row">
+    <label for="wPts">Corners &nbsp;[x, y] as 0&ndash;1 of the viewport
+      <button class="mini" id="wPts-reset" type="button">reset</button></label>
+    <textarea id="wPts" spellcheck="false" rows="7"></textarea>
+  </div>
+
+  <div class="row" id="wreadout">—</div>
+</div>
+
+<!-- Same order index.html uses: hero-letters, then smooth, then now-line.
+     ScrollSmoother must exist before now-line.js builds its pin. -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollSmoother.min.js"></script>
+<script src="js/hero-letters.js" defer></script>
+<script src="js/smooth.js" defer></script>
+<script src="js/now-line.js" defer></script>
+
+<script>
+(function () {
+  'use strict';
+
+  var W_INDEX = 6;              // M0 a1 t2 t3 h4 e5 w6 _7 D8 i9 e10 p11
+  var INTRO_MS = 2250;          // js/intro.js: nameMs 2000 + holdMs 250
+  // Bumped whenever CFG's shape changes. Without this a saved wD from an earlier
+  // session silently overrides the new path — the stored copy always wins.
+  var STORE = 'line-sweep-demo-v4';
+
+  /* Traced by eye from animations_etc/path_1.png, in that image's own 1964x1146
+     space. One continuous stroke: enters left ~16% down, hooks right along the
+     top, plunges down the left third, bows out, sweeps along the bottom, makes a
+     self-crossing loop on the right, exits bottom-right. It frames the greeting
+     rather than crossing it.
+
+     The LOOP is the uncertain part — which strand passes over which is genuinely
+     ambiguous in a flat drawing. Hence the editable d-field in the panel. */
+  /* Corners of the orthogonal path, as fractions of the viewport. Every leg is
+     purely horizontal or vertical, so each turn is exactly 90 degrees. Taken from
+     the skeleton of animations_etc/path_1.png, which was a rough guide:
+
+       left edge -> right, down, right, up, left, down -> off the bottom edge
+
+     The vertical leg down the right crosses the long horizontal one, which is
+     what produces the crossing in the drawing. */
+  var W_POINTS = [
+    [0.000, 0.172],   // enter at the left edge
+    [0.204, 0.172],   // turn down
+    [0.204, 0.659],   // turn right
+    [0.861, 0.659],   // turn up   (this leg is crossed later)
+    [0.861, 0.548],   // turn left
+    [0.771, 0.548],   // turn down
+    [0.771, 1.000]    // exit through the bottom edge
+  ];
+
+  // the panel's editable form: one corner per line
+  var W_PTS_TEXT = W_POINTS.map(function (p) {
+    return '[' + p[0] + ', ' + p[1] + ']';
+  }).join(',\n');
+
+  /* Straight legs joined by true quarter-circle arcs. Each corner is trimmed
+     back by the radius along both adjacent legs, clamped to half the shorter
+     leg so neighbouring corners can never overrun each other. */
+  function roundedPath(pts, r) {
+    function dist(a, b) { return Math.hypot(b[0] - a[0], b[1] - a[1]); }
+    var d = 'M ' + pts[0][0].toFixed(1) + ',' + pts[0][1].toFixed(1);
+
+    for (var i = 1; i < pts.length - 1; i++) {
+      var A = pts[i - 1], P = pts[i], B = pts[i + 1];
+      var dA = dist(A, P), dB = dist(P, B);
+      if (!dA || !dB) continue;
+      var rr = Math.min(r, dA / 2, dB / 2);
+
+      var sx = P[0] + (A[0] - P[0]) / dA * rr, sy = P[1] + (A[1] - P[1]) / dA * rr;
+      var ex = P[0] + (B[0] - P[0]) / dB * rr, ey = P[1] + (B[1] - P[1]) / dB * rr;
+
+      // cross product sign gives the turn direction; in SVG's y-down space a
+      // positive cross is a clockwise turn, which is sweep-flag 1
+      var cross = (P[0] - A[0]) * (B[1] - P[1]) - (P[1] - A[1]) * (B[0] - P[0]);
+
+      d += ' L ' + sx.toFixed(1) + ',' + sy.toFixed(1) +
+           ' A ' + rr.toFixed(1) + ',' + rr.toFixed(1) + ' 0 0 ' + (cross > 0 ? 1 : 0) +
+           ' ' + ex.toFixed(1) + ',' + ey.toFixed(1);
+    }
+
+    var last = pts[pts.length - 1];
+    return d + ' L ' + last[0].toFixed(1) + ',' + last[1].toFixed(1);
+  }
+
+  var CFG = {
+    delay: 0, dur: 1.4, ease: 'power2.out', thick: 3, hold: 900,
+    color: '#30e4d0', glow: true, front: false, debug: false,
+    body: 0.35,     // snake length as a fraction of the path; also the tail's lag
+    labelText: 'hover me!',
+    labelCount: 2,  // words spaced along the line
+    labelSize: 15,  // px
+    labelPad: 14,   // breathing room each side of a word, in path units
+    // serpentine shape
+    waves: 2.0,     // undulation count
+    amp: 0.10,      // wave height, fraction of viewport height
+    phase: 0,       // slides the crests along the path
+    startY: 0.16,   // entry height on the left edge
+    endY: 0.78,     // exit height on the right edge
+    over: 0.08,     // off-screen overshoot at both ends
+    sigma: 0.18,    // Gaussian width of the bend onto the W
+
+    // ── scroll-scrubbed Welcome path ──
+    wColor: '#FFEBD6',
+    wThick: 3,
+    wGlow: true,
+    wFront: false,
+    wRunway: 0.45,  // fraction of now-line.js's pin the draw spans
+    wLag: 0.45,     // how far the tail trails the head, as a share of the runway
+    wRadius: 56,    // corner radius in px
+    wPts: W_PTS_TEXT
+  };
+
+  var svg = document.getElementById('sweep');
+  var lineEl = document.getElementById('line');
+  var glowEl = document.getElementById('glow');
+  var dbg = document.getElementById('dbg');
+  var dbgBox = document.getElementById('dbg-box');
+  var dbgHit = document.getElementById('dbg-hit');
+  var dbgStrike = document.getElementById('dbg-strike');
+  var dbgPts = document.getElementById('dbg-pts');
+  var readout = document.getElementById('readout');
+  var warn = document.getElementById('warn');
+
+  var wEl = null, geo = null, tween = null, delayTimer = null, leaveTimer = null;
+
+  /* ── Failure banner ─────────────────────────────────────────────────────── */
+  function fail(title, body) {
+    warn.innerHTML = '<b>' + title + '</b>' + body;
+    warn.classList.add('on');
+  }
+
+  /* ── Path construction ───────────────────────────────────────────────────
+     A serpentine that is BUILT to pass through the W rather than aimed near it:
+
+       a. baseline   gentle descent, starting and ending off-screen so the head
+                     enters and leaves mid-motion
+       b. undulation vertical sine, windowed by sin(pi*u) so the wiggle dies out
+                     at both ends and entry/exit stay clean
+       c. correction the wave misses the letter by some error e; a Gaussian bump
+                     centred on the W is exactly e at the W and decays smoothly
+                     either side, bending the curve onto the letter without
+                     flattening the wave elsewhere. Gaussian rather than a linear
+                     taper because it's smooth in every derivative — no kink.
+       d. spline     Catmull-Rom through the samples. It INTERPOLATES its control
+                     points, so forcing one sample to sit exactly on the W is
+                     what makes the rendered curve pass through it.            */
+
+  var SAMPLES = 64;
+
+  function buildPoints() {
+    // Everything is expressed in the svg's OWN coordinate space, not the
+    // viewport's. The svg scrolls with the hero under ScrollSmoother, so
+    // viewport coords would drift the moment the page moved.
+    var box = svg.getBoundingClientRect();
+    if (!(box.width > 0) || !(box.height > 0)) return null;
+
+    var r = wEl.getBoundingClientRect();
+    var cx = r.left + r.width / 2 - box.left;
+    var cy = r.top + r.height / 2 - box.top;
+
+    var W = box.width, H = box.height;
+    if (!(cx > 0) || !(cy > 0) || cx > W || cy > H) return null;
+    var x0 = -CFG.over * W, x1 = W + CFG.over * W;
+    var y0 = CFG.startY * H, y1 = CFG.endY * H;
+    var amp = CFG.amp * H;
+    var sigma = Math.max(1, CFG.sigma * W);
+
+    function wave(x) {
+      var u = (x - x0) / (x1 - x0);
+      return y0 + (y1 - y0) * u +
+             amp * Math.sin(2 * Math.PI * CFG.waves * u + CFG.phase) * Math.sin(Math.PI * u);
+    }
+
+    // error at the W, and the bump that cancels it
+    var err = cy - wave(cx);
+    function y(x) {
+      var d = (x - cx) / sigma;
+      return wave(x) + err * Math.exp(-d * d);
+    }
+
+    // even samples, plus one forced exactly onto the W
+    var xs = [];
+    for (var i = 0; i <= SAMPLES; i++) xs.push(x0 + (x1 - x0) * (i / SAMPLES));
+    xs.push(cx);
+    xs.sort(function (a, b) { return a - b; });
+
+    var pts = xs.map(function (x) { return { x: x, y: y(x) }; });
+    return {
+      pts: pts, cx: cx, cy: cy, box: box,
+      // debug shapes live in the same local space as the path
+      rect: { left: r.left - box.left, top: r.top - box.top, width: r.width, height: r.height }
+    };
+  }
+
+  /* Catmull-Rom -> cubic Bezier. Ends are handled by duplicating the terminal
+     points, which gives a natural-looking tangent without extra cases. */
+  function toPath(pts) {
+    var d = 'M ' + pts[0].x.toFixed(2) + ',' + pts[0].y.toFixed(2);
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1] || pts[i];
+      var p1 = pts[i];
+      var p2 = pts[i + 1];
+      var p3 = pts[i + 2] || p2;
+      d += ' C ' + (p1.x + (p2.x - p0.x) / 6).toFixed(2) + ',' + (p1.y + (p2.y - p0.y) / 6).toFixed(2) +
+           ' '  + (p2.x - (p3.x - p1.x) / 6).toFixed(2) + ',' + (p2.y - (p3.y - p1.y) / 6).toFixed(2) +
+           ' '  + p2.x.toFixed(2) + ',' + p2.y.toFixed(2);
+    }
+    return d;
+  }
+
+  /* ── Strike fraction, MEASURED off the rendered path ─────────────────────
+     A curve has no closed form for "how far along is the W", so walk the real
+     geometry: coarse scan for the nearest point, then bisect to refine. The
+     residual is kept and shown — if the curve ever stops passing through the
+     letter, that number goes red instead of the demo striking thin air. */
+  function findStrike(pathEl, cx, cy) {
+    var total = pathEl.getTotalLength();
+    var best = 0, bestD = Infinity, i, s, p, dx, dy, dd;
+
+    for (i = 0; i <= 400; i++) {
+      s = total * (i / 400);
+      p = pathEl.getPointAtLength(s);
+      dx = p.x - cx; dy = p.y - cy; dd = dx * dx + dy * dy;
+      if (dd < bestD) { bestD = dd; best = s; }
+    }
+
+    var step = total / 400;
+    for (i = 0; i < 24; i++) {
+      step /= 2;
+      [best - step, best + step].forEach(function (cand) {
+        if (cand < 0 || cand > total) return;
+        var q = pathEl.getPointAtLength(cand);
+        var ex = q.x - cx, ey = q.y - cy, e2 = ex * ex + ey * ey;
+        if (e2 < bestD) { bestD = e2; best = cand; }
+      });
+    }
+
+    p = pathEl.getPointAtLength(best);
+    return { len: total, at: best / total, residual: Math.sqrt(bestD), px: p.x, py: p.y };
+  }
+
+  function applyGeometry() {
+    var built = buildPoints();
+    if (!built) {
+      geo = null;
+      [lineEl, glowEl].forEach(function (e) { e.style.visibility = 'hidden'; });
+      readout.innerHTML = '<b style="color:#ffd166">hero is scrolled out of view</b><br>' +
+                          'press <b>R</b> or Replay to return to the top';
+      return;
+    }
+
+    var d = toPath(built.pts);
+    lineEl.setAttribute('d', d);
+    glowEl.setAttribute('d', d);
+
+    var hit = findStrike(lineEl, built.cx, built.cy);
+
+    geo = {
+      cx: built.cx, cy: built.cy, rect: built.rect,
+      len: hit.len, strikeAt: hit.at, residual: hit.residual
+    };
+
+    // labels are positioned in arc length, so they must be rebuilt after any
+    // change to the path — the offsets are meaningless against the old length
+    buildLabels();
+
+    dbgBox.setAttribute('x', built.rect.left);
+    dbgBox.setAttribute('y', built.rect.top);
+    dbgBox.setAttribute('width', built.rect.width);
+    dbgBox.setAttribute('height', built.rect.height);
+    dbgHit.setAttribute('cx', built.cx); dbgHit.setAttribute('cy', built.cy);
+    dbgStrike.setAttribute('cx', hit.px); dbgStrike.setAttribute('cy', hit.py);
+    dbgPts.setAttribute('points', built.pts.map(function (p) {
+      return p.x.toFixed(1) + ',' + p.y.toFixed(1);
+    }).join(' '));
+
+    // The svg box is reported because if it ever stops matching the viewport the
+    // line gets silently clipped — which looks like "the line barely appears".
+    var box = built.box;
+    var clipped = Math.round(box.width) < window.innerWidth ||
+                  Math.round(box.height) < window.innerHeight;
+    var bad = hit.residual > 2;
+
+    readout.innerHTML =
+      'W centre <b>' + Math.round(built.cx) + ', ' + Math.round(built.cy) + '</b><br>' +
+      'path length <b>' + Math.round(hit.len) + '</b>px<br>' +
+      'strike at <b>' + (hit.at * 100).toFixed(1) + '%</b> of draw<br>' +
+      'residual ' + (bad ? '<b style="color:#ff6b6b">' : '<b>') +
+      hit.residual.toFixed(2) + 'px</b>' + (bad ? ' &larr; missing the W' : '') + '<br>' +
+      'svg box ' + (clipped ? '<b style="color:#ff6b6b">' : '<b>') +
+      Math.round(box.width) + '&times;' + Math.round(box.height) +
+      '</b> / viewport ' + window.innerWidth + '&times;' + window.innerHeight;
+  }
+
+  /* ── The strike: drive the REAL hover path in hero-letters.js ───────────── */
+  function strike() {
+    wEl.dispatchEvent(new MouseEvent('mouseenter'));
+    clearTimeout(leaveTimer);
+    leaveTimer = setTimeout(function () {
+      wEl.dispatchEvent(new MouseEvent('mouseleave'));
+    }, CFG.hold);
+  }
+
+  /* ── Run ────────────────────────────────────────────────────────────────── */
+  /* ── Labels riding the line ──────────────────────────────────────────────
+     Each label occupies an arc-length range that the stroke must skip, so the
+     words sit IN the line rather than over it. Rebuilt whenever the path or the
+     label settings change; measured with getComputedTextLength so the gap is
+     exactly as wide as the rendered word. */
+  var labelG = document.getElementById('sweep-labels');
+  var labels = [];   // [{ el, start, end }]
+
+  function buildLabels() {
+    labelG.textContent = '';
+    labels = [];
+    if (!geo || !CFG.labelCount) return;
+
+    for (var i = 0; i < CFG.labelCount; i++) {
+      var t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('class', 'sweep-label');
+      t.setAttribute('font-size', CFG.labelSize);
+      t.setAttribute('fill', CFG.color);
+
+      var tp = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
+      tp.setAttribute('href', '#line');
+      tp.textContent = CFG.labelText;
+      t.appendChild(tp);
+      labelG.appendChild(t);
+
+      // spread evenly but off-centre, so no label lands on the strike point
+      var centre = geo.len * ((i + 0.5) / CFG.labelCount);
+      var w = 0;
+      try { w = t.getComputedTextLength(); } catch (e) {}
+      if (!w) w = CFG.labelText.length * CFG.labelSize * 0.62;  // fallback estimate
+
+      tp.setAttribute('startOffset', Math.max(0, centre - w / 2));
+      labels.push({
+        el: t,
+        start: centre - w / 2 - CFG.labelPad,
+        end: centre + w / 2 + CFG.labelPad
+      });
+    }
+  }
+
+  /* Remove the label gaps from a visible interval. */
+  function subtractGaps(win) {
+    var out = [win];
+    labels.forEach(function (lab) {
+      var next = [];
+      out.forEach(function (iv) {
+        if (lab.end <= iv[0] || lab.start >= iv[1]) { next.push(iv); return; }
+        if (lab.start > iv[0]) next.push([iv[0], lab.start]);
+        if (lab.end < iv[1]) next.push([lab.end, iv[1]]);
+      });
+      out = next;
+    });
+    return out.filter(function (iv) { return iv[1] - iv[0] > 0.5; });
+  }
+
+  /* stroke-dasharray alternates dash/gap from length 0, so an arbitrary set of
+     visible intervals becomes: 0, gap-to-first, dash, gap, dash, … plus one
+     trailing gap long enough that the pattern never repeats. */
+  function dashFor(vis, total) {
+    var parts = ['0'], cursor = 0;
+    vis.forEach(function (iv) {
+      parts.push((iv[0] - cursor).toFixed(2));
+      parts.push((iv[1] - iv[0]).toFixed(2));
+      cursor = iv[1];
+    });
+    parts.push(total.toFixed(2));
+    return parts.join(' ');
+  }
+
+  function setWindow(tail, head) {
+    var body = head - tail;
+    var hidden = body <= 0.5;
+
+    var vis = hidden ? [] : subtractGaps([tail, head]);
+    var dash = hidden ? null : dashFor(vis, geo.len);
+
+    [lineEl, glowEl].forEach(function (el) {
+      // A zero-length dash with round linecaps renders as a dot, so hide
+      // outright rather than leaving a bead sitting at the path start.
+      el.style.visibility = hidden ? 'hidden' : 'visible';
+      if (hidden) return;
+      el.style.strokeDasharray = dash;
+      el.style.strokeDashoffset = 0;
+    });
+
+    // a word fades in as the head clears it and out as the tail reaches it
+    labels.forEach(function (lab) {
+      var o = hidden ? 0 :
+        Math.min(Math.max((head - lab.end) / 30, 0), 1) *
+        Math.min(Math.max((lab.start - tail) / 30, 0), 1);
+      lab.el.style.opacity = o;
+    });
+  }
+
+  function reset() {
+    clearTimeout(delayTimer);
+    clearTimeout(leaveTimer);
+    if (tween) { tween.kill(); tween = null; }
+    gsap.killTweensOf(svg);
+    gsap.set(svg, { opacity: 1 });
+    applyGeometry();
+    if (geo) setWindow(0, 0);
+  }
+
+  function play() {
+    reset();
+    if (!geo) return;
+
+    delayTimer = setTimeout(function () {
+      var p = { t: 0 };
+      var struck = false;
+      var lag = Math.min(Math.max(CFG.body, 0.01), 0.9);
+      var ease = gsap.parseEase(CFG.ease) || function (x) { return x; };
+
+      // Head and tail run the SAME eased profile, offset in time by `lag`. The
+      // head finishes at t = 1-lag; the tail then catches up by t = 1, so the
+      // snake leaves by following its own path out instead of fading.
+      tween = gsap.to(p, {
+        t: 1,
+        duration: CFG.dur,
+        ease: 'none',
+        onUpdate: function () {
+          var span = 1 - lag;
+          var hp = ease(Math.min(Math.max(p.t / span, 0), 1));
+          var tp = ease(Math.min(Math.max((p.t - lag) / span, 0), 1));
+          setWindow(geo.len * tp, geo.len * hp);
+
+          // hp is the eased HEAD position — the visible tip, which is what the
+          // strike must be compared against, not elapsed time.
+          if (!struck && hp >= geo.strikeAt) { struck = true; strike(); }
+        },
+        onComplete: function () { setWindow(geo.len, geo.len); }
+      });
+    }, CFG.delay);
+  }
+
+  /* ══ Scroll-scrubbed Welcome path ═══════════════════════════════════════
+     Draws as you scroll into the greeting, retracts as you scroll back up.
+     Driven straight off ScrollTrigger progress — no tween, so reversal is free
+     and the stroke length always equals scroll position exactly.            */
+
+  var wSvg = document.getElementById('wpath');
+  var wLine = document.getElementById('wpath-line');
+  var wGlow = document.getElementById('wpath-glow');
+  var wOut = document.getElementById('wreadout');
+  var wLen = 0, wST = null;
+
+  /* Regenerates the path in pixel space for the current window, then re-reads
+     its length. Both have to happen on every refresh: the geometry is derived
+     from the box size, so a resize changes the shape AND the length. */
+  function wMeasure() {
+    var box = wSvg.getBoundingClientRect();
+    if (box.width < 2 || box.height < 2) return;
+
+    var pts = wPoints().map(function (p) { return [p[0] * box.width, p[1] * box.height]; });
+    var d = roundedPath(pts, CFG.wRadius);
+
+    wLine.setAttribute('d', d);
+    wGlow.setAttribute('d', d);
+    wLen = wLine.getTotalLength();
+  }
+
+  /* Waypoints come from the panel when it parses, else the built-in set. This is
+     a free-text field, so it's parsed defensively and accepts either the bare
+     rows the panel displays ("[a,b],\n[c,d]") or a full array ("[[a,b],[c,d]]"). */
+  function wPoints() {
+    var txt = String(CFG.wPts || '').trim();
+    if (txt.charAt(0) !== '[') return W_POINTS;
+    try {
+      var v = JSON.parse(/^\[\s*\[/.test(txt) ? txt : '[' + txt + ']');
+      var ok = Array.isArray(v) && v.length > 1 && v.every(function (p) {
+        return Array.isArray(p) && p.length === 2 && isFinite(p[0]) && isFinite(p[1]);
+      });
+      if (ok) return v;
+    } catch (e) {}
+    return W_POINTS;
+  }
+
+  /* Scroll-driven snake. Head and tail run the same profile offset by wLag, so
+     at progress 1 BOTH have reached the end and nothing is left on screen — the
+     line has snaked out before the statement lines arrive. Purely a function of
+     progress, so scrolling back up reverses it exactly. */
+  function wDraw(p) {
+    p = Math.min(Math.max(p, 0), 1);
+    // still report on the zero-length path — that case is exactly the one that
+    // needs explaining, so bailing silently here would hide the diagnosis
+    if (!wLen) { wReport(p, 0, 0, 0); return; }
+    var lag = Math.min(Math.max(CFG.wLag, 0.05), 0.95);
+    var span = 1 - lag;
+    var head = wLen * Math.min(Math.max(p / span, 0), 1);
+    var tail = wLen * Math.min(Math.max((p - lag) / span, 0), 1);
+    var body = head - tail;
+    var hidden = body <= 0.5;
+
+    [wLine, wGlow].forEach(function (e) {
+      // a zero-length dash under round linecaps renders as a dot
+      e.style.visibility = hidden ? 'hidden' : 'visible';
+      if (hidden) return;
+      e.style.strokeDasharray = '0 ' + tail + ' ' + body + ' ' + wLen;
+      e.style.strokeDashoffset = 0;
+    });
+
+    wReport(p, head, tail, body);
+  }
+
+  /* Live state for the welcome path. Every value below has silently produced an
+     invisible line at some point, so all of them are on screen rather than
+     inferred: a zero svg box, a zero length, a missing trigger and a progress
+     that never moves all look identical from the outside. */
+  function wReport(p, head, tail, body) {
+    if (!wOut) return;
+    var box = wSvg.getBoundingClientRect();
+    var host = wHostST();
+    var bad = function (c) { return c ? '<b style="color:#ff6b6b">' : '<b>'; };
+
+    wOut.innerHTML =
+      'svg box ' + bad(box.width < 10 || box.height < 10) +
+        Math.round(box.width) + '&times;' + Math.round(box.height) + '</b><br>' +
+      'path len ' + bad(!wLen) + Math.round(wLen) + '</b> units<br>' +
+      'trigger ' + bad(!wST) + (wST ? 'live' : 'MISSING') + '</b>' +
+        (wST ? ' &nbsp;' + Math.round(wST.start) + '&rarr;' + Math.round(wST.end) : '') + '<br>' +
+      'host pin ' + bad(!host) + (host ? Math.round(host.end - host.start) + 'px' : 'not found') + '</b><br>' +
+      'progress <b>' + (p * 100).toFixed(1) + '%</b>' +
+        ' &nbsp;body ' + bad(body <= 0.5) + (body / (wLen || 1) * 100).toFixed(0) + '%</b>';
+  }
+
+  function wHostST() {
+    if (!window.ScrollTrigger) return null;
+    var pin = document.querySelector('.now-pin');
+    var all = ScrollTrigger.getAll();
+    for (var i = 0; i < all.length; i++) {
+      if (all[i] !== wST && all[i].trigger === pin) return all[i];
+    }
+    return null;
+  }
+
+  function wApplyPath() {
+    wMeasure();
+    wDraw(wST ? wST.progress : 0);
+  }
+
+  function initWelcomePath() {
+    wApplyPath();
+    if (!window.ScrollTrigger) return;
+
+    var pin = document.querySelector('.now-pin');
+    if (!pin) return;
+
+    // now-line.js owns the pin and derives its runway from its own private
+    // timeline. Borrow that measured range instead of re-deriving the maths —
+    // duplicating its TUNE values here would rot the moment it was retimed.
+    function hostRange() {
+      var all = ScrollTrigger.getAll();
+      for (var i = 0; i < all.length; i++) {
+        if (all[i] !== wST && all[i].trigger === pin) return all[i].end - all[i].start;
+      }
+      return window.innerHeight * 3.9; // fallback if now-line.js bailed
+    }
+
+    wST = ScrollTrigger.create({
+      trigger: pin,
+      start: 'top top',
+      end: function () { return '+=' + (hostRange() * CFG.wRunway); },
+      invalidateOnRefresh: true,
+      onUpdate: function (self) { wDraw(self.progress); },
+      onRefresh: function (self) { wMeasure(); wDraw(self.progress); }
+    });
+  }
+
+  /* ── Controls ───────────────────────────────────────────────────────────── */
+  var el = {};
+  ['delay', 'dur', 'ease', 'thick', 'hold', 'color', 'glow-on', 'front', 'debug', 'body',
+   'waves', 'amp', 'phase', 'startY', 'endY', 'sigma',
+   'labelText', 'labelCount', 'labelSize', 'labelPad',
+   'labelCount-v', 'labelSize-v', 'labelPad-v',
+   'wRunway', 'wLag', 'wThick', 'wColor', 'wGlow', 'wFront', 'wPts', 'wRadius',
+   'delay-v', 'dur-v', 'thick-v', 'hold-v', 'color-hex', 'body-v',
+   'waves-v', 'amp-v', 'phase-v', 'startY-v', 'endY-v', 'sigma-v',
+   'wRunway-v', 'wLag-v', 'wThick-v', 'wColor-hex', 'wRadius-v'].forEach(function (id) {
+    el[id] = document.getElementById(id);
+  });
+
+  function render() {
+    el.delay.value = CFG.delay;   el['delay-v'].textContent = CFG.delay + 'ms';
+    el.dur.value = CFG.dur;       el['dur-v'].textContent = CFG.dur.toFixed(2) + 's';
+    el.ease.value = CFG.ease;
+    el.thick.value = CFG.thick;   el['thick-v'].textContent = CFG.thick + 'px';
+    el.hold.value = CFG.hold;     el['hold-v'].textContent = CFG.hold + 'ms';
+    el.color.value = CFG.color;   el['color-hex'].textContent = CFG.color.toUpperCase();
+    el['glow-on'].checked = CFG.glow;
+    el.front.checked = CFG.front;
+    el.debug.checked = CFG.debug;
+    el.body.value = CFG.body; el['body-v'].textContent = (CFG.body * 100).toFixed(0) + '% behind';
+
+    el.waves.value  = CFG.waves;  el['waves-v'].textContent  = CFG.waves.toFixed(1);
+    el.amp.value    = CFG.amp;    el['amp-v'].textContent    = (CFG.amp * 100).toFixed(1) + '% vh';
+    el.phase.value  = CFG.phase;  el['phase-v'].textContent  = CFG.phase.toFixed(2);
+    el.startY.value = CFG.startY; el['startY-v'].textContent = (CFG.startY * 100).toFixed(0) + '%';
+    el.endY.value   = CFG.endY;   el['endY-v'].textContent   = (CFG.endY * 100).toFixed(0) + '%';
+    el.sigma.value  = CFG.sigma;  el['sigma-v'].textContent  = CFG.sigma.toFixed(2);
+
+    if (document.activeElement !== el.labelText) el.labelText.value = CFG.labelText;
+    el.labelCount.value = CFG.labelCount;
+    el['labelCount-v'].textContent = CFG.labelCount === 0 ? 'off' : CFG.labelCount;
+    el.labelSize.value = CFG.labelSize; el['labelSize-v'].textContent = CFG.labelSize + 'px';
+    el.labelPad.value = CFG.labelPad;   el['labelPad-v'].textContent = CFG.labelPad + 'px';
+
+    el.wRunway.value = CFG.wRunway;
+    el['wRunway-v'].textContent = (CFG.wRunway * 100).toFixed(0) + '% of pin';
+    el.wLag.value = CFG.wLag; el['wLag-v'].textContent = (CFG.wLag * 100).toFixed(0) + '% behind';
+    el.wThick.value = CFG.wThick; el['wThick-v'].textContent = CFG.wThick + 'px';
+    el.wColor.value = CFG.wColor; el['wColor-hex'].textContent = CFG.wColor.toUpperCase();
+    el.wGlow.checked = CFG.wGlow;
+    el.wFront.checked = CFG.wFront;
+    el.wRadius.value = CFG.wRadius; el['wRadius-v'].textContent = CFG.wRadius + 'px';
+    if (document.activeElement !== el.wPts) {
+      // one corner per line — far easier to edit than a single JSON blob
+      el.wPts.value = wPoints().map(function (p) {
+        return '[' + p[0] + ', ' + p[1] + ']';
+      }).join(',\n');
+    }
+
+    wLine.setAttribute('stroke', CFG.wColor);
+    wLine.setAttribute('stroke-width', CFG.wThick);
+    wGlow.setAttribute('stroke', CFG.wColor);
+    wGlow.setAttribute('stroke-width', CFG.wThick + 6);
+    wGlow.style.display = CFG.wGlow ? '' : 'none';
+    wSvg.classList.toggle('front', CFG.wFront);
+
+    lineEl.setAttribute('stroke', CFG.color);
+    lineEl.setAttribute('stroke-width', CFG.thick);
+    glowEl.setAttribute('stroke', CFG.color);
+    // additive, not a multiple: at the new 40px ceiling a x6 glow would be a
+    // 240px wash across the screen. This keeps 3px -> 18px as before.
+    glowEl.setAttribute('stroke-width', CFG.thick + 15);
+    glowEl.style.display = CFG.glow ? '' : 'none';
+    svg.classList.toggle('front', CFG.front);
+    dbg.classList.toggle('on', CFG.debug);
+
+    // labels are built separately, so keep their fill in step with the line
+    labels.forEach(function (l) { l.el.setAttribute('fill', CFG.color); });
+
+    try { localStorage.setItem(STORE, JSON.stringify(CFG)); } catch (e) {}
+  }
+
+  /* Shape sliders show the finished curve rather than replaying it — you can't
+     tune a path you can only see for a second and a half. */
+  function preview() {
+    clearTimeout(delayTimer);
+    if (tween) { tween.kill(); tween = null; }
+    gsap.killTweensOf(svg);
+    gsap.set(svg, { opacity: 1 });
+    applyGeometry();
+    if (!geo) return;
+    // Whole line visible, so shape and words can be judged at rest. Routed
+    // through setWindow rather than dasharray:none so the label gaps still show
+    // — otherwise the preview wouldn't match what actually plays.
+    setWindow(0, geo.len);
+  }
+
+  function bind(id, key, cast, mode) {
+    el[id].addEventListener('input', function () {
+      CFG[key] = cast(el[id].type === 'checkbox' ? el[id].checked : el[id].value);
+      render();
+      if (mode === 'replay') play();
+      else if (mode === 'shape') preview();
+    });
+  }
+
+  var num = Number, str = String, bool = Boolean;
+  bind('delay', 'delay', num);
+  bind('dur', 'dur', num);
+  bind('ease', 'ease', str, 'replay');
+  bind('thick', 'thick', num);
+  bind('hold', 'hold', num);
+  bind('color', 'color', str);
+  bind('glow-on', 'glow', bool);
+  bind('front', 'front', bool);
+  bind('debug', 'debug', bool);
+  bind('body', 'body', num, 'replay');
+
+  bind('waves', 'waves', num, 'shape');
+  bind('amp', 'amp', num, 'shape');
+  bind('phase', 'phase', num, 'shape');
+  bind('startY', 'startY', num, 'shape');
+  bind('endY', 'endY', num, 'shape');
+  bind('sigma', 'sigma', num, 'shape');
+
+  // 'shape' redraws the whole line at rest, so the words are visible while tuning
+  bind('labelText', 'labelText', str, 'shape');
+  bind('labelCount', 'labelCount', num, 'shape');
+  bind('labelSize', 'labelSize', num, 'shape');
+  bind('labelPad', 'labelPad', num, 'shape');
+
+  // redraws at the current scroll position so the effect is visible immediately
+  el.wLag.addEventListener('input', function () {
+    CFG.wLag = Number(el.wLag.value);
+    render();
+    wDraw(wST ? wST.progress : 0);
+  });
+
+  bind('wThick', 'wThick', num);
+  bind('wColor', 'wColor', str);
+  bind('wGlow', 'wGlow', bool);
+  bind('wFront', 'wFront', bool);
+
+  // runway changes the trigger's end, so ScrollTrigger has to re-measure
+  el.wRunway.addEventListener('input', function () {
+    CFG.wRunway = Number(el.wRunway.value);
+    render();
+    if (wST) wST.refresh();
+  });
+
+  el.wRadius.addEventListener('input', function () {
+    CFG.wRadius = Number(el.wRadius.value);
+    render();
+    wApplyPath();
+  });
+
+  // wPoints() falls back to the built-in set on anything unparseable, so the
+  // field is marked invalid rather than allowed to blank the path
+  el.wPts.addEventListener('input', function () {
+    CFG.wPts = el.wPts.value;
+    el.wPts.classList.toggle('invalid', wPoints() === W_POINTS && el.wPts.value.trim() !== '');
+    wApplyPath();
+  });
+
+  document.getElementById('wPts-reset').addEventListener('click', function () {
+    CFG.wPts = W_PTS_TEXT;
+    el.wPts.classList.remove('invalid');
+    render();
+    wApplyPath();
+  });
+
+  /* The sweep is a hero entrance, so it only makes sense from the top. Replay
+     returns there first — otherwise the W is off-screen and there's nothing to
+     aim at. ScrollSmoother owns scrolling, so route through it when present. */
+  function replay() {
+    var sm = window.ScrollSmoother && ScrollSmoother.get && ScrollSmoother.get();
+    if (sm) sm.scrollTo(0, false); else window.scrollTo(0, 0);
+    requestAnimationFrame(function () { requestAnimationFrame(play); });
+  }
+
+  document.getElementById('replay').addEventListener('click', replay);
+
+  // ScrollTrigger re-measures on resize and pin setup; the W moves with it, so
+  // re-aim the path whenever that happens.
+  if (window.ScrollTrigger) {
+    ScrollTrigger.addEventListener('refresh', function () {
+      if (wEl) applyGeometry();
+    });
+  }
+  document.getElementById('delay-intro').addEventListener('click', function () {
+    CFG.delay = INTRO_MS; render();
+  });
+  document.getElementById('delay-zero').addEventListener('click', function () {
+    CFG.delay = 0; render();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'r' || e.key === 'R') replay();
+  });
+
+  var panel = document.getElementById('panel');
+  var collapse = document.getElementById('collapse');
+  collapse.addEventListener('click', function () {
+    var c = panel.classList.toggle('collapsed');
+    collapse.textContent = c ? '+' : '–';
+  });
+
+  var rt = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () { reset(); }, 150);
+  });
+
+  /* ── Boot ───────────────────────────────────────────────────────────────── */
+  try {
+    var saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (saved) for (var k in CFG) if (saved[k] !== undefined) CFG[k] = saved[k];
+  } catch (e) {}
+  render();
+
+  if (!window.gsap) {
+    fail('GSAP did not load.',
+      'hero-letters.js bails without it, so the name is never split into letters ' +
+      'and there is no photo to trigger. Check the CDN / network tab.');
+    return;
+  }
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    fail('Reduced motion is on.',
+      'hero-letters.js bails immediately under prefers-reduced-motion — no letter ' +
+      'spans, no photos, nothing for the sweep to strike. Turn it off in your OS ' +
+      'display settings to test this demo.');
+    return;
+  }
+
+  // hero-letters.js binds its listeners inside document.fonts.ready — firing the
+  // sweep before that resolves would dispatch into a letter with no listener and
+  // silently do nothing.
+  document.fonts.ready.then(function () {
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        var letters = document.querySelectorAll('.hero-name .letter');
+        if (!document.documentElement.classList.contains('hero-split') || !letters[W_INDEX]) {
+          fail('hero-letters.js did not split the name.',
+            'Expected html.hero-split and 12 .letter spans; found ' + letters.length +
+            '. The sweep has nothing to aim at.');
+          return;
+        }
+        wEl = letters[W_INDEX];
+        if (!wEl.classList.contains('has-media')) {
+          fail('Letter ' + W_INDEX + ' carries no photo.',
+            'TUNE.media in js/hero-letters.js no longer includes index ' + W_INDEX +
+            ', so the "w" has no thumb to open. Update W_INDEX in this demo to match.');
+          return;
+        }
+        applyGeometry();
+        play();
+      });
+    });
+  });
+
+  // now-line.js creates its pin inside its own fonts.ready handler, so this must
+  // land after. A refresh tick is the reliable signal that pins are measured;
+  // the immediate call covers the case where now-line.js bailed entirely.
+  if (window.ScrollTrigger) {
+    ScrollTrigger.addEventListener('refreshInit', function once() {
+      ScrollTrigger.removeEventListener('refreshInit', once);
+      if (!wST) initWelcomePath();
+    });
+  }
+  document.fonts.ready.then(function () {
+    setTimeout(function () { if (!wST) initWelcomePath(); }, 0);
+  });
+  wReport(0, 0, 0, 0);   // so the panel says something before init runs
+})();
+</script>
+
+</body>
+</html>

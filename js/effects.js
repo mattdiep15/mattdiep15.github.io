@@ -22,8 +22,15 @@
   'use strict';
 
   var CONFIG = {
-    magnetStrength: 0.32,
-    magnetLerp: 0.18,
+    /* Fraction of the cursor's distance-from-centre that the element travels, so
+       the displacement scales with the element's own size. At 0.32 a text link
+       like .view-project slid ~22px and could walk out from under the pointer;
+       the contact pills never showed it because they set data-magnet="0.1"
+       explicitly. This brings the un-overridden elements into the same range,
+       so the whole site pulls by roughly the same amount. */
+    magnetStrength: 0.12,
+    // a touch slower to follow, which reads as softer rather than twitchy
+    magnetLerp: 0.14,
     tiltMax: 4,        // degrees
     tiltLerp: 0.12,
     parallax: { name: 6, lerp: 0.06 }

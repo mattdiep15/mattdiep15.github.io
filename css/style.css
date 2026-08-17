@@ -294,9 +294,56 @@ html.intro-pending:not(.intro-done) .hero-content { opacity: 0; }
    this stylesheet and has neither of them — a dark body would break that page.
    .now-pin's -45vh pull-up overlaps the hero, and both being the same black
    makes that seam invisible. */
+/* position:relative anchors the sweep layer that js/hero-sweep.js injects.
+   svh, not vh: the mobile URL bar changes vh, which would resize this box mid
+   scroll and drag its .hero-sticky child (already on svh) out of step. NOT dvh —
+   that tracks the bar continuously, which is worse again. */
 .hero-pin {
   height: 100vh;
+  height: 100svh;
   background: var(--ink-deep);
+  position: relative;
+}
+
+/* ── Hero sweep (js/hero-sweep.js) ─────────────────────────────────────────
+   The layer is a child of .hero-pin rather than a fixed sibling: under
+   ScrollSmoother #smooth-wrapper is its own stacking context, so a fixed
+   element outside it could never paint BEHIND the name. In here it shares a
+   context with .hero-content and scrolls away with the hero it belongs to.
+
+   width/height are load-bearing: <svg> is a REPLACED element, so with
+   width:auto an absolutely positioned box takes its intrinsic 300x150 default
+   and ignores right/bottom — inset:0 alone would clip the line to a stub. */
+#hero-sweep {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* Colour lives here, not in the module's TUNE: --paper is the hero name's own
+   colour, so the sweep tracks the palette instead of pinning a hex that goes
+   stale the next time the dark bands are retuned. CSS beats SVG presentation
+   attributes, so this is the single source of truth. */
+#hero-sweep-line,
+#hero-sweep-glow { stroke: var(--paper); }
+
+.hero-sweep-label { fill: var(--paper); }
+
+#hero-sweep-glow { filter: blur(10px); }
+
+/* the words ride the line via <textPath>; the stroke opens a gap for each one,
+   so they read as part of the line rather than sitting on top of it */
+.hero-sweep-label {
+  font-family: var(--font);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  dominant-baseline: central;
 }
 
 .hero-sticky {
@@ -310,7 +357,10 @@ html.intro-pending:not(.intro-done) .hero-content { opacity: 0; }
   padding: 2rem;
 }
 
+/* position/z-index put the name ABOVE the sweep layer injected into .hero-pin */
 .hero-content {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -436,7 +486,9 @@ html.hero-split .hero-name {
    no interactive elements, so nothing is lost. */
 .now-pin {
   height: auto;
+  /* svh so the URL bar can't shift where ScrollTrigger's `start: top top` lands */
   margin-top: -45vh;
+  margin-top: -45svh;
   pointer-events: none;
   background: var(--ink-deep); /* continues the hero's dark band */
 }
@@ -454,7 +506,10 @@ html.hero-split .hero-name {
 
 /* animated mode: full-viewport pinned frame, statement centred in it */
 html.now-anim .now-sticky {
+  /* this is the PINNED element — svh keeps its measured height stable while the
+     mobile URL bar slides, so ScrollTrigger's pin spacer can't go stale */
   height: 100vh;
+  height: 100svh;
   min-height: 0;
   padding: 0;
   align-items: center;
@@ -640,8 +695,10 @@ html.now-anim .now-l {
   color: var(--ink);
   font-size: 1rem;
   font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  /* sentence case, so the tracking comes down with it: 0.06em was there to open
+     up capitals, and that much air reads as loose on lowercase. 0.02em matches
+     .section-sub, the site's other non-uppercase supporting text. */
+  letter-spacing: 0.02em;
   padding: 0.4rem 0.2rem;
   will-change: transform;
 }
@@ -1107,6 +1164,63 @@ footer:not(.closing) {
   100% { transform: translate(0, 0); }
 }
 
+/* ── Scroll indicator (js/scroll-bar.js) ───────────────────────────────────
+   A clean rectangle on the right edge. Like #pill-nav it carries no background
+   and uses mix-blend-mode: difference with WHITE marks, so it renders light over
+   the dark bands and flips to dark over the light panel with no scroll logic.
+
+   Below #grain (9997) so the film grain sits over it like everything else. */
+/* The custom bar REPLACES the native one. Scoped to html.js so a no-JS visitor
+   keeps a real scrollbar, and to pointer:fine because scroll-bar.js sits out on
+   touch — where native scrollbars are transient overlays worth keeping anyway. */
+@media (pointer: fine) {
+  html.js { scrollbar-width: none; -ms-overflow-style: none; }
+  html.js::-webkit-scrollbar,
+  html.js body::-webkit-scrollbar { width: 0; height: 0; display: none; }
+}
+
+/* Indicator only. pointer-events:none is the important line — the bar sits at
+   the right edge for the whole viewport height, and without it an invisible
+   strip would swallow clicks on content near that edge. */
+#scroll-bar {
+  position: fixed;
+  top: 12vh;
+  bottom: 12vh;
+  right: 1.4rem;
+  width: 6px;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  /* flex-start, not the default stretch: the thumb's height is set by JS and it
+     must sit at the track top so translateY() measures from zero */
+  align-items: flex-start;
+  pointer-events: none;
+  mix-blend-mode: difference;
+  opacity: 0;
+  transition: opacity 0.45s var(--ease-out);
+}
+
+#scroll-bar.is-scrolling { opacity: 1; }
+
+#scroll-thumb {
+  width: 100%;
+  background: #fff;   /* inverted by the blend mode above */
+  border-radius: 3px;
+  will-change: transform;
+}
+
+/* Touch devices have their own transient scrollbars and less room to spare;
+   scroll-bar.js also returns early here, so this is belt-and-braces. */
+@media (pointer: coarse) {
+  #scroll-bar { display: none; }
+}
+
+/* The fade is the only motion here, and the indicator is useful information —
+   so keep it, just show it permanently rather than animating it in. */
+@media (prefers-reduced-motion: reduce) {
+  #scroll-bar { opacity: 1; transition: none; }
+}
+
 /* page-transition curtain */
 /* The curtain carries a rounded LEADING edge as it travels, easing to square
    as it lands — so it reads as a panel sliding over the page rather than a
@@ -1222,7 +1336,9 @@ html.page-enter #curtain.curtain-lift {
 /* ══ RESPONSIVE ═════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-  .hero-pin { height: 100vh; }
+  /* NB: .hero-pin's height deliberately isn't restated here. It used to carry
+     `height: 100vh`, which overrode nothing and would now silently undo the svh
+     fix on the base rule. */
 
   .project-card .card-inner { flex-direction: column; align-items: stretch; gap: 1rem; }
   .project-image-wrap { width: 100%; height: 170px; }
@@ -1236,6 +1352,28 @@ html.page-enter #curtain.curtain-lift {
 @media (max-width: 768px) {
   /* featured rows stack under ~tablet width (text above image) */
   .feature { grid-template-columns: 1fr; gap: 1.4rem; }
+
+  /* ── mobile scroll performance ──────────────────────────────────────────
+     The grain's cost is its geometry, not its texture. inset:-100% makes the
+     layer 9x the viewport — on a 390x844 phone at DPR 3 that's ~26M device
+     pixels — and grainShift runs forever, so the compositor can never settle it
+     into a static layer. Viewport-sized and still, it caches once and the
+     texture is unchanged. */
+  #grain {
+    inset: 0;
+    animation: none;
+  }
+}
+
+/* Hover can't happen on a touch device, so these promotions buy nothing and
+   cost a permanently retained compositor layer each — on a page with this many
+   cards that's real memory pressure, which shows up as scroll stutter.
+   .letter keeps its promotion: the hero sweep genuinely animates those. */
+@media (pointer: coarse) {
+  .card-inner,
+  .feature-img,
+  .project-card,
+  .tl-card { will-change: auto; }
 }
 
 @media (max-width: 480px) {
