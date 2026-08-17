@@ -41,6 +41,7 @@
 
   var TUNE = {
     // motion
+    startDelayMs: 500,      // pause after the hero is revealed, before the sweep starts
     drawDur: 4,             // seconds for head + tail to complete
     ease: 'power2.out',
     tailLag: 0.40,          // how far the tail trails the head, share of the run
@@ -425,7 +426,9 @@
         wEl = target;
         readConfig();   // before build(), which reads thickness and glow
         build();
-        whenHeroRevealed(play);
+        whenHeroRevealed(function () {
+          setTimeout(play, C.startDelayMs);
+        });
       });
     });
   });
