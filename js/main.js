@@ -13,7 +13,7 @@
   /* ── experience / education expanding cards ── */
   document.querySelectorAll('.tl-card[role="button"]').forEach(function (card) {
     var initialDetails = card.querySelector('.tl-details');
-    if (initialDetails) initialDetails.setAttribute('aria-hidden', 'true');
+    if (initialDetails) initialDetails.setAttribute('aria-hidden', String(!card.classList.contains('open')));
     function toggleCard() {
       var isOpen = card.classList.toggle('open');
       card.setAttribute('aria-expanded', String(isOpen));

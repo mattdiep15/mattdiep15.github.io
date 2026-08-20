@@ -436,8 +436,6 @@ html.hero-split .hero-name {
   will-change: transform;
 }
 
-.hero-name .letter.has-media { cursor: pointer; }
-
 .hero-name .char {
   display: inline-block;
   position: relative;
