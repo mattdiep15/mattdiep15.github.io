@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Experience Squiggle — Demo</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  /* ============================================================
+     Palette + primitives lifted from css/style.css's :root so this
+     demo reads like the real site. Satoshi isn't bundled here, so
+     this falls back to system-ui — the geometry is what's under
+     test, not the type.
+     ============================================================ */
+  :root {
+    --bg:        #f6f6f5;
+    --surface:   #ffffff;
+    --ink:       #131313;
+    --muted:     #6d6d6d;
+    --line:      #e4e4df;
+    --accent:    #2b4cff;
+    --ink-deep:  #020C20;
+    --paper:     #FFEBD6;
+    --ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
+    --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); }
+
+  /* ── scroll filler standing in for the hero ── */
+  .filler {
+    height: 100vh;
+    background: var(--ink-deep);
+    color: var(--paper);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    text-align: center;
+  }
+  .filler h1 { font-weight: 600; font-size: clamp(28px, 5vw, 48px); margin: 0; }
+  .filler p { margin: 0; opacity: 0.6; font-size: 0.9rem; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  /* ── light panel + section, mirroring css/style.css .light-panel/.section ── */
+  .light-panel { position: relative; background: var(--bg); border-radius: 28px 28px 0 0; }
+
+  /* full-bleed wrapper the sweep SVG anchors to — plays the same role as
+     .hero-pin does for js/hero-sweep.js: full page width so the line can
+     genuinely enter from off the *viewport* edge, not just off the
+     1160px-capped .section column nested inside it. */
+  .exp-pin { position: relative; }
+
+  .section { max-width: 1160px; margin: 0 auto; padding: clamp(4rem, 10vh, 7rem) 1.5rem; }
+  .section-head { margin-bottom: clamp(2rem, 6vh, 3.5rem); }
+  .display { font-weight: 600; font-size: clamp(28px, 4vw, 40px); letter-spacing: -0.01em; margin: 0; }
+
+  /* ── timeline, copied from css/style.css:871-1039 (trimmed to what this
+     demo needs — no mobile breakpoint, since the effect is desktop-hover
+     territory anyway, same as hero-sweep's MOBILE override removing labels) ── */
+  .timeline { position: relative; padding: 0.5rem 0; }
+  .timeline::before {
+    content: ''; position: absolute; left: 50%; top: 0; bottom: 0;
+    width: 1.5px; background: var(--line); transform: translateX(-50%);
+  }
+  .tl-entry { display: grid; grid-template-columns: 1fr 40px 1fr; align-items: start; margin-bottom: 2.6rem; }
+  .tl-entry:last-child { margin-bottom: 0; }
+  .tl-mid { display: flex; justify-content: center; align-items: center; position: relative; z-index: 1; margin-top: calc((190px - 12px) / 2); }
+  .tl-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid var(--ink); flex-shrink: 0; }
+  .tl-l:has(.tl-card), .tl-r:has(.tl-card) { margin-top: 56px; }
+  .tl-l { display: flex; justify-content: flex-end; align-items: center; padding-right: 1.75rem; }
+  .tl-r { display: flex; justify-content: flex-start; align-items: center; padding-left: 1.75rem; }
+  .tl-logo { width: 190px; height: 190px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .tl-logo img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
+  .tl-logo img.rounded { border-radius: 12px; }
+  .tl-logo.wide { width: 270px; }
+  .tl-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+    padding: 1.15rem 1.4rem; width: 100%; outline-offset: 3px; user-select: none;
+    will-change: transform; transition: box-shadow 0.3s var(--ease-out), border-color 0.3s var(--ease-out);
+  }
+  .tl-card:hover { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.08); }
+  .tl-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+  .tl-info { flex: 1; min-width: 0; }
+  .tl-title { font-weight: 500; font-size: 1.14rem; letter-spacing: -0.01em; }
+  .tl-company { color: var(--muted); font-size: 1.01rem; margin-top: 2px; font-weight: 300; }
+  .tl-meta { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
+  .tl-date { color: var(--muted); font-size: 0.98rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .tl-details { max-height: 0; overflow: hidden; transition: max-height 0.4s var(--ease-out), padding-top 0.2s ease; padding-top: 0; }
+  .tl-details ul { padding-left: 1.1rem; margin: 0; font-size: 1.01rem; line-height: 1.8; color: var(--muted); font-weight: 300; }
+  .tl-card.open { border-color: #c9c9c2; }
+  .tl-card.open .tl-details { max-height: 420px; padding-top: 0.8rem; }
+  .tl-details li {
+    opacity: 0; transform: translateX(28px);
+    transition: opacity 0.5s ease, transform 0.5s var(--ease-out);
+  }
+  .tl-card.open .tl-details li { opacity: 1; transform: none; }
+  .tl-card.open .tl-details li:nth-child(1) { transition-delay: 0.15s; }
+  .tl-card.open .tl-details li:nth-child(2) { transition-delay: 0.3s; }
+  .tl-card.open .tl-details li:nth-child(3) { transition-delay: 0.45s; }
+  .tl-card.open .tl-details li:nth-child(4) { transition-delay: 0.6s; }
+
+  /* js: the 'peek' hint drives .tl-details' max-height and the bullets'
+     opacity/transform directly with GSAP — the CSS transitions above (meant
+     for the real .open click) would otherwise fight those changes. li is
+     included: it has its own opacity/transform transition, and without
+     suspending it here, gsap.set()'ing a bullet to opacity:1/x:0 still
+     animates in over that transition's 0.5s instead of landing instantly.
+     Suspended for the duration of the peek sequence only. */
+  .tl-card.js-peeking .tl-details,
+  .tl-card.js-peeking .tl-details li { transition: none; }
+
+  .trailer { height: 60vh; }
+
+  /* ── the sweep SVG (js below), mirroring #hero-sweep in css/style.css:317-337 ──
+     Anchored to .exp-pin (full-bleed) rather than .section (1160px-capped), so
+     "off-screen right" means off the actual viewport edge. */
+  #exp-sweep {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 0; pointer-events: none; overflow: visible;
+  }
+  /* matches .tl-title's colour (inherited body colour, --ink) rather than
+     --accent, so the line reads as part of the page's own ink instead of a
+     UI-chrome highlight */
+  #exp-sweep-line { fill: none; stroke: var(--ink); stroke-linecap: round; }
+</style>
+</head>
+<body>
+
+<div class="filler">
+  <h1>scroll down</h1>
+  <p id="hint-caption"></p>
+</div>
+
+<div class="light-panel">
+  <div class="exp-pin">
+    <section id="experience" class="section">
+      <div class="section-head">
+        <h2 class="display">Experience</h2>
+      </div>
+
+      <div class="timeline">
+
+        <!-- Wind River Systems — the real entry, index.html:116-143 -->
+        <div class="tl-entry">
+          <div class="tl-l">
+            <div class="tl-logo wide"><img src="images/windriver.png" alt="Wind River" class="rounded" /></div>
+          </div>
+          <div class="tl-mid"><div class="tl-dot"></div></div>
+          <div class="tl-r">
+            <div class="tl-card" tabindex="0" role="button" aria-expanded="false">
+              <div class="tl-card-head">
+                <div class="tl-info">
+                  <div class="tl-title">Data Platform Engineering Intern</div>
+                  <div class="tl-company">Wind River Systems</div>
+                </div>
+                <div class="tl-meta">
+                  <span class="tl-date">2026</span>
+                </div>
+              </div>
+              <div class="tl-details">
+                <ul>
+                  <li>Automated Tableau asset migration and version control via a custom desktop app, cutting active manual work time per migration cycle by 90%</li>
+                  <li>Developed ad hoc scripts and standalone executable tools to support data workflows across Snowflake, dbt, and Tableau</li>
+                  <li>Built dbt models applying surrogate keys, joins, and aggregations, and exposed key fields to support downstream Tableau dashboards</li>
+                  <li>Designed UI/UX for new and existing internal tools, improving usability and adoption among non-technical teammates</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- stub entry — just for realistic section height, so the Wind River
+             card isn't glued to the section's top edge -->
+        <div class="tl-entry">
+          <div class="tl-l">
+            <div class="tl-card" tabindex="0" role="button" aria-expanded="false">
+              <div class="tl-card-head">
+                <div class="tl-info">
+                  <div class="tl-title">Senior Advisor</div>
+                  <div class="tl-company">Taiwanese American Student Association</div>
+                </div>
+                <div class="tl-meta">
+                  <span class="tl-date">2024–2026</span>
+                </div>
+              </div>
+              <div class="tl-details">
+                <ul>
+                  <li>Planned and coordinated internal events and social gatherings for 80+ active members.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="tl-mid"><div class="tl-dot"></div></div>
+          <div class="tl-r">
+            <div class="tl-logo"><img src="images/TASA_black-01 (1).png" alt="TASA" /></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="trailer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script>
+/* ==========================================================================
+   The real toggle logic, copied verbatim from js/main.js:13-29, so "opens the
+   tab" below is the actual accordion behavior, not a stand-in.
+   ========================================================================== */
+document.querySelectorAll('.tl-card[role="button"]').forEach(function (card) {
+  var initialDetails = card.querySelector('.tl-details');
+  if (initialDetails) initialDetails.setAttribute('aria-hidden', 'true');
+  function toggleCard() {
+    var isOpen = card.classList.toggle('open');
+    card.setAttribute('aria-expanded', String(isOpen));
+    var details = card.querySelector('.tl-details');
+    if (details) details.setAttribute('aria-hidden', String(!isOpen));
+  }
+  card.addEventListener('click', function (e) {
+    if (!e.target.closest('a')) toggleCard();
+  });
+  card.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleCard(); }
+  });
+});
+
+/* ==========================================================================
+   Which hint technique is live. The two below are alternatives, not layers —
+   flip this to compare them one at a time rather than running both.
+   ========================================================================== */
+var HINT_MODE = 'peek'; // 'sweep' | 'peek'
+
+document.getElementById('hint-caption').textContent = HINT_MODE === 'sweep'
+  ? 'the line fires when the Wind River card comes into view'
+  : 'the Wind River card peeks open on its own shortly after load, then snaps shut';
+
+/* ==========================================================================
+   exp-sweep — a squiggly line that draws in from off-screen RIGHT when the
+   visitor scrolls the Experience section into view, bends onto the Wind
+   River card, and — the instant its head reaches the card — dispatches a
+   synthetic click to open it, exactly as js/hero-sweep.js does to a hero
+   letter's photo on page load. This is that file's technique, mirrored:
+
+     - direction flips: entry is off-screen RIGHT instead of left, so the
+       curve is sampled from x = W back down toward 0 and the point list is
+       sorted DESCENDING (hero-sweep sorts ascending) to keep the spline's
+       traversal order correct.
+     - UNLIKE hero-sweep, the path does not cross the whole screen and exit
+       the far side — it ends just under the card (TUNE.underCard). The
+       layer paints BEHIND the card (see build()), so the line draws in,
+       touches the card's true right edge, and disappears behind it, instead
+       of continuing on across the rest of the page.
+     - the strike target is a CARD's bounding box instead of a letter's
+       centre — cx lands near the card's right edge (roughly where .tl-meta
+       sits, since it right-aligns via .tl-card-head's space-between), cy at
+       the card's vertical centre. Same measured-not-derived
+       getPointAtLength + bisection approach.
+     - the strike dispatches a `click` (main.js's handler listens for click,
+       not mouseenter) and is skipped if the card is already open — the
+       sweep shouldn't toggle a manually-opened card shut. Opening itself is
+       the plain, unadorned .open transition already in main.js/CSS — no
+       extra highlight on top.
+     - gated by ScrollTrigger with once:true (js/split-lines.js's one-shot
+       pattern), not autoplayed on load.
+     - no labels riding the line — bare stroke.
+
+   Same degrade-to-nothing guards as the original: reduced motion, blocked
+   GSAP/ScrollTrigger CDN, or missing target all leave the page exactly as it
+   would have been.
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  if (HINT_MODE !== 'sweep') return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!window.gsap || !window.ScrollTrigger) return;
+  gsap.registerPlugin(ScrollTrigger);
+
+  var TUNE = {
+    startDelayMs: 150,   // pause after the section scrolls into view, before the line fires
+    drawDur: 1.4,
+    ease: 'power2.out',
+    tailLag: 0.40,
+
+    waves: 1,
+    amp: 0.12,
+    phase: 0,
+    startY: 0.14,         // entry height at the right edge, fraction of the pin's height
+    over: 0.08,
+    sigma: 0.16,
+
+    thickness: 12,
+    cardInset: 6,          // px in from the card's true right edge — the strike point sits
+                            // right at the edge, not buried in the card
+    underCard: 48,         // px the path continues PAST the strike point, back under the
+                            // card, before it ends. The line now paints BEHIND the card (see
+                            // build()), so this stretch is invisible — it exists only so the
+                            // dash-window animation finishes hidden under the opaque card
+                            // instead of cutting off exactly on the boundary pixel, which
+                            // reads as a glitch rather than "disappearing behind the card"
+
+    maxSlope: 0.9,
+    samples: 64,
+    strikeSamples: 300
+  };
+
+  var NS = 'http://www.w3.org/2000/svg';
+
+  var pin = document.querySelector('.exp-pin');
+  var card = document.querySelector('#experience .tl-card');
+  if (!pin || !card) return;
+
+  var svg, lineEl, geo = null;
+
+  function build() {
+    svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('id', 'exp-sweep');
+    svg.setAttribute('aria-hidden', 'true');
+
+    lineEl = document.createElementNS(NS, 'path');
+    lineEl.setAttribute('id', 'exp-sweep-line');
+    lineEl.setAttribute('stroke-width', TUNE.thickness);
+
+    svg.appendChild(lineEl);
+    // first child, not appended — paints BEHIND the section/card, same as
+    // js/hero-sweep.js does for .hero-content (css/style.css:308-312). This
+    // is load-bearing: it's what lets the line disappear "into" the card's
+    // right edge instead of drawing on top of its text.
+    pin.insertBefore(svg, pin.firstChild);
+  }
+
+  /* ── curve, mirrored from js/hero-sweep.js buildPoints()/toPath() ── */
+
+  function buildPoints() {
+    var box = svg.getBoundingClientRect();
+    if (!(box.width > 0) || !(box.height > 0)) return null;
+
+    var r = card.getBoundingClientRect();
+    // strike point sits right at the card's true right edge — this is what
+    // the visible part of the line aims for; it's not buried in the card
+    var cx = r.right - box.left - TUNE.cardInset;
+    var cy = r.top + r.height / 2 - box.top;
+
+    var W = box.width, H = box.height;
+    if (!(cx > 0) || !(cy > 0) || cx > W || cy > H) return null;
+
+    // MIRRORED from hero-sweep: entry at the right edge, off-screen — but
+    // UNLIKE hero-sweep, the exit is NOT the opposite edge. x1 sits just
+    // past the strike point, back UNDER the card (underCard), so the path
+    // stops there instead of crossing the rest of the screen. Combined with
+    // the layer painting behind the card (build()), that stretch is hidden —
+    // the line draws in, touches the edge, and disappears behind the card.
+    var x0 = W + TUNE.over * W, x1 = cx - TUNE.underCard;
+    var y0 = TUNE.startY * H, y1 = cy;
+    var sigma = Math.max(1, TUNE.sigma * W);
+
+    var lambda = Math.abs(x1 - x0) / TUNE.waves;
+    var amp = Math.min(TUNE.amp * H, TUNE.maxSlope * lambda / (2 * Math.PI));
+
+    function wave(x) {
+      var u = (x - x0) / (x1 - x0);
+      return y0 + (y1 - y0) * u +
+             amp * Math.sin(2 * Math.PI * TUNE.waves * u + TUNE.phase) * Math.sin(Math.PI * u);
+    }
+
+    var err = cy - wave(cx);
+    function y(x) {
+      var d = (x - cx) / sigma;
+      return wave(x) + err * Math.exp(-d * d);
+    }
+
+    var xs = [], i;
+    for (i = 0; i <= TUNE.samples; i++) xs.push(x0 + (x1 - x0) * (i / TUNE.samples));
+    xs.push(cx);
+    // DESCENDING — x0 (right) is the start, x1 (left) is the end
+    xs.sort(function (a, b) { return b - a; });
+
+    return { pts: xs.map(function (x) { return { x: x, y: y(x) }; }), cx: cx, cy: cy };
+  }
+
+  function toPath(pts) {
+    var d = 'M ' + pts[0].x.toFixed(2) + ',' + pts[0].y.toFixed(2);
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+      d += ' C ' + (p1.x + (p2.x - p0.x) / 6).toFixed(2) + ',' + (p1.y + (p2.y - p0.y) / 6).toFixed(2) +
+           ' '  + (p2.x - (p3.x - p1.x) / 6).toFixed(2) + ',' + (p2.y - (p3.y - p1.y) / 6).toFixed(2) +
+           ' '  + p2.x.toFixed(2) + ',' + p2.y.toFixed(2);
+    }
+    return d;
+  }
+
+  function findStrike(cx, cy) {
+    var total = lineEl.getTotalLength();
+    var best = 0, bestD = Infinity, i, s, p, dx, dy, dd;
+    var coarse = TUNE.strikeSamples;
+
+    for (i = 0; i <= coarse; i++) {
+      s = total * (i / coarse);
+      p = lineEl.getPointAtLength(s);
+      dx = p.x - cx; dy = p.y - cy; dd = dx * dx + dy * dy;
+      if (dd < bestD) { bestD = dd; best = s; }
+    }
+
+    var step = total / coarse;
+    for (i = 0; i < 24; i++) {
+      step /= 2;
+      [best - step, best + step].forEach(function (c) {
+        if (c < 0 || c > total) return;
+        var q = lineEl.getPointAtLength(c);
+        var ex = q.x - cx, ey = q.y - cy, e2 = ex * ex + ey * ey;
+        if (e2 < bestD) { bestD = e2; best = c; }
+      });
+    }
+
+    return { len: total, at: best / total };
+  }
+
+  function measure() {
+    var built = buildPoints();
+    if (!built) { geo = null; return; }
+
+    var d = toPath(built.pts);
+    lineEl.setAttribute('d', d);
+
+    var hit = findStrike(built.cx, built.cy);
+    geo = { len: hit.len, strikeAt: hit.at };
+  }
+
+  /* ── the moving window, unchanged from js/hero-sweep.js (direction-agnostic —
+     it only deals in fractions of path length) ── */
+
+  function setWindow(tail, head) {
+    var body = head - tail;
+    var hidden = body <= 0.5;
+
+    lineEl.style.visibility = hidden ? 'hidden' : 'visible';
+    if (hidden) return;
+    lineEl.style.strokeDasharray = '0 ' + tail.toFixed(2) + ' ' + (head - tail).toFixed(2) + ' ' + geo.len.toFixed(2);
+    lineEl.style.strokeDashoffset = 0;
+  }
+
+  /* ── run ── */
+
+  function strike() {
+    if (card.classList.contains('open')) return; // don't shut a manually-opened card
+    card.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  }
+
+  function play() {
+    measure();
+    if (!geo) return;
+    setWindow(0, 0);
+
+    var p = { t: 0 };
+    var struck = false;
+    var lag = Math.min(Math.max(TUNE.tailLag, 0.01), 0.9);
+    var ease = gsap.parseEase(TUNE.ease) || function (x) { return x; };
+
+    gsap.to(p, {
+      t: 1,
+      duration: TUNE.drawDur,
+      ease: 'none',
+      onUpdate: function () {
+        var span = 1 - lag;
+        var hp = ease(Math.min(Math.max(p.t / span, 0), 1));
+        var tp = ease(Math.min(Math.max((p.t - lag) / span, 0), 1));
+        setWindow(geo.len * tp, geo.len * hp);
+
+        if (!struck && hp >= geo.strikeAt) { struck = true; strike(); }
+      },
+      onComplete: function () {
+        setWindow(geo.len, geo.len);
+        if (svg.parentNode) svg.parentNode.removeChild(svg); // nothing left to paint
+      }
+    });
+  }
+
+  /* ── boot: build once fonts/layout have settled, gate playback on scroll ── */
+  build();
+
+  ScrollTrigger.create({
+    trigger: '#experience',
+    start: 'top 75%',
+    once: true,
+    onEnter: function () { setTimeout(play, TUNE.startDelayMs); }
+  });
+})();
+
+/* ==========================================================================
+   exp-peek — a page-load hint, alternative to exp-sweep: shortly after the
+   page loads, the collapsed Wind River card peeks open with a spring-style
+   overshoot/wobble, then snaps back shut the same way. Purely decorative —
+   .open/aria-expanded are never touched, so the card's real state doesn't
+   change, only its resting visual does for a moment.
+
+   The spring feel comes from GSAP's built-in elastic ease (elastic.out for
+   the overshooting open, elastic.in for the wind-up-then-snap close) — the
+   same ease family js/hero-letters.js already uses for its own overshoot
+   (shiftEase: 'elastic.out(1, 0.7)'), rather than a separate physics plugin
+   for one demo animation.
+
+   Runs once by construction: a single setTimeout, no reschedule.
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  if (HINT_MODE !== 'peek') return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!window.gsap) return;
+
+  var TUNE = {
+    startDelayMs: 900,     // pause after page load, before the peek fires
+    peekHeight: 58,        // px of .tl-details revealed at the top of the bounce —
+                            // padding + a full bullet line, not just a sliver
+    peekPad: 10,           // px top padding during the peek, so text isn't jammed
+                            // against the card head (mirrors .open's own padding-top)
+    openDur: 0.45,
+    openEase: 'elastic.out(1, 0.5)',
+    holdMs: 60,             // brief pause at the peek before snapping shut
+    closeDur: 0.32,
+    closeEase: 'elastic.in(1, 0.4)'
+  };
+
+  var card = document.querySelector('#experience .tl-card');
+  if (!card) return;
+
+  var details = card.querySelector('.tl-details');
+  // the bullets themselves: .tl-details li is opacity:0/translated by default
+  // and normally only revealed by .tl-card.open (CSS). The peek never adds
+  // that class, so without animating these directly the "peek" would just
+  // open onto empty space — no text, no hint that there's anything to read.
+  var items = details ? details.querySelectorAll('li') : [];
+  if (!details || !items.length) return;
+
+  setTimeout(function () {
+    // re-checked here, not just at schedule time — respects a card the
+    // visitor opened for real during the wait
+    if (document.querySelector('.tl-card.open')) return;
+
+    card.classList.add('js-peeking'); // suspends the real .open CSS transitions
+
+    // static, not animated: the text itself doesn't fade/slide in — it just
+    // sits there at full opacity, and the bouncing max-height is what reveals
+    // (and re-hides) it via the container's clip
+    gsap.set(items, { opacity: 1, x: 0 });
+
+    gsap.timeline({
+      onComplete: function () {
+        gsap.set(details, { clearProps: 'maxHeight,paddingTop' });
+        gsap.set(items, { clearProps: 'opacity,x' });
+        card.classList.remove('js-peeking');
+      }
+    })
+      .to(details, { maxHeight: TUNE.peekHeight, paddingTop: TUNE.peekPad, duration: TUNE.openDur, ease: TUNE.openEase }, 0)
+      .to(details, { maxHeight: 0, paddingTop: 0, duration: TUNE.closeDur, ease: TUNE.closeEase }, '+=' + (TUNE.holdMs / 1000));
+  }, TUNE.startDelayMs);
+})();
+</script>
+
+</body>
+</html>

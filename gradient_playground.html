@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dark-band gradient playground</title>
+<style>
+  @font-face {
+    font-family: 'Satoshi';
+    src: url('fonts/Satoshi-Regular.woff2') format('woff2');
+    font-weight: 100 450;
+    font-style: normal;
+  }
+  @font-face {
+    font-family: 'Satoshi';
+    src: url('fonts/Satoshi-Medium.woff2') format('woff2');
+    font-weight: 451 900;
+    font-style: normal;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Satoshi', system-ui, sans-serif;
+    background: #f6f6f5;
+    color: #131313;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── controls panel ───────────────────────────────────────────── */
+  #panel {
+    width: 340px;
+    flex: 0 0 340px;
+    padding: 28px 24px;
+    background: #ffffff;
+    border-right: 1px solid #e4e4df;
+    overflow-y: auto;
+  }
+
+  #panel h1 {
+    font-size: 1.05rem;
+    font-weight: 500;
+    margin: 0 0 4px;
+  }
+
+  #panel .sub {
+    font-size: 0.8rem;
+    color: #6d6d6d;
+    margin: 0 0 24px;
+    line-height: 1.4;
+  }
+
+  .field {
+    margin-bottom: 20px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6d6d6d;
+    margin-bottom: 6px;
+  }
+
+  select, input[type="range"] {
+    width: 100%;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .row output {
+    font-variant-numeric: tabular-nums;
+    font-size: 0.8rem;
+    width: 42px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .checkbox-field label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: none;
+    letter-spacing: normal;
+    font-size: 0.8rem;
+    color: #131313;
+    cursor: pointer;
+  }
+  .checkbox-field input { width: auto; }
+
+  input[type="color"] {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid #e4e4df;
+    border-radius: 6px;
+    background: none;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* ── freeform point canvas — the "hand-placed" surface ──────────── */
+  #pointCanvas {
+    position: relative;
+    height: 170px;
+    border-radius: 10px;
+    border: 1px solid #e4e4df;
+    margin-bottom: 6px;
+    cursor: crosshair;
+    touch-action: none;
+    overflow: hidden;
+  }
+  #pointCanvas .hint {
+    position: absolute;
+    bottom: 8px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 0.68rem;
+    color: rgba(255, 235, 214, 0.55);
+    pointer-events: none;
+  }
+
+  .point-dot {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.4);
+    transform: translate(-50%, -50%);
+    cursor: grab;
+  }
+  .point-dot:active { cursor: grabbing; transform: translate(-50%, -50%) scale(1.2); }
+  .point-dot.active { box-shadow: 0 0 0 2px #131313, 0 1px 4px rgba(0,0,0,0.45); }
+
+  #points { margin-top: 10px; }
+
+  .point-card {
+    border: 1px solid #e4e4df;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+  .point-card.active { border-color: #131313; }
+
+  .point-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .point-head input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size: 0.78rem;
+    padding: 6px 8px;
+    border: 1px solid #e4e4df;
+    border-radius: 6px;
+    text-transform: uppercase;
+  }
+  .point-head .del {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px solid #e4e4df;
+    background: #fff;
+    color: #6d6d6d;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+  .point-head .del:hover { background: #f6f6f5; color: #131313; }
+
+  .point-sliders .row { margin-bottom: 6px; }
+  .point-sliders .row:last-child { margin-bottom: 0; }
+  .point-sliders .row span.tag {
+    font-size: 0.68rem;
+    color: #6d6d6d;
+    width: 44px;
+    flex-shrink: 0;
+  }
+
+  #addPointBtn {
+    width: 100%;
+    padding: 8px 0;
+    border: 1px dashed #c9c9c2;
+    border-radius: 8px;
+    background: none;
+    color: #6d6d6d;
+    font-family: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+  #addPointBtn:hover { border-color: #131313; color: #131313; }
+
+  #cssOut {
+    width: 100%;
+    height: 130px;
+    resize: vertical;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size: 0.72rem;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #e4e4df;
+    background: #f6f6f5;
+    color: #131313;
+  }
+
+  #copyBtn {
+    margin-top: 8px;
+    width: 100%;
+    padding: 9px 0;
+    border: none;
+    border-radius: 8px;
+    background: #131313;
+    color: #f9f9f9;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  #copyBtn:active { transform: translateY(1px); }
+
+  /* ── preview ──────────────────────────────────────────────────── */
+  #previewWrap {
+    flex: 1;
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+  }
+  #preview {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    scroll-snap-type: y proximity;
+  }
+
+  #gradientTrack {
+    min-height: 240vh;
+  }
+
+  .beat {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px;
+    scroll-snap-align: center;
+  }
+
+  .hero-name {
+    font-size: clamp(3rem, 9vw, 6rem);
+    line-height: 1;
+    font-weight: 500;
+    color: #FFEBD6;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .now-welcome {
+    font-size: 1.05rem;
+    color: rgba(255, 235, 214, 0.7);
+    margin: 0 0 18px;
+  }
+
+  .now-statement {
+    font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+    line-height: 1.25;
+    font-weight: 500;
+    color: #FFEBD6;
+    margin: 0;
+  }
+
+  .now-statement em { font-style: normal; color: #FFEBD6; }
+
+  .scroll-hint {
+    position: sticky;
+    bottom: 18px;
+    left: 0;
+    text-align: center;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 235, 214, 0.55);
+    pointer-events: none;
+  }
+
+  /* grain overlay: pinned over the viewport, not inside the scrolling
+     track, so it reads as texture on glass rather than something that
+     scrolls away with the content */
+  .grain-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  #grainToggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 235, 214, 0.25);
+    background: rgba(255, 235, 214, 0.08);
+    color: #FFEBD6;
+    font-family: inherit;
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+  }
+  #grainToggle:hover { background: rgba(255, 235, 214, 0.14); }
+  #grainToggle .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #6ee7a8;
+    box-shadow: 0 0 6px #6ee7a8;
+  }
+  #grainToggle.is-off .dot { background: rgba(255, 235, 214, 0.35); box-shadow: none; }
+</style>
+</head>
+<body>
+
+<div id="panel">
+  <h1>Dark-band gradient</h1>
+  <p class="sub">Hand-placed color points with soft radial falloff, layered over a dark base — drag a point to move it, click empty canvas to add one. Turn "Overall subtlety" down for a whisper of color instead of a visible wash.</p>
+
+  <div class="field">
+    <label for="baseColor">Base color</label>
+    <input type="color" id="baseColor" value="#020C20">
+  </div>
+
+  <div class="field">
+    <label for="intensity">Overall subtlety</label>
+    <div class="row">
+      <input type="range" id="intensity" min="0" max="100" value="30">
+      <output id="intensityOut">30%</output>
+    </div>
+  </div>
+
+  <div class="field checkbox-field">
+    <label>
+      <input type="checkbox" id="smooth" checked>
+      Smoother blending (OKLab) — no muddy edges
+    </label>
+  </div>
+
+  <div class="field">
+    <label>Color points</label>
+    <div id="pointCanvas">
+      <span class="hint">click to place · drag to move</span>
+    </div>
+    <div id="points"></div>
+    <button id="addPointBtn" type="button">+ Add point</button>
+  </div>
+
+  <div class="field">
+    <label for="grainAmount">Grain amount</label>
+    <div class="row">
+      <input type="range" id="grainAmount" min="0" max="100" value="50">
+      <output id="grainAmountOut">50%</output>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="grainSize">Grain size</label>
+    <div class="row">
+      <input type="range" id="grainSize" min="5" max="200" value="85">
+      <output id="grainSizeOut">0.85</output>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="cssOut">CSS output</label>
+    <textarea id="cssOut" readonly spellcheck="false"></textarea>
+    <button id="copyBtn" type="button">Copy background rule</button>
+  </div>
+</div>
+
+<div id="previewWrap">
+  <div id="preview">
+    <div id="gradientTrack">
+      <div class="beat">
+        <h1 class="hero-name">Matthew Diep</h1>
+      </div>
+      <div class="beat">
+        <p class="now-welcome">Welcome to my website!</p>
+        <h2 class="now-statement">
+          I'm currently a<br>
+          data platform engineer<br>
+          at <em>wind river systems!</em>
+        </h2>
+      </div>
+      <div class="scroll-hint">scroll ↑</div>
+    </div>
+  </div>
+
+  <svg id="grainSvg" class="grain-overlay" aria-hidden="true">
+    <filter id="grainFilter">
+      <feTurbulence id="grainTurbulence" type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch" result="grainNoise" />
+      <feColorMatrix in="grainNoise" type="saturate" values="0" result="grainMono" />
+      <feComponentTransfer in="grainMono">
+        <feFuncA type="linear" slope="0.6" intercept="0" />
+      </feComponentTransfer>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#grainFilter)" />
+  </svg>
+
+  <button id="grainToggle" type="button" aria-pressed="true">
+    <span class="dot"></span>
+    <span id="grainToggleLabel">Grain: On</span>
+  </button>
+</div>
+
+<script>
+  // warm/cool tones overlapping with soft falloff, tuned low so the default
+  // read is "barely there" rather than a visible wash
+  let pointsData = [
+    { x: 22, y: 32, hex: '#FF6E42', opacity: 0.45, radius: 65 }, // warm
+    { x: 78, y: 58, hex: '#004E72', opacity: 0.50, radius: 70 }, // cool
+    { x: 48, y: 88, hex: '#092634', opacity: 0.55, radius: 80 }, // cool, near-base
+    { x: 60, y: 10, hex: '#F9F9F9', opacity: 0.18, radius: 40 }, // warm highlight
+  ];
+  const DEFAULT_PALETTE = ['#FF6E42', '#004E72', '#092634', '#F9F9F9'];
+
+  const pointsEl = document.getElementById('points');
+  const canvasEl = document.getElementById('pointCanvas');
+  const baseColorEl = document.getElementById('baseColor');
+  const intensityEl = document.getElementById('intensity');
+  const intensityOut = document.getElementById('intensityOut');
+  const smoothEl = document.getElementById('smooth');
+  const addPointBtn = document.getElementById('addPointBtn');
+  const gradientTrack = document.getElementById('gradientTrack');
+  const cssOut = document.getElementById('cssOut');
+  const copyBtn = document.getElementById('copyBtn');
+
+  function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+
+  function hexToRgba(hex, alpha) {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
+  }
+
+  function pointLayer(p, space) {
+    const alpha = clamp(p.opacity * (Number(intensityEl.value) / 100), 0, 1);
+    const color = hexToRgba(p.hex, alpha);
+    return `radial-gradient(${space}ellipse ${p.radius}% ${p.radius}% at ${p.x}% ${p.y}%, ${color} 0%, transparent 100%)`;
+  }
+
+  function compositeBackground() {
+    const space = smoothEl.checked ? 'in oklab ' : '';
+    const base = baseColorEl.value;
+    if (!pointsData.length) return base;
+    const layers = pointsData.map(p => pointLayer(p, space)).join(', ');
+    return `${layers}, ${base}`;
+  }
+
+  function setActive(target) {
+    Array.from(pointsEl.children).forEach(el => el.classList.toggle('active', el._point === target));
+    Array.from(canvasEl.querySelectorAll('.point-dot')).forEach(el => el.classList.toggle('active', el._point === target));
+  }
+
+  function render() {
+    const css = compositeBackground();
+    gradientTrack.style.background = css;
+    canvasEl.style.background = css;
+    cssOut.value = `background: ${css};`;
+    intensityOut.textContent = intensityEl.value + '%';
+  }
+
+  function rebuildPointsUI() {
+    pointsEl.innerHTML = '';
+    canvasEl.querySelectorAll('.point-dot').forEach(el => el.remove());
+
+    pointsData.forEach(point => {
+      // ── dot on the freeform canvas ──
+      const dot = document.createElement('div');
+      dot.className = 'point-dot';
+      dot.style.left = point.x + '%';
+      dot.style.top = point.y + '%';
+      dot.style.background = point.hex;
+      dot.title = point.hex;
+      dot._point = point;
+      canvasEl.appendChild(dot);
+
+      dot.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        dot.setPointerCapture(e.pointerId);
+        setActive(point);
+        function onMove(ev) {
+          const rect = canvasEl.getBoundingClientRect();
+          point.x = Math.round(clamp(((ev.clientX - rect.left) / rect.width) * 100, 0, 100) * 10) / 10;
+          point.y = Math.round(clamp(((ev.clientY - rect.top) / rect.height) * 100, 0, 100) * 10) / 10;
+          dot.style.left = point.x + '%';
+          dot.style.top = point.y + '%';
+          render();
+        }
+        function onUp() {
+          dot.releasePointerCapture(e.pointerId);
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+        }
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+      });
+
+      // ── card in the list ──
+      const card = document.createElement('div');
+      card.className = 'point-card';
+      card._point = point;
+
+      const head = document.createElement('div');
+      head.className = 'point-head';
+
+      const colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.value = point.hex;
+
+      const textInput = document.createElement('input');
+      textInput.type = 'text';
+      textInput.value = point.hex;
+      textInput.maxLength = 7;
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'del';
+      delBtn.type = 'button';
+      delBtn.textContent = '×';
+      delBtn.title = 'Remove point';
+
+      head.appendChild(colorInput);
+      head.appendChild(textInput);
+      head.appendChild(delBtn);
+
+      const sliders = document.createElement('div');
+      sliders.className = 'point-sliders';
+
+      function sliderRow(labelText, min, max, value, onInput) {
+        const row = document.createElement('div');
+        row.className = 'row';
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = labelText;
+        const range = document.createElement('input');
+        range.type = 'range';
+        range.min = min; range.max = max; range.value = value;
+        const out = document.createElement('output');
+        out.textContent = value + '%';
+        range.addEventListener('input', () => {
+          onInput(Number(range.value));
+          out.textContent = range.value + '%';
+          render();
+        });
+        row.appendChild(tag);
+        row.appendChild(range);
+        row.appendChild(out);
+        return row;
+      }
+
+      sliders.appendChild(sliderRow('Opacity', 0, 100, Math.round(point.opacity * 100), v => point.opacity = v / 100));
+      sliders.appendChild(sliderRow('Falloff', 10, 100, point.radius, v => point.radius = v));
+
+      card.appendChild(head);
+      card.appendChild(sliders);
+      pointsEl.appendChild(card);
+
+      function syncColor(hex) {
+        if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+        point.hex = hex;
+        colorInput.value = hex;
+        textInput.value = hex.toUpperCase();
+        dot.style.background = hex;
+        dot.title = hex;
+        render();
+      }
+
+      colorInput.addEventListener('input', () => syncColor(colorInput.value));
+      textInput.addEventListener('input', () => {
+        const v = textInput.value.trim();
+        syncColor(v.startsWith('#') ? v : '#' + v);
+      });
+      colorInput.addEventListener('focus', () => setActive(point));
+      textInput.addEventListener('focus', () => setActive(point));
+      dot.addEventListener('pointerdown', () => setActive(point));
+
+      delBtn.addEventListener('click', () => {
+        pointsData = pointsData.filter(p => p !== point);
+        rebuildPointsUI();
+        render();
+      });
+    });
+  }
+
+  canvasEl.addEventListener('pointerdown', (e) => {
+    if (e.target !== canvasEl && !e.target.classList.contains('hint')) return; // dots handle their own
+    const rect = canvasEl.getBoundingClientRect();
+    const x = Math.round(clamp(((e.clientX - rect.left) / rect.width) * 100, 0, 100) * 10) / 10;
+    const y = Math.round(clamp(((e.clientY - rect.top) / rect.height) * 100, 0, 100) * 10) / 10;
+    const hex = DEFAULT_PALETTE[pointsData.length % DEFAULT_PALETTE.length];
+    pointsData.push({ x, y, hex, opacity: 0.4, radius: 60 });
+    rebuildPointsUI();
+    render();
+  });
+
+  addPointBtn.addEventListener('click', () => {
+    const hex = DEFAULT_PALETTE[pointsData.length % DEFAULT_PALETTE.length];
+    pointsData.push({ x: 50, y: 50, hex, opacity: 0.4, radius: 60 });
+    rebuildPointsUI();
+    render();
+  });
+
+  baseColorEl.addEventListener('input', render);
+  intensityEl.addEventListener('input', render);
+  smoothEl.addEventListener('change', render);
+
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(cssOut.value).then(() => {
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => (copyBtn.textContent = 'Copy background rule'), 1200);
+    });
+  });
+
+  rebuildPointsUI();
+  render();
+
+  // ── grain controls — amount drives the overlay's opacity, size drives the
+  // feTurbulence baseFrequency. The toggle mutes/unmutes on top of these. ──
+  const grainToggle = document.getElementById('grainToggle');
+  const grainSvg = document.getElementById('grainSvg');
+  const grainLabel = document.getElementById('grainToggleLabel');
+  const grainTurbulence = document.getElementById('grainTurbulence');
+  const grainAmountEl = document.getElementById('grainAmount');
+  const grainAmountOut = document.getElementById('grainAmountOut');
+  const grainSizeEl = document.getElementById('grainSize');
+  const grainSizeOut = document.getElementById('grainSizeOut');
+
+  let grainOn = true;
+
+  function renderGrain() {
+    const amount = Number(grainAmountEl.value) / 100;
+    grainSvg.style.opacity = grainOn ? amount : 0;
+
+    const freq = Number(grainSizeEl.value) / 100;
+    grainTurbulence.setAttribute('baseFrequency', freq.toFixed(2));
+    grainSizeOut.textContent = freq.toFixed(2);
+    grainAmountOut.textContent = grainAmountEl.value + '%';
+  }
+
+  grainAmountEl.addEventListener('input', renderGrain);
+  grainSizeEl.addEventListener('input', renderGrain);
+
+  grainToggle.addEventListener('click', () => {
+    grainOn = !grainOn;
+    grainToggle.classList.toggle('is-off', !grainOn);
+    grainToggle.setAttribute('aria-pressed', String(grainOn));
+    grainLabel.textContent = 'Grain: ' + (grainOn ? 'On' : 'Off');
+    renderGrain();
+  });
+
+  renderGrain();
+</script>
+
+</body>
+</html>

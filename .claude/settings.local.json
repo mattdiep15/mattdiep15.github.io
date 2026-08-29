@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:devpost.com)",
+      "Bash(Select-Object Name)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\mqtth\\\\OneDrive\\\\Desktop\\\\mattdiep15.github.io\\\\images\\\\unused\")",
+      "Bash(mv \"C:\\\\Users\\\\mqtth\\\\OneDrive\\\\Desktop\\\\mattdiep15.github.io\\\\images/amazon.webp\" \"C:\\\\Users\\\\mqtth\\\\OneDrive\\\\Desktop\\\\mattdiep15.github.io\\\\images/unused/\")",
+      "Bash(mv \"C:\\\\Users\\\\mqtth\\\\OneDrive\\\\Desktop\\\\mattdiep15.github.io\\\\images/amazon_project_picture.png\" \"C:\\\\Users\\\\mqtth\\\\OneDrive\\\\Desktop\\\\mattdiep15.github.io\\\\images/unused/\")",
+      "Bash(mv \"C:\\\\Users\\\\mqtth\\\\OneDrive\\\\Desktop\\\\mattdiep15.github.io\\\\images/amazon_white.jpg\" \"C:\\\\Users\\\\mqtth\\\\OneDrive\\\\Desktop\\\\mattdiep15.github.io\\\\images/unused/\")",
+      "Bash(mv \"C:\\\\Users\\\\mqtth\\\\OneDrive\\\\Desktop\\\\mattdiep15.github.io\\\\images/aptiv_logo.png\" \"C:\\\\Users\\\\mqtth\\\\OneDrive\\\\Desktop\\\\mattdiep15.github.io\\\\images/unused/\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(python -m http.server 8123 --bind 127.0.0.1)",
+      "Bash(node *)",
+      "Bash(npm init *)",
+      "Bash(npm install *)",
+      "Bash(curl -s -o /dev/null -w \"index %{http_code}\\\\n\" http://localhost:8765/index.html)"
+    ]
+  }
+}

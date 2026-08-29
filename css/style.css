@@ -1014,6 +1014,7 @@ main.section { padding-bottom: 32vh; }
 .tl-card.open .tl-details li:nth-child(6) { transition-delay: 0.9s; }
 .tl-card.open .tl-details li:nth-child(7) { transition-delay: 1.05s; }
 .tl-card.open .tl-details li:nth-child(8) { transition-delay: 1.2s; }
+.tl-card.open .tl-details li:nth-child(9) { transition-delay: 1.35s; }
 
 /* no-JS: expander can't open, so show details statically */
 html.no-js .tl-details { max-height: none; padding-top: 0.8rem; }
