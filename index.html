@@ -41,7 +41,7 @@
 
   <!-- intro preloader (shown only under html.intro-pending) -->
   <div id="intro" aria-hidden="true">
-    <div class="intro-counter">0</div>
+    <div class="intro-iris"></div>
   </div>
 
   <!-- Floating pill nav: one element that collapses to a 64px circle and
@@ -72,8 +72,9 @@
     <div class="hero-sticky">
       <div class="hero-content">
         <!-- Plain text is the source of truth; js/hero-letters.js splits it
-             into per-letter spans and attaches a photo to the first "t", the
-             first "e" and the "i". Without JS this stays a normal heading. -->
+             into per-letter spans and attaches a photo to every letter but
+             the space — see TUNE.media/images in that file. Without JS this
+             stays a normal heading. -->
         <h1 class="hero-name">Matthew Diep</h1>
       </div>
     </div>
@@ -85,11 +86,6 @@
        .now-sticky in css/style.css. ── -->
   <section id="now" class="now-pin">
     <div class="now-sticky">
-      <!-- greeting flourish, played before the statement: slides in from the
-           right, holds centred, then leaves left (js/now-line.js). Sits
-           absolutely over the statement so it doesn't affect its layout, and
-           stays hidden unless that animation runs. -->
-      <p class="now-line now-welcome"><span class="now-w">Welcome to my website!</span></p>
       <h2 class="now-line">
         <span class="now-l">I'm currently a</span>
         <span class="now-l">data platform engineer</span>
@@ -134,8 +130,8 @@
               <ul>
                 <li>Automated Tableau asset migration and version control via a custom desktop app, cutting active manual work time per migration cycle by 90%</li>
                 <li>Developed ad hoc scripts and standalone executable tools to support data workflows across Snowflake, dbt, and Tableau</li>
-                <li>Built dbt models applying surrogate keys, joins, and aggregations, and exposed key fields to support downstream Tableau dashboards</li>  
-                <li>Designed UI/UX for new and existing internal tools, improving usability and adoption among non-technical teammates</li>
+                <li>Built layered dbt models following Kimball dimensional modeling, using surrogate keys, joins, and aggregations to expose key fields for downstream Tableau dashboards</li>  
+                <li>Designed UI/UX for internal tools and a company-hosted Tableau event website, improving usability and adoption for non-technical teammates and employees across the company</li>
               </ul>
             </div>
           </div>

@@ -1,12 +1,10 @@
 /* ==========================================================================
-   now-line.js — the greeting, then the Wind River statement
+   now-line.js — the Wind River statement
    --------------------------------------------------------------------------
    .now-sticky is pinned for the length of the section while a single scrubbed
    timeline runs the whole choreography:
 
-     • "Welcome to my Website!" glides in from off-screen right, decelerates
-       into the centre, holds there briefly, then accelerates away to the left
-     • each statement line then glides in from off-screen right, DECELERATES
+     • each statement line glides in from off-screen right, DECELERATES
        into its resting position in the middle of the screen, and stays put
      • lines accumulate — one arrives while the previous ones hold still
      • all three sit together for a beat
@@ -24,10 +22,9 @@
 
    Degrades to a plain wrapped statement whenever this doesn't run — reduced
    motion, GSAP CDN blocked, missing elements. The animated layout only
-   switches on via html.now-anim, and the greeting via html.welcome-anim,
-   both added below.
+   switches on via html.now-anim, added below.
 
-   TUNABLES: see TUNE and WELCOME.
+   TUNABLES: see TUNE.
    ========================================================================== */
 
 (function () {
@@ -39,7 +36,6 @@
   var sticky = document.querySelector('.now-sticky');
   var pin = document.querySelector('.now-pin');
   var lines = Array.prototype.slice.call(document.querySelectorAll('.now-l'));
-  var welcomeText = document.querySelector('.now-welcome .now-w');
   if (!sticky || !pin || !lines.length) return;
 
   var TUNE = {
@@ -58,32 +54,6 @@
                              // units over 2.2vh — this preserves that pacing)
   };
 
-  /* The greeting is a plain slide: in from the right, dwell, out to the left.
-     It used to arrive as a per-character scatter (GreenSock's
-     "ContainerAnimation SplitText" pen) that settled in a wave and came apart
-     again on the way out — dropped because the character wave has to finish
-     while the phrase is still crossing, which left it either assembling in
-     mid-air or frozen in a scattered arrangement for the rest of the trip.
-
-     What's left matches the statement lines' easing exactly: same pair,
-     decelerating in and accelerating out, just over a longer distance (a full
-     edge-to-centre crossing rather than TUNE.enterX). */
-  var WELCOME = {
-    enterDur: 0.62,     // the phrase's travel from the right edge to centre
-    exitDur: 0.52,      // ...and off to the left. Both a touch longer than the
-                        // statement's 0.5/0.42, in the same proportion as the
-                        // extra distance, so the two read at the same speed.
-    hold: 0.22          // the centred dwell. NOT TUNE.hold — it used to share
-                        // that beat with the statement, but the two aren't
-                        // comparable: the statement earns its dwell by holding
-                        // three accumulated lines, while the greeting is four
-                        // words that are read the moment they land. The real
-                        // pause is longer than this number looks, too, since
-                        // power2.out creeps the last of the entrance and
-                        // power2.in barely moves off the mark, so the phrase
-                        // reads as stationary either side of the hold itself.
-  };
-
   gsap.registerPlugin(ScrollTrigger);
 
   // widths are font-dependent and everything here is set to nowrap, so wait for
@@ -93,40 +63,6 @@
     document.documentElement.classList.add('now-anim');
 
     var tl = gsap.timeline({ paused: true }); // ScrollTrigger drives it below
-    var offset = 0; // where the statement's own choreography begins
-
-    /* ── greeting ──
-       The class is what un-hides it, so if this block doesn't run nothing is
-       shown and the statement plays on its own. No SplitText dependency any
-       more — the phrase moves as one element. */
-    if (welcomeText) {
-      document.documentElement.classList.add('welcome-anim');
-
-      /* Park the phrase exactly one leading edge beyond the viewport, not a
-         whole innerWidth out: half the viewport plus half the phrase puts its
-         left edge precisely on the right edge of the screen, so it starts
-         moving into view immediately instead of covering dead ground first.
-         A function so it re-measures on refresh (invalidateOnRefresh). */
-      function offRight() {
-        return (window.innerWidth + welcomeText.offsetWidth) / 2;
-      }
-
-      // in from the right edge, decelerating into centre
-      tl.fromTo(welcomeText,
-        { x: offRight },
-        { x: 0, ease: TUNE.enterEase, duration: WELCOME.enterDur }, 0);
-
-      var leaves = WELCOME.enterDur + WELCOME.hold;
-
-      // ...and out to the left, accelerating away
-      tl.to(welcomeText, {
-        x: function () { return -offRight(); },
-        ease: TUNE.exitEase,
-        duration: WELCOME.exitDur
-      }, leaves);
-
-      offset = leaves + WELCOME.exitDur;
-    }
 
     // fromTo rather than from: `from` defaults to immediateRender, which in a
     // staggered timeline fires every start state at build time and flickers
@@ -134,12 +70,12 @@
       tl.fromTo(l,
         { x: function () { return window.innerWidth * TUNE.enterX; }, opacity: 0 },
         { x: 0, opacity: 1, ease: TUNE.enterEase, duration: TUNE.enterDur },
-        offset + i * TUNE.stagger);
+        i * TUNE.stagger);
     });
 
     // positioned explicitly rather than appended, so `hold` is a real dwell
     // that's independent of how long the entrances took
-    var lastIn = offset + (lines.length - 1) * TUNE.stagger + TUNE.enterDur;
+    var lastIn = (lines.length - 1) * TUNE.stagger + TUNE.enterDur;
 
     tl.to(lines, {
       x: function () { return -window.innerWidth * TUNE.enterX; },

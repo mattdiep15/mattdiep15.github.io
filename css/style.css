@@ -6,8 +6,10 @@
 
      --accent             the one accent color (links, tags)
      --grain-opacity      film-grain strength (0 turns it off)
-     --intro-name-ms      how long the intro's 0-100 count takes
-                          (matched by INTRO.nameMs in js/intro.js)
+     --intro-hold-ms      how long the iris dot holds before opening
+                          (matched by INTRO.holdMs in js/intro.js)
+     --intro-iris-ms      how long the iris takes to open
+                          (matched by INTRO.expandMs in js/intro.js)
      --curtain-ms         page-transition curtain speed
      magnetic pull / tilt amounts → CONFIG in js/effects.js
    ========================================================================== */
@@ -73,7 +75,10 @@
   --grain-opacity: 0.05;
 
   /* timing */
-  --intro-name-ms: 2000ms;
+  --intro-hold-ms:    1000ms; /* dwell on the static dot before it opens (mirror INTRO.holdMs in js/intro.js) */
+  --intro-iris-ms:    1100ms; /* iris expand duration (mirror INTRO.expandMs in js/intro.js) */
+  --intro-iris-size:  1vmax;  /* iris's rest diameter */
+  --intro-iris-scale: 180;    /* scale factor; comfortably exceeds any viewport's center-to-corner distance */
   --curtain-ms: 420ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-io:  cubic-bezier(0.65, 0, 0.35, 1);
@@ -242,43 +247,44 @@ html.no-js #pill-toggle { display: none; }
    tiny inline script in <head> when JS is on, no reduced-motion, and the
    intro hasn't played this session) shows it. Fully invisible to no-JS. */
 
-/* dark to match the hero it wipes away to reveal — on --bg it flashed light */
+/* #intro itself stays background-transparent — all the dark color comes
+   from .intro-iris's box-shadow. If #intro painted its own background, the
+   iris's transparent hole would just reveal that instead of the real page. */
 #intro {
   display: none;
   position: fixed;
   inset: 0;
   z-index: 10000;
-  background: var(--ink-deep);
-  color: var(--paper);
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 1.1rem;
-  clip-path: inset(0 0 0 0);
+  overflow: hidden;
 }
 
-html.intro-pending #intro { display: flex; }
+html.intro-pending #intro { display: block; }
 
-/* Display-scale, so the count reads as the moment rather than a status line.
-   tabular-nums is load-bearing at this size: without it the counter visibly
-   jerks sideways every time a digit changes width, and again at 9→10 and
-   99→100. The wide 0.22em tracking that suited it at 0.94rem would sprawl
-   here, so it flips to the display type's negative tracking instead. */
-.intro-counter {
-  font-family: var(--font-display);
-  font-variant-numeric: tabular-nums;
-  font-size: clamp(2.25rem, 7vw, 4rem);
-  font-weight: 400;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  color: var(--muted);
+/* the "dot": a tiny transparent circle whose huge box-shadow paints
+   everything OUTSIDE it — a spotlight in reverse. Scaling the element up
+   (not width/height, so it's a GPU transform) grows the transparent hole
+   and the shadow together, proportionally, staying centered. */
+.intro-iris {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--intro-iris-size);
+  height: var(--intro-iris-size);
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 0 0 0 100vmax var(--ink-deep);
+  transform: translate(-50%, -50%) scale(1);
+  will-change: transform;
 }
 
-/* curtain wipe out */
+/* iris opens out */
 #intro.intro-leave {
-  transition: clip-path 0.7s var(--ease-io);
-  clip-path: inset(0 0 100% 0);
   pointer-events: none;
+}
+
+#intro.intro-leave .intro-iris {
+  transition: transform var(--intro-iris-ms) var(--ease-io);
+  transform: translate(-50%, -50%) scale(var(--intro-iris-scale));
 }
 
 /* keep hero hidden underneath until the intro lifts */
@@ -408,9 +414,9 @@ html.intro-done .hero-content > * {
 }
 
 /* ── Hero letter photos ────────────────────────────────────────────────────
-   js/hero-letters.js splits the name into one .letter per character. Three of
-   them carry a hidden .thumb; hovering pops the photo in over the glyph while
-   the neighbouring letters slide aside to make room.
+   js/hero-letters.js splits the name into one .letter per character. Every
+   letter but the space carries a hidden .thumb; hovering pops the photo in
+   over the glyph while the neighbouring letters slide aside to make room.
 
    Every letter is plain --ink at rest — the photos only ever appear on hover.
    The flex row is what lets neighbours be shifted independently, and is only
@@ -513,35 +519,6 @@ html.now-anim .now-sticky {
   align-items: center;
   justify-content: center;
   overflow: hidden; /* clips each line while it's off-screen right, then left */
-  position: relative; /* anchors the absolutely-placed .now-welcome below */
-}
-
-/* ── the "Welcome to my Website!" greeting ──
-   Plays first, in the same pinned frame, then clears out before the statement
-   arrives. Hidden by default and switched on only by html.welcome-anim, which
-   js/now-line.js adds when it has actually tweened it — so no JS, a blocked
-   CDN or reduced motion all leave the statement's own layout untouched rather
-   than showing a stray line.
-
-   Taken out of flow (the statement is the only thing in the flex box) and
-   centred by its own full-size flex box, so nothing writes a base transform
-   that GSAP would then have to fight over. */
-.now-welcome { display: none; }
-
-html.welcome-anim .now-welcome {
-  display: flex;
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  align-items: center;
-  justify-content: center;
-}
-
-/* the tween drives this inner span, not the flex box itself — the box is what
-   does the centring, so writing a transform onto it would fight the layout */
-html.welcome-anim .now-w {
-  white-space: nowrap;
-  will-change: transform, opacity;
 }
 
 /* left-aligned so all three share one left edge — centring each line on its own
@@ -1323,8 +1300,6 @@ html.page-enter #curtain.curtain-lift {
      statement wrapped and at rest even if it ever survives a pref change */
   .now-line { white-space: normal !important; }
   .now-l { transform: none !important; opacity: 1 !important; }
-  /* the greeting is pure motion — there's nothing to show when it can't play */
-  .now-welcome { display: none !important; }
   #grain { display: none !important; }
   /* split-lines.js bails before splitting, so the heading is still plain text;
      this is belt-and-braces in case a split ever survives a preference change */

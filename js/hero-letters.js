@@ -1,8 +1,8 @@
 /* ==========================================================================
    hero-letters.js — photos that pop out of the hero name on hover
    --------------------------------------------------------------------------
-   "Matthew Diep" is split into one .letter span per character. Three of them
-   carry a hidden photo thumbnail: the first "t", the first "e", and the "i".
+   "Matthew Diep" is split into one .letter span per character. Every letter
+   except the space carries a hidden photo thumbnail.
 
    Every letter renders as plain --ink at rest. Hovering one of the three
    swaps the glyph for its photo — the thumbnail scales up with a slight
@@ -34,24 +34,45 @@
     // Paired positionally with `images` below — the split loop walks characters
     // in order and pulls images[mediaCount++], so ascending indices map to the
     // array in order.
-    media: [1, 3, 6, 10],
+    media: [0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11],
+    // Pre-resized + sharpened to images/thumb/ (see make_thumbs note below)
+    // for everything whose source was far bigger than this ever displays —
+    // relying on the browser to downscale e.g. a 4032x3024 original by ~8x
+    // at runtime left fine detail (fur, foliage, grain) looking soft even
+    // once settled. wailord.jpg, campanille.jpg and world_tree.jpg are left
+    // at their original path; their sources were already close to display
+    // size, so a resize would gain nothing.
     images: [
-      'images/chopper.avif',          // a
-      'images/PalaceFineArts.jpg',    // the SECOND t
-      'images/MOMA.jpg',              // w
-      'images/abandonedhutphoto.jpg'  // the e next to p
+      'images/thumb/sunset.jpg',             // M
+      'images/thumb/chopper.avif',           // a
+      'images/thumb/smiski.jpg',             // the FIRST t
+      'images/thumb/PalaceFineArts.jpg',     // the SECOND t
+      'images/wailord.jpg',                  // h
+      'images/campanille.jpg',               // the FIRST e (in "thew")
+      'images/thumb/MOMA.jpg',               // w
+      'images/thumb/llama.jpg',              // D
+      'images/world_tree.jpg',               // i
+      'images/thumb/abandonedhutphoto.jpg',  // the second e (in "Diep")
+      'images/thumb/dessert.jpg'             // p
     ],
-    // [width, height] in em — index-matched to media/images above, so the four
+    // [width, height] in em — index-matched to media/images above, so the
     // photos aren't identical squares. WIDTH feeds shiftFor(): a wider photo
     // pushes its neighbours further, which eats into the collision margin the
-    // .letter padding absorbs. Measured safe at these values; the worst case is
-    // driven by 't' (Satoshi's narrowest of the four at 0.298em), so the 'e'
-    // photo only becomes the constraint past ~1.35em wide.
+    // .letter padding absorbs. Measured safe at these values; the narrowest
+    // glyphs ('i', 't') are the tightest fit, so a wide photo only becomes the
+    // constraint well past 1.3em wide.
     sizes: [
+      [0.87, 1.15],   // M — sunset, tall (3:4 source)
       [0.89, 0.89],   // a — chopper, 15% smaller
-      [1.05, 1.18],   // t — PalaceFineArts, slightly taller
+      [0.87, 1.15],   // t (first) — smiski, tall (3:4 source)
+      [1.05, 1.18],   // t (second) — PalaceFineArts, slightly taller
+      [1.28, 0.80],   // h — wailord, wide (1.65:1 source)
+      [1.05, 0.96],   // e (thew) — campanille, near-square
       [1.02, 1.00],   // w — MOMA
-      [1.25, 1.05]    // e — abandonedhut, wider
+      [0.87, 1.15],   // D — llama, tall (3:4 source)
+      [0.87, 1.15],   // i — world_tree, tall (3:4 source)
+      [1.25, 1.05],   // e (Diep) — abandonedhut, wider
+      [0.87, 1.15]    // p — dessert, tall (3:4 source)
     ],
     // px of breathing room either side of a photo. Lowered from 10 because the
     // natural-aspect photos are up to 50% wider than the old squares, and this
