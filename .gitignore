@@ -2,3 +2,6 @@
 documents/
 animations_etc/
 changes.txt
+
+# Claude Code local worktrees
+.claude/worktrees/
