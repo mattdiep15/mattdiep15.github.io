@@ -950,6 +950,8 @@ main.section { padding-bottom: 32vh; }
 }
 
 .tl-card:hover { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.08); }
+/* grey focus ring instead of the global blue one */
+.tl-card:focus-visible { outline-color: #c9c9c2; }
 
 .tl-card-head {
   display: flex;
@@ -975,7 +977,7 @@ main.section { padding-bottom: 32vh; }
 .tl-details {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.4s var(--ease-out), padding-top 0.2s ease;
+  transition: max-height 1.1s var(--ease-io), padding-top 0.6s ease;
   padding-top: 0;
 }
 
@@ -998,7 +1000,7 @@ main.section { padding-bottom: 32vh; }
 .tl-details .coursework-column p {
   opacity: 0;
   transform: translateX(28px);
-  transition: opacity 0.5s ease, transform 0.5s var(--ease-out);
+  transition: opacity 0.8s ease, transform 0.8s var(--ease-out);
 }
 .tl-card.open .tl-details li,
 .tl-card.open .tl-details .coursework-column p {
