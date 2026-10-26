@@ -776,6 +776,9 @@ main.section { padding-bottom: 32vh; }
    still clears every edge with room to spare, at both the feature size and
    the smaller project-card one.
 
+   freshly_logo.png (3000×3000) is loose the same way (~88% × ~66% of a
+   square canvas), so it reuses this class.
+
    `transform`, not `scale` — the hover lift on these images owns the `scale`
    property. The two are independent, so they multiply (1.35 × 1.04 on hover)
    instead of the hover clobbering the base size. */
@@ -843,6 +846,10 @@ main.section { padding-bottom: 32vh; }
   border-color: transparent;
   color: var(--accent);
   font-weight: 500;
+}
+
+.project-skills .award-tag i {
+  margin-right: 0.35em;
 }
 
 /* ── Experience timeline ───────────────────────────────────────────────── */
@@ -966,7 +973,7 @@ main.section { padding-bottom: 32vh; }
 }
 
 .tl-card.open { border-color: #c9c9c2; }
-.tl-card.open .tl-details { max-height: 420px; padding-top: 0.8rem; }
+.tl-card.open .tl-details { max-height: 900px; padding-top: 0.8rem; }
 .tl-card.open .tl-chevron { transform: rotate(180deg); color: var(--accent); }
 
 /* bullets slide + fade in from the right, one after another, when a card
