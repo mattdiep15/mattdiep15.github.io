@@ -195,9 +195,9 @@ a { color: inherit; }
   color: #fff; /* inverted by the blend mode above — not var(--ink) */
   font-family: var(--font); /* Satoshi, matching the rest of the site */
   font-weight: 400;         /* Regular */
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 15px;
+  letter-spacing: 0.03em;
+  text-transform: lowercase;
   transition: opacity 0.2s var(--ease-out);
 }
 
@@ -655,7 +655,8 @@ html.now-anim .now-l {
   transition: filter 0.4s var(--ease-out), scale 0.5s var(--ease-out);
 }
 
-.feature-img.contain img { object-fit: contain; padding: 20px; background: #fff; }
+.feature-img.contain { background: transparent; }
+.feature-img.contain img { object-fit: contain; padding: 20px; }
 
 .feature:hover .feature-img img { filter: none; scale: 1.04; }
 
@@ -701,7 +702,7 @@ main.section { padding-bottom: 32vh; }
   font-size: 0.92rem;
   font-weight: 500;
   letter-spacing: 0.1em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   margin-bottom: 2.2rem;
   padding: 0.3rem 0.1rem;
   will-change: transform;
@@ -710,35 +711,29 @@ main.section { padding-bottom: 32vh; }
 
 .back-link:hover { color: var(--ink); }
 
-.project-list { display: flex; flex-direction: column; gap: 1.2rem; margin-top: 1rem; }
+.project-list { display: flex; flex-direction: column; margin-top: 1rem; }
 
+/* open rows rather than boxed cards — a hairline between entries does the
+   separating that the card borders used to */
 .project-card {
   display: block;
-  padding: 1.5rem;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 22px;
+  padding: 2.2rem 0;
   text-decoration: none;
   color: var(--ink);
   scroll-margin-top: 100px;
-  will-change: transform;
-  transition: box-shadow 0.35s var(--ease-out), border-color 0.35s var(--ease-out);
 }
 
-.project-card:hover {
-  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.1);
-  border-color: transparent;
-}
+.project-card + .project-card { border-top: 1px solid var(--line); }
 
 .project-card .card-inner {
   display: flex;
   align-items: center;
-  gap: 1.8rem;
+  gap: 2.4rem;
 }
 
 .project-image-wrap {
-  width: 190px;
-  height: 130px;
+  width: 250px;
+  height: 170px;
   border-radius: 15px;
   overflow: hidden;
   flex-shrink: 0;
@@ -754,7 +749,8 @@ main.section { padding-bottom: 32vh; }
   transition: filter 0.4s var(--ease-out), scale 0.5s var(--ease-out);
 }
 
-.project-image-wrap.contain .project-image { object-fit: contain; padding: 12px; background: #fff; }
+.project-image-wrap.contain { background: transparent; }
+.project-image-wrap.contain .project-image { object-fit: contain; padding: 12px; }
 
 /* ── optical sizing for .contain logos ────────────────────────────────────
    object-fit: contain sizes the CANVAS, not the drawing inside it, so two
@@ -1093,8 +1089,8 @@ html.no-js .tl-chevron { display: none; }
   color: var(--paper);
   font-size: 0.94rem;
   font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-transform: lowercase;
   will-change: transform;
   transition: background 0.3s ease, color 0.3s ease,
               border-color 0.3s ease, box-shadow 0.3s var(--ease-out);
@@ -1322,7 +1318,7 @@ html.page-enter #curtain.curtain-lift {
      fix on the base rule. */
 
   .project-card .card-inner { flex-direction: column; align-items: stretch; gap: 1rem; }
-  .project-image-wrap { width: 100%; height: 170px; }
+  .project-image-wrap { width: 100%; height: 210px; }
 
   .tl-card-head { flex-wrap: wrap; gap: 0.5rem; }
 
