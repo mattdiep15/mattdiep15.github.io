@@ -806,13 +806,6 @@ main.section { padding-bottom: 32vh; }
   margin-bottom: 0.4rem;
 }
 
-.project-card h3 i {
-  font-size: 0.83rem;
-  color: var(--muted);
-  margin-left: 0.4rem;
-  vertical-align: 2px;
-}
-
 .project-card p {
   font-size: 1.03rem;
   line-height: 1.65;
