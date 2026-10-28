@@ -924,6 +924,19 @@ main.section { padding-bottom: 32vh; }
 
 .tl-card:hover { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.08); }
 
+/* hand-drawn doodles pinned to an element. Each one's left/top/width live in
+   its inline style, relative to its parent's top-left corner — that's what
+   js/doodle-editor.js (open the page with ?doodles) drags around and copies
+   out, so don't move those values into this stylesheet. */
+/* :where() = zero specificity, so a parent that's already absolute/fixed keeps it */
+:where(:has(> .doodle)) { position: relative; }
+.doodle {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+  z-index: 2;
+}
+
 .tl-card-head {
   display: flex;
   justify-content: space-between;
