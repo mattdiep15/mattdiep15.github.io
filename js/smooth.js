@@ -71,6 +71,22 @@
   // lets CSS hand the .now-sticky pin over to ScrollTrigger (see style.css)
   document.documentElement.classList.add('smoothing');
 
+  /* No scrolling until the intro iris has fully opened. js/intro.js removes
+     html.intro-pending once the iris transition ends; until then the smoother
+     is paused, which blocks wheel, touch (normalizeScroll) and keys alike.
+     css/style.css carries an overflow:hidden fallback for when GSAP is
+     blocked and this never runs. */
+  var docEl = document.documentElement;
+  if (docEl.classList.contains('intro-pending')) {
+    smoother.paused(true);
+    var introObs = new MutationObserver(function () {
+      if (docEl.classList.contains('intro-pending')) return;
+      introObs.disconnect();
+      smoother.paused(false);
+    });
+    introObs.observe(docEl, { attributes: true, attributeFilter: ['class'] });
+  }
+
   /* The Wind River statement's pin lives in js/now-line.js — it belongs to the
      horizontal tween that drives the section, and two pins on one element
      would fight. Nothing to pin here. */

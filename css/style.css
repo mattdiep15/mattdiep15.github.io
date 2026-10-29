@@ -275,6 +275,11 @@ html.no-js #pill-toggle { display: none; }
 
 html.intro-pending #intro { display: block; }
 
+/* no scrolling past the hero until the iris has opened. js/smooth.js pauses
+   ScrollSmoother for the same window; this covers a blocked GSAP CDN, where
+   the page scrolls natively. intro.js drops the class when the iris lands. */
+html.intro-pending { overflow: hidden; }
+
 /* the "dot": a tiny transparent circle whose huge box-shadow paints
    everything OUTSIDE it — a spotlight in reverse. Scaling the element up
    (not width/height, so it's a GPU transform) grows the transparent hole
@@ -356,6 +361,20 @@ html.intro-pending:not(.intro-done) .hero-content { opacity: 0; }
 .hero-sweep-label { fill: var(--paper); }
 
 #hero-sweep-glow { filter: blur(10px); }
+
+/* Motion-trail layers drawn by js/hero-bounce.js: --trail-1 is the head (on
+   top), each later one sits beneath and lags further behind. The head stays
+   --paper rather than black: black would vanish on the --ink-deep hero.
+   Layer count, stagger and easing live in TUNE in that file. */
+#hero-sweep {
+  --trail-1: var(--paper);
+  --trail-2: #74B3FA;   /* medium blue */
+  --trail-3: #8FDCE0;   /* light teal */
+}
+
+.hero-trail-1 { stroke: var(--trail-1); }
+.hero-trail-2 { stroke: var(--trail-2); }
+.hero-trail-3 { stroke: var(--trail-3); }
 
 /* the words ride the line via <textPath>; the stroke opens a gap for each one,
    so they read as part of the line rather than sitting on top of it */

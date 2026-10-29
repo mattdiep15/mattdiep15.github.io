@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Hero bouncing line — demo</title>
+
+<!--
+  SCRATCH FILE — not part of the site. Not linked from anywhere.
+
+  Prototype of js/hero-bounce.js: a line drops in from the top-left, bounces
+  along the name landing on M, w and p (opening each photo), then arcs off the
+  right edge. It would replace js/hero-sweep.js on the homepage.
+
+  Links the REAL css/style.css and js/hero-letters.js, unmodified. Must live at
+  the repo root: hero-letters.js uses document-relative image paths.
+
+  Serve it, don't double-click (Chrome blocks @font-face over file://):
+      python -m http.server 8000  ->  http://localhost:8000/bounce-demo.html
+-->
+
+<!-- same boot as line-sweep-demo.html: no intro, but html.js for riseIn -->
+<script>
+  (function () {
+    var d = document.documentElement;
+    d.classList.remove('no-js');
+    d.classList.add('js');
+  })();
+</script>
+
+<link rel="preload" href="fonts/Satoshi-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  #replay {
+    position: fixed;
+    right: 1.4rem;
+    bottom: 1.4rem;
+    z-index: 10;
+    padding: 0.6rem 1.2rem;
+    border: 1.5px solid var(--paper-45);
+    border-radius: 100vmax;
+    background: none;
+    color: var(--paper);
+    font: 500 0.9rem var(--font);
+    letter-spacing: 0.03em;
+    cursor: pointer;
+  }
+  #replay:hover { background: var(--paper); color: var(--ink-deep); }
+</style>
+</head>
+<body>
+
+  <header class="hero-pin" id="top">
+    <div class="hero-sticky">
+      <div class="hero-content">
+        <h1 class="hero-name">Matthew Diep</h1>
+      </div>
+    </div>
+  </header>
+
+  <button id="replay" type="button" onclick="location.reload()">replay</button>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js" defer></script>
+  <script src="js/hero-letters.js" defer></script>
+  <script src="js/hero-bounce.js" defer></script>
+</body>
+</html>

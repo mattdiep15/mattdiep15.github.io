@@ -50,10 +50,10 @@
       'images/wailord.jpg',                  // h
       'images/campanille.jpg',               // the FIRST e (in "thew")
       'images/thumb/MOMA.jpg',               // w
-      'images/thumb/llama.jpg',              // D
+      'images/thumb/dessert.jpg',            // D
       'images/world_tree.jpg',               // i
       'images/thumb/abandonedhutphoto.jpg',  // the second e (in "Diep")
-      'images/thumb/dessert.jpg'             // p
+      'images/thumb/llama.jpg'               // p
     ],
     // [width, height] in em — index-matched to media/images above, so the
     // photos aren't identical squares. WIDTH feeds shiftFor(): a wider photo
@@ -69,10 +69,10 @@
       [1.28, 0.80],   // h — wailord, wide (1.65:1 source)
       [1.05, 0.96],   // e (thew) — campanille, near-square
       [1.02, 1.00],   // w — MOMA
-      [0.87, 1.15],   // D — llama, tall (3:4 source)
+      [0.87, 1.15],   // D — dessert, tall (3:4 source)
       [0.87, 1.15],   // i — world_tree, tall (3:4 source)
       [1.25, 1.05],   // e (Diep) — abandonedhut, wider
-      [0.87, 1.15]    // p — dessert, tall (3:4 source)
+      [0.87, 1.15]    // p — llama, tall (3:4 source)
     ],
     // px of breathing room either side of a photo. Lowered from 10 because the
     // natural-aspect photos are up to 50% wider than the old squares, and this
