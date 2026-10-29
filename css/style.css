@@ -655,7 +655,7 @@ html.now-anim .now-l {
   gap: 0.5rem;
   margin-top: 1.4rem;
   text-decoration: none;
-  color: var(--accent);
+  color: #1F6B3A;   /* dark green — ~6:1 on --bg */
   font-size: 1rem;
   font-weight: 500;
   letter-spacing: 0.04em;
