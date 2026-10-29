@@ -104,6 +104,12 @@
    fights it. js/smooth.js routes anchor links through smoother.scrollTo. */
 html { scroll-behavior: auto; }
 
+/* clip, not hidden: it stops anything poking past the right edge (doodles,
+   the off-screen .now-l lines) from widening a phone's layout viewport —
+   which let the page pan sideways and pushed the fixed nav half off-screen —
+   without turning html into a scroll container the way hidden would. */
+html { overflow-x: clip; }
+
 body {
   font-family: var(--font);
   background: var(--bg);
@@ -767,7 +773,7 @@ main.section { padding-bottom: 32vh; }
    different sizes in an identical frame.
 
    feynman_icon.png (560×400) is cropped tight — its drawing covers ~89% of
-   the canvas width and ~47% of the height. clean_visadino.png (2048×2048) is
+   the canvas width and ~47% of the height. clean_visadino.png (800×800) is
    loose: ~66% × ~48% of a *square* canvas. Fitted to the same box height that
    works out to roughly 336×128 vs 178×131 — the same height, but barely half
    the width, which is what read as "the dino is smaller".
@@ -781,7 +787,7 @@ main.section { padding-bottom: 32vh; }
    still clears every edge with room to spare, at both the feature size and
    the smaller project-card one.
 
-   freshly_logo.png (3000×3000) is loose the same way (~88% × ~66% of a
+   freshly_logo.png (800×800) is loose the same way (~88% × ~66% of a
    square canvas), so it reuses this class.
 
    `transform`, not `scale` — the hover lift on these images owns the `scale`
@@ -1047,21 +1053,28 @@ html.no-js .tl-details li,
 html.no-js .tl-details .coursework-column p { opacity: 1; transform: none; }
 html.no-js .tl-chevron { display: none; }
 
+/* Phones: one column — a small logo above a full-width card. A logo column
+   beside the card left the card ~220px wide, which wrapped titles one word
+   per line. */
 @media (max-width: 740px) {
   .timeline::before { display: none; }
-  /* logo column must fit the widest logo (the wide wordmarks) so it never
-     overflows onto the card — see .tl-logo.wide below */
-  .tl-entry { grid-template-columns: 104px 1fr; gap: 1rem; margin-bottom: 1.5rem; align-items: start; }
+  .tl-entry { grid-template-columns: 1fr; gap: 0.9rem; margin-bottom: 2.4rem; }
   .tl-mid { display: none; }
   /* desktop rest-state centering offsets don't apply to the stacked layout */
   .tl-l:has(.tl-card), .tl-r:has(.tl-card) { margin-top: 0; }
-  .tl-l { padding: 0; justify-content: flex-start; grid-row: 1; }
-  .tl-r { padding: 0; grid-row: 1; grid-column: 2; }
-  .tl-l:has(.tl-card) { grid-column: 2; }
-  .tl-r:has(.tl-logo) { grid-column: 1; }
-  /* cap both dimensions to the column so logos stay contained */
-  .tl-logo { width: 80px !important; height: 80px !important; }
-  .tl-logo.wide { width: 104px !important; }
+  .tl-l, .tl-r { padding: 0; justify-content: flex-start; }
+  /* logo first whichever side it sat on at desktop */
+  .tl-l:has(.tl-logo), .tl-r:has(.tl-logo) { grid-row: 1; }
+  .tl-l:has(.tl-card), .tl-r:has(.tl-card) { grid-row: 2; }
+  .tl-logo, .tl-logo.wide { width: 100%; height: 84px; justify-content: flex-start; }
+  .tl-logo img { max-width: 210px; }
+
+  /* Doodle positions are tuned for the desktop card. Overrides need
+     !important to beat the inline styles js/doodle-editor.js writes. The
+     sitter moves to the card's right end so it doesn't land on the logo
+     that now sits above the card's left end. */
+  .doodle[data-doodle="windriver-fisher"] { right: -6px !important; top: -58px !important; width: 100px !important; }
+  .doodle[data-doodle="tasa-sitter"] { left: auto !important; right: 18px !important; }
 }
 
 /* ── Education ─────────────────────────────────────────────────────────── */
@@ -1365,15 +1378,41 @@ html.page-enter #curtain.curtain-lift {
   .project-card .card-inner { flex-direction: column; align-items: stretch; gap: 1rem; }
   .project-image-wrap { width: 100%; height: 210px; }
 
-  .tl-card-head { flex-wrap: wrap; gap: 0.5rem; }
+  /* title gets the full width; the date drops under the company and the
+     chevron stays top-right. display:contents lifts .tl-date and .tl-chevron
+     out of .tl-meta so they can be placed on the grid directly. */
+  .tl-card-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "info chev" "date date";
+    gap: 0.35rem 0.75rem;
+  }
+  .tl-info { grid-area: info; }
+  .tl-meta { display: contents; }
+  .tl-date { grid-area: date; font-size: 0.92rem; }
+  .tl-chevron { grid-area: chev; align-self: start; padding-top: 0.2rem; }
+  /* line the date up with the text, not the school icon (44px + its gap) */
+  #education .tl-date { padding-left: calc(44px + 0.75rem); }
 
-  /* long bullets wrap a lot on narrow screens — give the expander room */
-  .tl-card.open .tl-details { max-height: 900px; }
+  /* long bullets wrap a lot on narrow screens — give the expander room
+     (900px cut off the end of the Wind River list at phone width) */
+  .tl-card.open .tl-details,
+  #education .tl-card.open .tl-details { max-height: 2000px; }
+
+  /* the desktop clamp lands at ~100px top and bottom, which stacks into
+     ~200px dead gaps between sections on a phone */
+  .section { padding-top: 3.5rem; padding-bottom: 3.5rem; }
+
+  /* the floor of the desktop clamp leaves the statement small on a phone;
+     9.5vw keeps the widest line ("data platform engineer") inside 390px */
+  .now-line { font-size: clamp(2.01rem, 9.5vw, 4.01rem); }
 }
 
 @media (max-width: 768px) {
-  /* featured rows stack under ~tablet width (text above image) */
+  /* featured rows stack under ~tablet width, image first — matching the
+     cards on projects.html */
   .feature { grid-template-columns: 1fr; gap: 1.4rem; }
+  .feature-img { order: -1; }
 
   /* ── mobile scroll performance ──────────────────────────────────────────
      The grain's cost is its geometry, not its texture. inset:-100% makes the
@@ -1398,6 +1437,15 @@ html.page-enter #curtain.curtain-lift {
   .tl-card { will-change: auto; }
 }
 
+/* a centred 2×2 grid under the centred heading — a left-aligned column
+   looked misplaced beneath it */
 @media (max-width: 480px) {
-  .contact-links { flex-direction: column; align-items: flex-start; }
+  .contact-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+    max-width: 340px;
+    margin-inline: auto;
+  }
+  .contact-pill { justify-content: center; padding: 0.85rem 1rem; }
 }
