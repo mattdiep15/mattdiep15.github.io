@@ -4,7 +4,8 @@
    TUNABLES — every knob you'll realistically want to turn lives in :root
    below (plus the CONFIG object at the top of js/effects.js):
 
-     --accent             the one accent color (links, tags)
+     --accent             the one accent color (links)
+     --tag-*              project tag pill colors (event / award / default)
      --grain-opacity      film-grain strength (0 turns it off)
      --intro-hold-ms      how long the iris dot holds before opening
                           (matched by INTRO.holdMs in js/intro.js)
@@ -53,6 +54,14 @@
   --line:      #e4e4df;
   --accent:    #2b4cff;
   --accent-soft: rgba(43, 76, 255, 0.08);
+
+  /* project tag pills — one place to retune all three variants */
+  --tag-event-bg:      #7C74E8;   /* hackathons, e.g. "Cal Hacks 2026" */
+  --tag-event-text:    #FFFFFF;
+  --tag-award-bg:      #EBCB6B;   /* awards, e.g. "Runner-up · Best Design" */
+  --tag-award-text:    #5A4300;   /* dark brown, keeps contrast on gold */
+  --tag-default-bg:    #6B7285;   /* tech stack, e.g. "Next.js", "Convex" */
+  --tag-default-text:  #FFFFFF;
 
   /* dark bands: the hero, the role statement and the closing card */
   --ink-deep:  #020C20;
@@ -817,28 +826,58 @@ main.section { padding-bottom: 32vh; }
   margin-top: 0.9rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 8px;
 }
 
-.project-skills span {
-  background: var(--bg);
-  border: 1px solid var(--line);
-  color: var(--muted);
-  padding: 0.22rem 0.68rem;
-  border-radius: 100vmax;
-  font-size: 0.8rem;
-  letter-spacing: 0.04em;
-}
-
-.project-skills .hackathon-tag {
-  background: var(--accent-soft);
-  border-color: transparent;
-  color: var(--accent);
+/* Tag pills. The variant is set in the markup (tag--event / tag--award /
+   tag--default), never guessed from the text. Colors live only in the
+   --tag-* variables on :root. */
+.project-skills .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 9999px;
+  font-size: 13px;
   font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.project-skills .award-tag i {
-  margin-right: 0.35em;
+.project-skills .tag--default {
+  background: var(--tag-default-bg);
+  color: var(--tag-default-text);
+}
+
+.project-skills .tag--event {
+  background: var(--tag-event-bg);
+  color: var(--tag-event-text);
+  box-shadow: 0 2px 8px rgba(124, 116, 232, 0.2);
+}
+
+.project-skills .tag--award {
+  background: var(--tag-award-bg);
+  color: var(--tag-award-text);
+  box-shadow: 0 2px 8px rgba(235, 203, 107, 0.25);
+}
+
+/* inline Lucide icon (Medal on the award tag); strokes with currentColor */
+.project-skills .tag--award .tag__icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--tag-award-text);
+}
+
+/* optional leading dot; icons (<i>) sit at the 6px gap on either side */
+.project-skills .tag__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
 }
 
 /* ── Experience timeline ───────────────────────────────────────────────── */
