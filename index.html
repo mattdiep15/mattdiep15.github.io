@@ -77,7 +77,7 @@
              into per-letter spans and attaches a photo to every letter but
              the space — see TUNE.media/images in that file. Without JS this
              stays a normal heading. -->
-        <h1 class="hero-name">Matthew Diep</h1>
+        <h1 class="hero-name" data-reveal="load">Matthew Diep</h1>
       </div>
     </div>
   </header>
@@ -105,7 +105,7 @@
   <!-- ── Experience ── -->
   <section id="experience" class="section">
     <div class="section-head">
-      <h2 class="display">Experience</h2>
+      <h2 class="display" data-reveal>Experience</h2>
     </div>
 
     <div class="timeline">
@@ -233,7 +233,7 @@
   <!-- ── Featured projects (editorial rows, per documents/Project Layout.png) ── -->
   <section id="work" class="section">
     <div class="section-head">
-      <h2 class="display">Projects</h2>
+      <h2 class="display" data-reveal>Projects</h2>
       <p class="section-sub">things I've built :)</p>
     </div>
 
@@ -285,7 +285,7 @@
   <!-- ── Education ── -->
   <section id="education" class="section">
     <div class="section-head">
-      <h2 class="display">Education</h2>
+      <h2 class="display" data-reveal>Education</h2>
     </div>
 
     <div>
@@ -349,13 +349,11 @@
        full-bleed with only its contents constrained (.closing-inner). -->
   <footer id="contact" class="closing">
     <div class="closing-inner">
-      <!-- the site's one masked per-line reveal (js/split-lines.js). The other
-           section headings used to carry data-split too; it was pulled back to
-           this one so the effect reads as a closing flourish rather than a
-           thing every heading does. -->
-      <h2 class="display closing-title" data-split>Let's Connect!</h2>
+      <!-- letter reveal (js/reveal.js); the pills follow it in once the
+           heading has mostly landed (data-reveal-after) -->
+      <h2 class="display closing-title" id="closing-title" data-reveal>Let's Connect!</h2>
 
-      <div class="contact-links">
+      <div class="contact-links" data-reveal-after="closing-title">
         <a href="mailto:matthewdiep@berkeley.edu" class="contact-pill magnetic" data-magnet="0.1">
           <i class="fas fa-envelope" aria-hidden="true"></i> Email
         </a>
@@ -381,16 +379,14 @@
   <div id="grain" aria-hidden="true"></div>
   <div id="curtain" aria-hidden="true"></div>
 
-  <!-- GSAP: ScrollTrigger (the pinned .now-pin timeline), ScrollSmoother
-       (smooth scrolling + data-speed parallax) and SplitText (the per-line
-       reveal on the one [data-split] heading). defer preserves execution
+  <!-- GSAP: ScrollTrigger (the pinned .now-pin timeline)
+       and ScrollSmoother (smooth scrolling). defer preserves execution
        order, so the plugins are ready before our modules run. If these fail to
        load every module bails and the page degrades to plain native
        scrolling. -->
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollSmoother.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js" defer></script>
 
   <script src="js/scroll-bar.js" defer></script>
   <script src="js/pill-nav.js" defer></script>
@@ -402,12 +398,11 @@
   <!-- after hero-letters.js: the bouncing line opens M, w and p by dispatching
        synthetic mouseenters, so the letters must exist and be listening first. -->
   <script src="js/hero-bounce.js" defer></script>
+  <!-- after hero-letters.js: it splits the hero name first, and reveal.js
+       wraps the letters it made rather than re-splitting the text. -->
+  <script src="js/reveal.js" defer></script>
   <script src="js/smooth.js" defer></script>
-  <!-- before split-lines.js: ScrollTrigger measures pinned triggers most
-       reliably when they're created in DOM order, and .now-pin sits above the
-       [data-split] heading. -->
   <script src="js/now-line.js" defer></script>
-  <script src="js/split-lines.js" defer></script>
   <script src="js/intro.js" defer></script>
   <script src="js/doodle-editor.js" defer></script>
 </body>

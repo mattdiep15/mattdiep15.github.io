@@ -435,10 +435,11 @@ html.intro-pending:not(.intro-done) .hero-content { opacity: 0; }
 }
 
 /* entrance — runs immediately on normal loads, or when the intro finishes
-   (html.intro-done). Static (visible) when JS is off. .hero-content holds a
-   single <h1> now, so there's no stagger. */
-html.js:not(.intro-pending) .hero-content > *,
-html.intro-done .hero-content > * {
+   (html.intro-done). Static (visible) when JS is off. The <h1> carries
+   [data-reveal] and gets the letter reveal instead (js/reveal.js), so this
+   only covers anything else that lands in .hero-content. */
+html.js:not(.intro-pending) .hero-content > :not([data-reveal]),
+html.intro-done .hero-content > :not([data-reveal]) {
   animation: riseIn 1s var(--ease-out) both;
 }
 
@@ -745,7 +746,7 @@ html.now-anim .now-l {
 
 /* projects-page title: staggered entrance on load (not scroll-linked —
    it sits at the top of the viewport where a view-timeline would dim it) */
-html.js .page-head > * { animation: riseIn 0.9s var(--ease-out) both; }
+html.js .page-head > :not([data-reveal]) { animation: riseIn 0.9s var(--ease-out) both; }
 html.js .page-head > :nth-child(2) { animation-delay: 0.12s; }
 
 /* extra scroll room below the list so the last card can fully resolve
@@ -1360,43 +1361,93 @@ html.page-enter #curtain.curtain-lift {
               border-radius calc(var(--curtain-ms) + 120ms) var(--ease-io);
 }
 
-/* ══ LINE-SPLIT HEADINGS ════════════════════════════════════════════════
-   A [data-split] heading is broken into per-line masks by js/split-lines.js
-   (GSAP SplitText). SplitText builds each mask as a clone of the line and
-   names it after the line's class + "-mask", so .sline → .sline-mask.
+/* ══ LETTER REVEAL (js/reveal.js) ═══════════════════════════════════════
+   [data-reveal] text is split into .rv-w (one nowrap word) > .rv-c (one
+   letter). Each letter rises, fades and un-blurs, staggered left to right;
+   the long duration against the short stagger is what makes neighbours
+   overlap into a wave rather than read as typing.
 
-   Only "Let's Connect!" carries the attribute now, but this stays written for
-   any heading: .display sets line-height: 1.02 while Satoshi's em box is
-   1.25em tall (ascent 1.010 + descent 0.240), so glyphs overflow the line box
-   by 0.115em top and bottom, and the mask's overflow:clip cuts descenders off
-   — it took the tail off the "j" in Projects and the "p" in Experience back
-   when those were split too. 0.14em of padding clears that 0.115em; the
-   matching negative margin pulls it back out so line spacing and the heading's
-   layout height are exactly what they were before the split. The current text
-   happens to have no descenders, so this is doing nothing visible today —
-   leave it in, or the first heading that grows one silently gets clipped.
-   (js/split-lines.js starts lines at yPercent 120, not 100, so nothing peeks
-   into this padding at the start of the reveal.)                          */
+   Tune globally here or per element, e.g. style="--stagger: 40ms".
+   --max-stagger caps the spread from first to last letter, so a long line
+   compresses its stagger instead of dragging on. --n (letters - 1) is set by
+   the JS.
 
-.sline-mask {
-  padding-bottom: 0.14em;
-  margin-bottom: -0.14em;
+   No mask/overflow clipping is involved, so descenders and the blur are
+   never cut off, and layout is untouched: the spans are inline-blocks with
+   the original spaces left between words. */
+:root {
+  --stagger: 25ms;
+  --duration: 800ms;
+  --blur: 6px;
+  --distance: 0.4em;
+  --max-stagger: 600ms;
+  --reveal-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ══ SCROLL ENTRANCES — none ════════════════════════════════════════════
-   Page content has NO scroll-driven entrance. Section headings, project rows,
-   timeline entries and cards simply scroll into view with the page, at full
-   opacity and their natural position — nothing rises, fades or scales.
+/* Hidden until reveal.js has split the text, so nothing flashes. Scoped to
+   html.js (no-JS keeps the text) and to no-preference (reduced motion keeps
+   it — reveal.js bails there). The failsafe un-hides it after 2.5s in case
+   reveal.js never loads. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-reveal]:not(.rv-split),
+  html.js [data-reveal-after]:not(.rv-split) {
+    visibility: hidden;
+    animation: rvFailsafe 0s linear 2.5s forwards;
+  }
+}
 
-   The former js/scroll.js engine (a data-scroll="card" rise+fade, with both a
-   native animation-timeline path and a JS/IntersectionObserver fallback) was
-   removed entirely for this reason.
+@keyframes rvFailsafe { to { visibility: visible; } }
 
-   The two deliberate motion pieces that remain are separate systems:
-     • the closing [data-split] heading — masked per-line reveal, one heading
-       only, js/split-lines.js
-     • the pinned .now-pin timeline — the greeting and the .now-l statement
-       lines, js/now-line.js                                                */
+.rv-w {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.rv-c {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(var(--distance));
+  filter: blur(var(--blur));
+  will-change: transform, opacity;
+  transition-property: opacity, transform, filter;
+  transition-duration: var(--duration);
+  transition-timing-function: var(--reveal-ease);
+  transition-delay: calc(var(--i) * min(var(--stagger), var(--max-stagger) / var(--n)));
+}
+
+.rv-in .rv-c {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* landed — release the compositor layers */
+.rv-done .rv-c { will-change: auto; }
+
+/* [data-reveal-after] — its children follow the heading in as whole blocks.
+   Scoped to :not(.rv-done) so that once they've landed, the children's own
+   transitions (e.g. the contact pills' hover) are theirs again. */
+.rv-split[data-reveal-after]:not(.rv-done) > * {
+  opacity: 0;
+  transform: translateY(var(--distance));
+  filter: blur(var(--blur));
+  transition-property: opacity, transform, filter;
+  transition-duration: var(--duration);
+  transition-timing-function: var(--reveal-ease);
+  transition-delay: calc(var(--delay, 0ms) + var(--i) * 60ms);
+}
+
+.rv-in[data-reveal-after]:not(.rv-done) > * {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* ══ OTHER MOTION ═══════════════════════════════════════════════════════
+   Project rows, timeline entries and cards have no scroll entrance — they
+   scroll into view at full opacity. Besides the letter reveal above, the one
+   other scroll piece is the pinned .now-pin timeline (js/now-line.js), which
+   animates its statement by line and so carries no [data-reveal].         */
 
 /* ══ REDUCED MOTION ═════════════════════════════════════════════════════
    JS engines all bail out early; this kills the remaining CSS motion and
@@ -1422,10 +1473,10 @@ html.page-enter #curtain.curtain-lift {
   .now-line { white-space: normal !important; }
   .now-l { transform: none !important; opacity: 1 !important; }
   #grain { display: none !important; }
-  /* split-lines.js bails before splitting, so the heading is still plain text;
-     this is belt-and-braces in case a split ever survives a preference change */
-  [data-split], .sline, .sline-mask { opacity: 1 !important; transform: none !important; }
-  .sline-mask { overflow: visible !important; padding-bottom: 0; margin-bottom: 0; }
+  /* reveal.js bails before splitting, so headings stay plain text; this is
+     belt-and-braces in case a split ever survives a preference change */
+  .rv-c,
+  [data-reveal-after] > * { opacity: 1 !important; transform: none !important; filter: none !important; }
 }
 
 /* ══ RESPONSIVE ═════════════════════════════════════════════════════════ */
