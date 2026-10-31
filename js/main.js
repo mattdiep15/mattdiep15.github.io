@@ -11,20 +11,25 @@
      js/smooth.js plays for the nav's in-page tabs. */
 
   /* ── experience / education expanding cards ── */
-  document.querySelectorAll('.tl-card[role="button"]').forEach(function (card) {
-    var initialDetails = card.querySelector('.tl-details');
-    if (initialDetails) initialDetails.setAttribute('aria-hidden', String(!card.classList.contains('open')));
+  /* The real control is the <button class="tl-card-head">; it supplies the
+     keyboard behaviour natively. The click listener sits on the whole card so
+     the rest of it stays clickable too, and a button click simply bubbles up. */
+  document.querySelectorAll('.tl-card').forEach(function (card) {
+    var head = card.querySelector('.tl-card-head');
+    var details = card.querySelector('.tl-details');
+    if (!head || !details) return;
+    details.setAttribute('aria-hidden', String(!card.classList.contains('open')));
     function toggleCard() {
       var isOpen = card.classList.toggle('open');
-      card.setAttribute('aria-expanded', String(isOpen));
-      var details = card.querySelector('.tl-details');
-      if (details) details.setAttribute('aria-hidden', String(!isOpen));
+      head.setAttribute('aria-expanded', String(isOpen));
+      details.setAttribute('aria-hidden', String(!isOpen));
     }
     card.addEventListener('click', function (e) {
-      if (!e.target.closest('a')) toggleCard();
-    });
-    card.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleCard(); }
+      if (e.target.closest('a')) return;
+      // the bullets are selectable text — finishing a selection inside the
+      // card shouldn't snap it shut
+      if (!e.target.closest('.tl-card-head') && String(window.getSelection())) return;
+      toggleCard();
     });
   });
 

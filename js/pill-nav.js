@@ -34,7 +34,10 @@
   var pill = document.getElementById('pill-nav');
   var toggle = document.getElementById('pill-toggle');
   var list = document.getElementById('pill-items');
-  if (!pill || !toggle || !list || !window.gsap) return;
+  if (!pill || !toggle || !list) return;
+  // GSAP blocked: the pill can never expand, so fall back to the no-JS inline
+  // row instead of leaving a 64px button that does nothing
+  if (!window.gsap) { pill.classList.add('static'); return; }
 
   var items = Array.prototype.slice.call(list.querySelectorAll('li'));
   var bars = Array.prototype.slice.call(pill.querySelectorAll('.pill-bars i'));
@@ -66,7 +69,10 @@
   function measure() {
     pill.classList.add('measuring');
     pill.style.width = 'auto';
-    expandedW = pill.getBoundingClientRect().width;
+    // never wider than the viewport minus the pill's inset on both sides, so
+    // the first link can't open off the left edge on a narrow phone
+    var inset = parseFloat(getComputedStyle(pill).right) || 0;
+    expandedW = Math.min(pill.getBoundingClientRect().width, window.innerWidth - 2 * inset);
     pill.style.width = '';
     pill.classList.remove('measuring');
   }
@@ -74,7 +80,9 @@
   function setOpen(open) {
     toggle.setAttribute('aria-expanded', String(open));
     toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-    list.setAttribute('aria-hidden', String(!open));
+    // inert, not aria-hidden: the collapsed links are only clipped and faded,
+    // so they must also leave the tab order
+    list.inert = !open;
     pill.classList.toggle('is-open', open);
     isOpen = open;
   }
@@ -162,7 +170,9 @@
   /* ── focus trap while open ── */
   pill.addEventListener('keydown', function (e) {
     if (e.key !== 'Tab' || !isOpen) return;
-    var focusable = [toggle].concat(Array.prototype.slice.call(list.querySelectorAll('a')));
+    // DOM order — the links come before the toggle — so Tab from the toggle
+    // wraps to the first link instead of escaping into the page
+    var focusable = Array.prototype.slice.call(list.querySelectorAll('a')).concat(toggle);
     var first = focusable[0];
     var last = focusable[focusable.length - 1];
     if (e.shiftKey && document.activeElement === first) {

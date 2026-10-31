@@ -49,7 +49,7 @@
        js/effects.js writes style.transform to magnetic elements every frame
        and the GSAP stagger writes transform to the same nodes; they'd fight. -->
   <nav id="pill-nav" aria-label="Main">
-    <ul id="pill-items" aria-hidden="true">
+    <ul id="pill-items">
       <li><a href="projects.html" data-transition>Projects</a></li>
       <li><a href="#experience">Experience</a></li>
       <li><a href="#education">Education</a></li>
@@ -66,6 +66,8 @@
        Only scrollable page content goes inside. -->
   <div id="smooth-wrapper">
   <div id="smooth-content">
+
+  <main id="main">
 
   <!-- ── Hero (pinned: scales/fades out as you scroll past) ── -->
   <header class="hero-pin" id="top">
@@ -115,19 +117,19 @@
         </div>
         <div class="tl-mid"><div class="tl-dot"></div></div>
         <div class="tl-r">
-          <div class="tl-card open" tabindex="0" role="button" aria-expanded="true">
+          <div class="tl-card open">
             <img class="doodle" data-doodle="windriver-fisher" src="images/stickman/stickman_fishing_right.png" alt="" aria-hidden="true" style="right: -77px; top: -75px; width: 136px;">
-            <div class="tl-card-head">
-              <div class="tl-info">
-                <div class="tl-title">Data Platform Engineer Intern</div>
-                <div class="tl-company">Wind River Systems</div>
-              </div>
-              <div class="tl-meta">
+            <button type="button" class="tl-card-head" aria-expanded="true" aria-controls="tl-windriver">
+              <span class="tl-info">
+                <span class="tl-title">Data Platform Engineer Intern</span>
+                <span class="tl-company">Wind River Systems</span>
+              </span>
+              <span class="tl-meta">
                 <span class="tl-date">2026–Present</span>
-                <span class="tl-chevron"><i class="fas fa-chevron-down"></i></span>
-              </div>
-            </div>
-            <div class="tl-details">
+                <span class="tl-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+              </span>
+            </button>
+            <div class="tl-details" id="tl-windriver">
               <ul>
                 <li>Developed a Python desktop app that automates Tableau migrations with GitHub version control, cutting each one from 2 hours to 10 minutes</li>
                 <li>Built Python tools that sync dbt metadata with Tableau data sources and export field-level lineage</li>
@@ -143,19 +145,19 @@
       <!-- 2: card LEFT · logo RIGHT — TASA -->
       <div class="tl-entry">
         <div class="tl-l">
-          <div class="tl-card" tabindex="0" role="button" aria-expanded="false">
+          <div class="tl-card">
             <img class="doodle" data-doodle="tasa-sitter" src="images/stickman/stickman_sitting_left_taiwan.png" alt="" aria-hidden="true" style="left: -9px; top: -49px; width: 55px;">
-            <div class="tl-card-head">
-              <div class="tl-info">
-                <div class="tl-title">Senior Advisor</div>
-                <div class="tl-company">Taiwanese American Student Association</div>
-              </div>
-              <div class="tl-meta">
-                <span class="tl-date">2024–2026</span>
-                <span class="tl-chevron"><i class="fas fa-chevron-down"></i></span>
-              </div>
-            </div>
-            <div class="tl-details">
+            <button type="button" class="tl-card-head" aria-expanded="false" aria-controls="tl-tasa">
+              <span class="tl-info">
+                <span class="tl-title">Senior Advisor</span>
+                <span class="tl-company">Taiwanese American Student Association</span>
+              </span>
+              <span class="tl-meta">
+                <span class="tl-date">2024–Present</span>
+                <span class="tl-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+              </span>
+            </button>
+            <div class="tl-details" id="tl-tasa">
               <ul>
                 <li><strong>Internal Vice President</strong> (2024–2025) — Planned and coordinated numerous internal events and social gatherings, managing logistics, communication, and execution to strengthen community bonds and support the overall well-being of 80+ active members, boosting participation rates by 25%.</li>
                 <li><strong>Senior Advisor</strong> (2025–Present)</li>
@@ -176,18 +178,18 @@
         </div>
         <div class="tl-mid"><div class="tl-dot"></div></div>
         <div class="tl-r">
-          <div class="tl-card" tabindex="0" role="button" aria-expanded="false">
-            <div class="tl-card-head">
-              <div class="tl-info">
-                <div class="tl-title">Venture Capital Intern</div>
-                <div class="tl-company">Ignite XL</div>
-              </div>
-              <div class="tl-meta">
+          <div class="tl-card">
+            <button type="button" class="tl-card-head" aria-expanded="false" aria-controls="tl-ignite">
+              <span class="tl-info">
+                <span class="tl-title">Venture Capital Intern</span>
+                <span class="tl-company">Ignite XL</span>
+              </span>
+              <span class="tl-meta">
                 <span class="tl-date">2024</span>
-                <span class="tl-chevron"><i class="fas fa-chevron-down"></i></span>
-              </div>
-            </div>
-            <div class="tl-details">
+                <span class="tl-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+              </span>
+            </button>
+            <div class="tl-details" id="tl-ignite">
               <ul>
                 <li>Evaluated 100+ pre-seed and seed-stage startups across multiple industries, analyzing competitive landscapes, market trends, customer needs, and growth potential to identify promising early-stage investment opportunities.</li>
                 <li>Authored and presented investment briefs and one-page memos by synthesizing qualitative insights and quantitative metrics into recommendations, supporting shortlisting decisions and presenting an opportunity to the Ignite XL team.</li>
@@ -200,18 +202,18 @@
       <!-- 4: card LEFT · logo RIGHT — Exceptional STEAM -->
       <div class="tl-entry">
         <div class="tl-l">
-          <div class="tl-card" tabindex="0" role="button" aria-expanded="false">
-            <div class="tl-card-head">
-              <div class="tl-info">
-                <div class="tl-title">Co-Founder &amp; Instructor</div>
-                <div class="tl-company">Exceptional STEAM</div>
-              </div>
-              <div class="tl-meta">
+          <div class="tl-card">
+            <button type="button" class="tl-card-head" aria-expanded="false" aria-controls="tl-steam">
+              <span class="tl-info">
+                <span class="tl-title">Co-Founder &amp; Instructor</span>
+                <span class="tl-company">Exceptional STEAM</span>
+              </span>
+              <span class="tl-meta">
                 <span class="tl-date">2020–2024</span>
-                <span class="tl-chevron"><i class="fas fa-chevron-down"></i></span>
-              </div>
-            </div>
-            <div class="tl-details">
+                <span class="tl-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+              </span>
+            </button>
+            <div class="tl-details" id="tl-steam">
               <ul>
                 <li>Founded a nonprofit to address limited STEAM access, delivering 9-week camps for 30+ Title I students in the U.S. and 12 in Taiwan and India, broadening access to STEAM education across local and international communities.</li>
                 <li>Designed an interactive curriculum with weekly experiments in physics, chemistry, math, and engineering, and built virtual lab simulations on www.exceptionalsteam.org to expand international accessibility, boosting site usage by 60%.</li>
@@ -287,21 +289,21 @@
     </div>
 
     <div>
-      <div class="tl-card" tabindex="0" role="button" aria-expanded="false">
-        <div class="tl-card-head">
-          <div class="tl-info" style="display:flex;align-items:center;gap:0.75rem;">
-            <img src="images/berkeley_icon.svg" alt="UC Berkeley Logo" class="school-icon" />
-            <div>
-              <div class="tl-title">UC Berkeley</div>
-              <div class="tl-company">B.A. Data Science &amp; B.A. Economics</div>
-            </div>
-          </div>
-          <div class="tl-meta">
+      <div class="tl-card">
+        <button type="button" class="tl-card-head" aria-expanded="false" aria-controls="tl-berkeley">
+          <span class="tl-info" style="display:flex;align-items:center;gap:0.75rem;">
+            <img src="images/berkeley_icon.svg" alt="" class="school-icon" />
+            <span>
+              <span class="tl-title">UC Berkeley</span>
+              <span class="tl-company">B.A. Data Science &amp; B.A. Economics</span>
+            </span>
+          </span>
+          <span class="tl-meta">
             <span class="tl-date">2024–2026</span>
-            <span class="tl-chevron"><i class="fas fa-chevron-down"></i></span>
-          </div>
-        </div>
-        <div class="tl-details">
+            <span class="tl-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+          </span>
+        </button>
+        <div class="tl-details" id="tl-berkeley">
           <div style="display:flex;flex-wrap:wrap;gap:1.5rem;align-items:flex-start;">
             <div class="coursework-column">
               <p>Data Science Coursework</p>
@@ -338,6 +340,8 @@
 
   </div><!-- /.light-panel -->
 
+  </main>
+
   <!-- ── Closing card ──
        One element is both the semantic footer and the #contact anchor target,
        so the nav link lands here with no extra wrapper. It deliberately does
@@ -352,16 +356,16 @@
       <h2 class="display closing-title" data-split>Let's Connect!</h2>
 
       <div class="contact-links">
-        <a href="mailto:matthewdiep@berkeley.edu" class="contact-pill magnetic" data-magnet="0.1" aria-label="Email">
+        <a href="mailto:matthewdiep@berkeley.edu" class="contact-pill magnetic" data-magnet="0.1">
           <i class="fas fa-envelope" aria-hidden="true"></i> Email
         </a>
-        <a href="https://github.com/mattdiep15" target="_blank" rel="noopener" class="contact-pill magnetic" data-magnet="0.1" aria-label="GitHub">
+        <a href="https://github.com/mattdiep15" target="_blank" rel="noopener" class="contact-pill magnetic" data-magnet="0.1">
           <i class="fab fa-github" aria-hidden="true"></i> GitHub
         </a>
-        <a href="https://www.linkedin.com/in/matthewdiep15/" target="_blank" rel="noopener" class="contact-pill magnetic" data-magnet="0.1" aria-label="LinkedIn">
+        <a href="https://www.linkedin.com/in/matthewdiep15/" target="_blank" rel="noopener" class="contact-pill magnetic" data-magnet="0.1">
           <i class="fab fa-linkedin-in" aria-hidden="true"></i> LinkedIn
         </a>
-        <a href="files/Matthew_Diep_Resume_Oct_2026.pdf" target="_blank" rel="noopener" class="contact-pill magnetic" data-magnet="0.1" aria-label="Resume">
+        <a href="files/Matthew_Diep_Resume_Oct_2026.pdf" target="_blank" rel="noopener" class="contact-pill magnetic" data-magnet="0.1">
           <i class="fas fa-file-lines" aria-hidden="true"></i> Resume
         </a>
       </div>

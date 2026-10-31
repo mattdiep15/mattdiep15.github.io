@@ -108,9 +108,15 @@
       var target = document.querySelector(href);
       if (!target) return;
       e.preventDefault();
-      function jump() { smoother.scrollTo(target, false, 'top ' + SMOOTH.anchorOffset + 'px'); }
+      // preventDefault also cancels the browser moving focus to the target, so
+      // do it here — otherwise the next Tab starts back in the nav
+      function focusTarget() {
+        if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+        target.focus({ preventScroll: true });
+      }
+      function jump() { smoother.scrollTo(target, false, 'top ' + SMOOTH.anchorOffset + 'px'); focusTarget(); }
       if (window.PageCurtain) window.PageCurtain.sweep(jump);
-      else smoother.scrollTo(target, true, 'top ' + SMOOTH.anchorOffset + 'px'); // no curtain
+      else { smoother.scrollTo(target, true, 'top ' + SMOOTH.anchorOffset + 'px'); focusTarget(); } // no curtain
       if (history.pushState) history.pushState(null, '', href);
     });
   });

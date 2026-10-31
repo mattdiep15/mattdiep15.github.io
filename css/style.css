@@ -12,7 +12,7 @@
      --intro-iris-ms      how long the iris takes to open
                           (matched by INTRO.expandMs in js/intro.js)
      --curtain-ms         page-transition curtain speed
-     magnetic pull / tilt amounts → CONFIG in js/effects.js
+     magnetic pull amounts → CONFIG in js/effects.js
    ========================================================================== */
 
 /* ── Satoshi (self-hosted) ─────────────────────────────────────────────────
@@ -56,7 +56,7 @@
   --accent-soft: rgba(43, 76, 255, 0.08);
 
   /* project tag pills — one place to retune all three variants */
-  --tag-event-bg:      #7C74E8;   /* hackathons, e.g. "Cal Hacks 2026" */
+  --tag-event-bg:      #6F66D9;   /* hackathons, e.g. "Cal Hacks 2026" — 4.59:1 under white text; #7C74E8 was 3.80:1 */
   --tag-event-text:    #FFFFFF;
   --tag-award-bg:      #EBCB6B;   /* awards, e.g. "Runner-up · Best Design" */
   --tag-award-text:    #5A4300;   /* dark brown, keeps contrast on gold */
@@ -152,6 +152,10 @@ a { color: inherit; }
   scroll-margin-top: 60px;
 }
 
+/* js/smooth.js focuses the section a nav tab jumps to, so the next Tab
+   continues from there. The section itself isn't a control, so no ring. */
+.section[tabindex="-1"]:focus-visible { outline: none; }
+
 .section-head { margin-bottom: clamp(2rem, 6vh, 3.5rem); }
 
 .section-sub {
@@ -216,7 +220,17 @@ a { color: inherit; }
   transition: opacity 0.2s var(--ease-out);
 }
 
-#pill-items a:hover { opacity: 0.55; }
+@media (hover: hover) {
+  #pill-items a:hover { opacity: 0.55; }
+}
+
+/* Focus inside the blended nav. The global ring is --accent, which the
+   difference blend turns into a low-contrast gold/blue — white is the nav's
+   own mark colour and inverts the same way the bars do. The toggle fills the
+   64px box exactly and overflow:hidden would clip a ring drawn outside it, so
+   its ring sits inside instead. */
+#pill-nav :focus-visible { outline-color: #fff; }
+#pill-toggle:focus-visible { outline-offset: -6px; }
 
 /* the toggle never moves; the row of links grows out to its left */
 #pill-toggle {
@@ -254,8 +268,19 @@ a { color: inherit; }
 
 /* no JS: it can't expand, so show the links inline rather than trapping them
    inside a 64px box */
-html.no-js #pill-nav { width: auto; }
-html.no-js #pill-toggle { display: none; }
+html.no-js #pill-nav,
+#pill-nav.static { width: auto; }
+html.no-js #pill-toggle,
+#pill-nav.static #pill-toggle { display: none; }
+
+/* The open row needs ~382px at the desktop spacing, more than a 320px phone
+   has left of the inset — the first link opened off the left edge. Tighter
+   spacing and a slimmer inset bring it to ~300px. */
+@media (max-width: 400px) {
+  #pill-nav { right: 0.6rem; }
+  #pill-items { gap: 0.9rem; padding: 0 0.4rem 0 0.9rem; }
+  #pill-items a { font-size: 14px; letter-spacing: 0.01em; }
+}
 
 /* ── Intro preloader ───────────────────────────────────────────────────────
    Markup is display:none by default; only html.intro-pending (set by the
@@ -627,7 +652,6 @@ html.now-anim .now-l {
   align-items: center;
   padding: clamp(2.2rem, 5vh, 3.5rem) 0;
   border-bottom: 1px solid var(--line);
-  will-change: transform;
 }
 
 .feature:last-child { border-bottom: none; }
@@ -664,18 +688,15 @@ html.now-anim .now-l {
 }
 
 .view-project i { transition: transform 0.3s var(--ease-out); }
-.view-project:hover i { transform: translateX(5px); }
-
-/* inner wrapper carries the pointer tilt so it never fights the
-   scroll-driven transform on the row/card itself */
-.card-inner { will-change: transform; }
+@media (hover: hover) {
+  .view-project:hover i { transform: translateX(5px); }
+}
 
 .feature-img {
   height: clamp(200px, 24vw, 310px);
   border-radius: 20px;
   overflow: hidden;
   background: #f0f0ee;
-  will-change: transform;
 }
 
 .feature-img img {
@@ -683,16 +704,18 @@ html.now-anim .now-l {
   height: 100%;
   object-fit: cover;
   filter: grayscale(10%);
-  /* `scale`, not `transform: scale()` — ScrollSmoother owns `transform` on the
-     [data-speed] images below, and an inline transform would override a CSS
-     one. `scale` is an independent property, so the two compose instead. */
+  /* `scale`, not `transform: scale()` — the .art-small optical sizing below
+     owns `transform`. `scale` is an independent property, so the two compose
+     instead of the hover clobbering the base size. */
   transition: filter 0.4s var(--ease-out), scale 0.5s var(--ease-out);
 }
 
 .feature-img.contain { background: transparent; }
 .feature-img.contain img { object-fit: contain; padding: 20px; }
 
-.feature:hover .feature-img img { filter: none; scale: 1.04; }
+@media (hover: hover) {
+  .feature:hover .feature-img img { filter: none; scale: 1.04; }
+}
 
 .view-all-wrap { text-align: center; margin-top: 2.2rem; }
 
@@ -714,7 +737,9 @@ html.now-anim .now-l {
 }
 
 .view-all i { transition: transform 0.3s var(--ease-out); color: var(--accent); }
-.view-all:hover i { transform: translateX(5px); }
+@media (hover: hover) {
+  .view-all:hover i { transform: translateX(5px); }
+}
 
 /* ── Projects page ─────────────────────────────────────────────────────── */
 
@@ -743,7 +768,9 @@ main.section { padding-bottom: 32vh; }
   transition: color 0.3s var(--ease-out);
 }
 
-.back-link:hover { color: var(--ink); }
+@media (hover: hover) {
+  .back-link:hover { color: var(--ink); }
+}
 
 .project-list { display: flex; flex-direction: column; margin-top: 1rem; }
 
@@ -751,10 +778,24 @@ main.section { padding-bottom: 32vh; }
    separating that the card borders used to */
 .project-card {
   display: block;
+  position: relative;
   padding: 2.2rem 0;
-  text-decoration: none;
   color: var(--ink);
   scroll-margin-top: 100px;
+}
+
+/* The link lives on the title, so its accessible name is just the project
+   name; the pseudo-element stretches its hit area over the whole row so the
+   card stays clickable everywhere. */
+.project-card h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.project-card h3 a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
 }
 
 .project-card + .project-card { border-top: 1px solid var(--line); }
@@ -814,21 +855,8 @@ main.section { padding-bottom: 32vh; }
    instead of the hover clobbering the base size. */
 .contain.art-small img { transform: scale(1.35); }
 
-.project-card:hover .project-image { filter: none; scale: 1.06; }
-
-/* ── ScrollSmoother parallax ──────────────────────────────────────────────
-   data-speed="auto" derives its travel from the gap between the image and
-   its clipping frame — an image that exactly fills its box computes to zero
-   movement, and any fixed speed would expose a bare edge. So parallaxed
-   images overfill by 28%, centred, giving "auto" room to work and
-   guaranteeing the frame stays covered at both ends of the scroll.
-   Only cover-fit photos are targeted; .contain logos sit on white padding
-   and would look wrong drifting. */
-.feature-img img[data-speed],
-.project-image-wrap img[data-speed] {
-  position: relative;
-  height: 128%;
-  top: -14%;
+@media (hover: hover) {
+  .project-card:hover .project-image { filter: none; scale: 1.06; }
 }
 
 .project-card-body { flex: 1; min-width: 0; }
@@ -980,13 +1008,13 @@ main.section { padding-bottom: 32vh; }
   border-radius: 16px;
   padding: 1.15rem 1.4rem;
   width: 100%;
-  outline-offset: 3px;
-  user-select: none;
-  will-change: transform;
+  cursor: pointer;
   transition: box-shadow 0.3s var(--ease-out), border-color 0.3s var(--ease-out);
 }
 
-.tl-card:hover { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.08); }
+@media (hover: hover) {
+  .tl-card:hover { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.08); }
+}
 
 /* hand-drawn doodles pinned to an element. Each one's left/top/width live in
    its inline style, relative to its parent's top-left corner — that's what
@@ -1001,16 +1029,25 @@ main.section { padding-bottom: 32vh; }
   z-index: 2;
 }
 
+/* a real <button> (main.js), reset so it lays out like the div it replaced */
 .tl-card-head {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
 }
 
 .tl-info { flex: 1; min-width: 0; }
-.tl-title { font-weight: 500; font-size: 1.14rem; letter-spacing: -0.01em; }
-.tl-company { color: var(--muted); font-size: 1.01rem; margin-top: 2px; font-weight: 300; }
+.tl-title { display: block; font-weight: 500; font-size: 1.14rem; letter-spacing: -0.01em; }
+.tl-company { display: block; color: var(--muted); font-size: 1.01rem; margin-top: 2px; font-weight: 300; }
 
 .tl-meta { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
 .tl-date { color: var(--muted); font-size: 0.98rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -1022,12 +1059,17 @@ main.section { padding-bottom: 32vh; }
   display: inline-block;
 }
 
+/* 0fr → 1fr animates to the content's real height, however tall it gets —
+   the old max-height cap clipped open cards once the text was enlarged. The
+   single child is what collapses, so it carries min-height/overflow. */
 .tl-details {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.4s var(--ease-out), padding-top 0.2s ease;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.4s var(--ease-out), padding-top 0.2s ease;
   padding-top: 0;
 }
+
+.tl-details > * { min-height: 0; overflow: hidden; }
 
 .tl-details ul {
   padding-left: 1.1rem;
@@ -1039,7 +1081,7 @@ main.section { padding-bottom: 32vh; }
 }
 
 .tl-card.open { border-color: #c9c9c2; }
-.tl-card.open .tl-details { max-height: 900px; padding-top: 0.8rem; }
+.tl-card.open .tl-details { grid-template-rows: 1fr; padding-top: 0.8rem; }
 .tl-card.open .tl-chevron { transform: rotate(180deg); color: var(--accent); }
 
 /* bullets slide + fade in from the right, one after another, when a card
@@ -1067,7 +1109,7 @@ main.section { padding-bottom: 32vh; }
 .tl-card.open .tl-details li:nth-child(9) { transition-delay: 1.35s; }
 
 /* no-JS: expander can't open, so show details statically */
-html.no-js .tl-details { max-height: none; padding-top: 0.8rem; }
+html.no-js .tl-details { grid-template-rows: 1fr; padding-top: 0.8rem; }
 html.no-js .tl-details li,
 html.no-js .tl-details .coursework-column p { opacity: 1; transform: none; }
 html.no-js .tl-chevron { display: none; }
@@ -1110,9 +1152,6 @@ html.no-js .tl-chevron { display: none; }
   color: var(--muted);
   font-weight: 300;
 }
-
-/* education card reuses .tl-card; give the taller coursework room */
-#education .tl-card.open .tl-details { max-height: 900px; }
 
 /* ── Resume ────────────────────────────────────────────────────────────── */
 
@@ -1175,11 +1214,13 @@ html.no-js .tl-chevron { display: none; }
 
 .contact-pill i { font-size: 1.18rem; }
 
-.contact-pill:hover {
-  background: var(--paper);
-  border-color: var(--paper);
-  color: var(--ink-deep);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+@media (hover: hover) {
+  .contact-pill:hover {
+    background: var(--paper);
+    border-color: var(--paper);
+    color: var(--ink-deep);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  }
 }
 
 /* ── Plain footer ──────────────────────────────────────────────────────────
@@ -1413,11 +1454,6 @@ html.page-enter #curtain.curtain-lift {
   /* line the date up with the text, not the school icon (44px + its gap) */
   #education .tl-date { padding-left: calc(44px + 0.75rem); }
 
-  /* long bullets wrap a lot on narrow screens — give the expander room
-     (900px cut off the end of the Wind River list at phone width) */
-  .tl-card.open .tl-details,
-  #education .tl-card.open .tl-details { max-height: 2000px; }
-
   /* the desktop clamp lands at ~100px top and bottom, which stacks into
      ~200px dead gaps between sections on a phone */
   .section { padding-top: 3.5rem; padding-bottom: 3.5rem; }
@@ -1443,17 +1479,6 @@ html.page-enter #curtain.curtain-lift {
     inset: 0;
     animation: none;
   }
-}
-
-/* Hover can't happen on a touch device, so these promotions buy nothing and
-   cost a permanently retained compositor layer each — on a page with this many
-   cards that's real memory pressure, which shows up as scroll stutter.
-   .letter keeps its promotion: the hero sweep genuinely animates those. */
-@media (pointer: coarse) {
-  .card-inner,
-  .feature-img,
-  .project-card,
-  .tl-card { will-change: auto; }
 }
 
 /* a centred 2×2 grid under the centred heading — a left-aligned column
