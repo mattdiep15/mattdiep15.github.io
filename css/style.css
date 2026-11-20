@@ -1155,6 +1155,22 @@ html.no-js .tl-chevron { display: none; }
 
 /* .display hard-codes color: var(--ink) — inherit the card's light text */
 .closing-title { color: inherit; }
+.closing-title .holiday-red   { color: #e5383b; }
+.closing-title .holiday-green { color: #2dbd5a; }
+
+/* heading + animated ASCII tree side by side; stacks on narrow screens */
+.closing-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1rem, 3vw, 2.5rem);
+  flex-wrap: wrap;
+}
+.closing-head .closing-title { margin: 0; }
+.closing-tree {
+  height: clamp(8rem, 18vw, 13rem);
+  width: auto;
+}
 
 .closing-credit {
   margin-top: clamp(3rem, 8vh, 5rem);
@@ -1167,8 +1183,8 @@ html.no-js .tl-chevron { display: none; }
 .contact-links {
   display: flex;
   justify-content: center;
-  gap: 0.9rem;
-  margin-top: 2.4rem;
+  gap: clamp(1rem, 3vw, 2.25rem);
+  margin-top: 2.8rem;
   flex-wrap: wrap;
 }
 
@@ -1186,7 +1202,6 @@ html.no-js .tl-chevron { display: none; }
   font-weight: 500;
   letter-spacing: 0.03em;
   text-transform: lowercase;
-  will-change: transform;
   transition: background 0.3s ease, color 0.3s ease,
               border-color 0.3s ease, box-shadow 0.3s var(--ease-out);
 }
